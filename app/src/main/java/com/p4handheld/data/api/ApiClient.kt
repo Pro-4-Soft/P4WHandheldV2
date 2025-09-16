@@ -227,7 +227,7 @@ object ApiClient {
         override suspend fun updateUserLocation(lat: Double, lon: Double): ApiResponse<Unit> {
             return withContext(Dispatchers.IO) {
                 try {
-                    val url = "${getBaseUrl()}/api/UserApi/UpdateGeoLocation?lon={${lon}&lat=${lat}"
+                    val url = "${getBaseUrl()}api/UserApi/UpdateGeoLocation?lon=${lon}&lat=${lat}"
 
                     val request = Request.Builder()
                         .url(url)

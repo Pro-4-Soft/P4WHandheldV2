@@ -112,7 +112,7 @@ class TenantViewModel(application: Application) : AndroidViewModel(application) 
         val context = LocalContext.current
         val sharedPreferences = context.getSharedPreferences("tenant_config", Context.MODE_PRIVATE)
         val baseUrl = sharedPreferences.getString("base_url", "") ?: ""
-        val logoUrl = "$baseUrl/data/logo"
+        val logoUrl = "${baseUrl}data/logo"
         return logoUrl
     }
 }

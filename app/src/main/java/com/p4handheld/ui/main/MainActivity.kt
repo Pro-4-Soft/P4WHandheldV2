@@ -81,8 +81,6 @@ class MainActivity : ComponentActivity() {
                 ExistingPeriodicWorkPolicy.UPDATE,
                 workRequest
             )
-
-
     }
 
     // Sets up LiveData observers to update the UI based on ViewModel changes.

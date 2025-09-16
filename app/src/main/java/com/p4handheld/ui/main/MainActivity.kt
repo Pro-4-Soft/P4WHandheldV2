@@ -29,7 +29,7 @@ import com.p4handheld.R
 import com.p4handheld.scanner.DWCommunicationWrapper
 import com.p4handheld.ui.compose.theme.HandheldP4WTheme
 import com.p4handheld.ui.navigation.AppNavigation
-import com.p4handheld.utils.LocationPermissionHelper
+import com.p4handheld.utils.PermissionChecker
 import com.p4handheld.workers.LocationWorker
 import java.util.concurrent.TimeUnit
 
@@ -207,9 +207,9 @@ fun MainActivityContent(
     // Request location permissions when needed (after user context is available)
     LaunchedEffect(Unit) {
         // This will be triggered after navigation and login when user context becomes available
-        if (LocationPermissionHelper.shouldRequestLocationPermissions(navController.context)) {
+        if (PermissionChecker.shouldRequestLocationPermissions(navController.context)) {
             Log.d("MainActivity", "Requesting location permissions based on user context")
-            permissionLauncher.launch(LocationPermissionHelper.getLocationPermissions())
+            permissionLauncher.launch(PermissionChecker.getLocationPermissions())
         }
     }
 }

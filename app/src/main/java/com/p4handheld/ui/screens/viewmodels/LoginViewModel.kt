@@ -7,7 +7,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.p4handheld.data.repository.AuthRepository
-import com.p4handheld.utils.LocationPermissionHelper
+import com.p4handheld.utils.PermissionChecker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -48,7 +48,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
                     if (menuResult.isSuccess) {
                         // Check if we should request location permissions based on user context
-                        val shouldRequestPermissions = LocationPermissionHelper.shouldRequestLocationPermissions(getApplication())
+                        val shouldRequestPermissions = PermissionChecker.shouldRequestLocationPermissions(getApplication())
 
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,

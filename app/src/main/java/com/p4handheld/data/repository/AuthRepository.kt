@@ -108,8 +108,8 @@ class AuthRepository(context: Context) {
                 UserContextResponse(
                     menu = menuItems,
                     trackGeoLocation = authSharedPreferences.getBoolean("track_geo_location", false),
-                    userScanType = authSharedPreferences.getString("user_scan_type", ""),
-                    tenantScanType = authSharedPreferences.getString("tenant_scan_type", "")
+                    userScanType = authSharedPreferences.getString("user_scan_type", "") ?: "",
+                    tenantScanType = authSharedPreferences.getString("tenant_scan_type", "") ?: ""
                 )
             } catch (e: Exception) {
                 null

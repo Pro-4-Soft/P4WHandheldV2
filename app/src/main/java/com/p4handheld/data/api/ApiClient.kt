@@ -108,15 +108,20 @@ object ApiClient {
                         val responseBody = response.body?.string().orEmpty()
 
                         // Parse JSON into MenuResponse
-                        val menuResponse = Gson().fromJson(responseBody, UserContextResponse::class.java)
+                        val userContextResponse = Gson().fromJson(responseBody, UserContextResponse::class.java)
 
                         // Find Handheld menu item
-                        val handheldItem = menuResponse.menu.firstOrNull { it.id == "Handheld" }
+                        val handheldItem = userContextResponse.menu.firstOrNull { it.id == "Handheld" }
 
                         // Get its children (or empty list if not found)
                         val handheldChildren: List<MenuItem> = handheldItem?.children.orEmpty()
 
-                        val handHeldMenuItems = UserContextResponse(handheldChildren)
+                        val handHeldMenuItems = UserContextResponse(
+                            menu = handheldChildren,
+                            trackGeoLocation = userContextResponse.trackGeoLocation,
+                            userScanType = userContextResponse.userScanType,
+                            tenantScanType = userContextResponse.tenantScanType
+                        )
                         ApiResponse(true, handHeldMenuItems, responseCode)
                     } else {
                         val errorBody = response.body?.string()

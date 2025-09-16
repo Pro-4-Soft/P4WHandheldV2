@@ -7,7 +7,7 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import com.p4handheld.data.repository.AuthRepository
 
-object LocationPermissionHelper {
+object PermissionChecker {
     private const val TAG = "LocationPermissionHelper"
 
     fun shouldRequestLocationPermissions(context: Context): Boolean {

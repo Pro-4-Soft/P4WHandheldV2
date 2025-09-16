@@ -77,6 +77,9 @@ class AuthRepository(context: Context) {
 
         authSharedPreferences.edit()
             .putString("menu_json", menuArray.toString())
+            .putBoolean("track_geo_location", menuResponse.trackGeoLocation)
+            .putString("user_scan_type", menuResponse.userScanType)
+            .putString("tenant_scan_type", menuResponse.tenantScanType)
             .apply()
     }
 
@@ -102,13 +105,22 @@ class AuthRepository(context: Context) {
                     menuItems.add(menuItem)
                 }
 
-                UserContextResponse(menuItems)
+                UserContextResponse(
+                    menu = menuItems,
+                    trackGeoLocation = authSharedPreferences.getBoolean("track_geo_location", false),
+                    userScanType = authSharedPreferences.getString("user_scan_type", ""),
+                    tenantScanType = authSharedPreferences.getString("tenant_scan_type", "")
+                )
             } catch (e: Exception) {
                 null
             }
         } else {
             null
         }
+    }
+
+    fun shouldTrackLocation(): Boolean {
+        return authSharedPreferences.getBoolean("track_geo_location", false)
     }
 
     fun isLoggedIn(): Boolean {

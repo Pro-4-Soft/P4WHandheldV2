@@ -3,6 +3,7 @@ package com.p4handheld.ui.main
 import android.Manifest
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -28,6 +29,7 @@ import com.p4handheld.R
 import com.p4handheld.scanner.DWCommunicationWrapper
 import com.p4handheld.ui.compose.theme.HandheldP4WTheme
 import com.p4handheld.ui.navigation.AppNavigation
+import com.p4handheld.utils.LocationPermissionHelper
 import com.p4handheld.workers.LocationWorker
 import java.util.concurrent.TimeUnit
 
@@ -164,6 +166,7 @@ fun MainActivityContent(
     startDestination: String
 ) {
     val scanViewState by viewModel.scanViewStatus.observeAsState()
+    val navController = rememberNavController()
 
     // Handle side effects based on scan view state changes
     DisposableEffect(scanViewState) {
@@ -186,7 +189,6 @@ fun MainActivityContent(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        val navController = rememberNavController()
         AppNavigation(
             navController = navController,
             startDestination = startDestination
@@ -197,16 +199,17 @@ fun MainActivityContent(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
-            // Start location updates
+            // Location permissions granted
+            Log.d("MainActivity", "Location permissions granted")
         }
     }
 
+    // Request location permissions when needed (after user context is available)
     LaunchedEffect(Unit) {
-        permissionLauncher.launch(
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            )
-        )
+        // This will be triggered after navigation and login when user context becomes available
+        if (LocationPermissionHelper.shouldRequestLocationPermissions(navController.context)) {
+            Log.d("MainActivity", "Requesting location permissions based on user context")
+            permissionLauncher.launch(LocationPermissionHelper.getLocationPermissions())
+        }
     }
 }

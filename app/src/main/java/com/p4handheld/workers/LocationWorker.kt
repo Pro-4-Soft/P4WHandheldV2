@@ -11,6 +11,7 @@ import androidx.work.WorkerParameters
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.p4handheld.data.api.ApiClient
+import com.p4handheld.data.repository.AuthRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -26,10 +27,18 @@ class LocationWorker(
 
     private val fusedLocationClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(applicationContext)
+    
+    private val authRepository = AuthRepository(applicationContext)
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         try {
             Log.d(TAG, "LocationWorker started")
+
+            // Check if location tracking is enabled for this user
+            if (!authRepository.shouldTrackLocation()) {
+                Log.d(TAG, "Location tracking is disabled for this user")
+                return@withContext Result.success()
+            }
 
             if (!hasLocationPermissions()) {
                 Log.w(TAG, "Location permissions not granted")

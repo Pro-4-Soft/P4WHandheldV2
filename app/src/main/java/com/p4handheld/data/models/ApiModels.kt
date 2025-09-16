@@ -1,0 +1,145 @@
+package com.p4handheld.data.models
+
+import com.google.gson.annotations.SerializedName
+
+data class LoginRequest(
+    @SerializedName("Username")
+    val username: String,
+    @SerializedName("Password")
+    val password: String
+)
+
+data class LoginResponse(
+    @SerializedName("success")
+    val success: Boolean,
+    @SerializedName("message")
+    val message: String? = null,
+    @SerializedName("token")
+    val token: String? = null
+)
+
+data class MenuResponse(
+    @SerializedName("Menu")
+    val menu: List<MenuItem>
+)
+
+data class MenuItem(
+    @SerializedName("Id")
+    val id: String? = null,
+    @SerializedName("Label")
+    val label: String,
+    @SerializedName("State")
+    val state: String? = null,
+    @SerializedName("StateParams")
+    val stateParams: Any? = null,
+    @SerializedName("Icon")
+    val icon: String? = null,
+    @SerializedName("Children")
+    val children: List<MenuItem> = emptyList()
+)
+
+data class ApiError(
+    override val message: String,
+    val code: Int? = null
+) : Throwable(message)
+
+// Action View Models
+enum class PromptType {
+    @SerializedName("Text")
+    TEXT,
+
+    @SerializedName("Picker")
+    PICKER,
+
+    @SerializedName("List")
+    LIST,
+
+    @SerializedName("Complete")
+    COMPLETE,
+
+    @SerializedName("GoToNewPage")
+    GO_TO_NEW_PAGE,
+
+    @SerializedName("Photo")
+    PHOTO,
+
+    @SerializedName("Sign")
+    SIGN,
+
+    @SerializedName("Confirm")
+    CONFIRM,
+
+    @SerializedName("Scan")
+    SCAN
+}
+
+data class PromptResponse(
+    @SerializedName("Prompt")
+    val prompt: Prompt,
+    @SerializedName("Context")
+    val context: Map<String, Any>? = null,
+    @SerializedName("Messages")
+    val messages: List<Message> = emptyList(),
+    @SerializedName("ToolbarActions")
+    val toolbarActions: List<String> = emptyList(),
+    @SerializedName("IsStart")
+    val isStart: Boolean = false
+)
+
+data class Message(
+    @SerializedName("Id")
+    val id: String = "",
+    @SerializedName("Value")
+    val value: String,
+    @SerializedName("Severity")
+    val severity: String = "",
+    @SerializedName("ImageResource")
+    val imageResource: String? = null,
+    @SerializedName("ActionName")
+    val actionName: String? = "",
+    @SerializedName("Subtitle")
+    val Subtitle: String? = "",
+    @SerializedName("GoToLink")
+    val GoToLink: String = "",
+
+    var isCommitted: Boolean = false,
+    val state: PromptResponse? = null
+)
+
+
+data class Prompt(
+    @SerializedName("Value")
+    val value: String = "",
+    @SerializedName("ActionName")
+    val actionName: String = "",
+    @SerializedName("PromptType")
+    val promptType: PromptType,
+    @SerializedName("PromptPlaceholder")
+    val promptPlaceholder: String = "",
+    @SerializedName("Items")
+    val items: List<PromptItem> = emptyList(),
+    @SerializedName("DefaultValue")
+    val defaultValue: String = ""
+)
+
+data class PromptItem(
+    @SerializedName("Value")
+    val value: String,
+    @SerializedName("Label")
+    val label: String,
+    @SerializedName("Info1")
+    val info1: String? = null,
+    @SerializedName("Info2")
+    val info2: String? = null
+)
+
+data class ProcessRequest(
+    @SerializedName("PromptValue")
+    val promptValue: Any?,
+    @SerializedName("ActionFor")
+    val actionFor: String,
+    @SerializedName("Context")
+    val context: Map<String, Any>? = null,
+    @SerializedName("ToolbarActions")
+    val toolbarActions: List<String>? = null
+)

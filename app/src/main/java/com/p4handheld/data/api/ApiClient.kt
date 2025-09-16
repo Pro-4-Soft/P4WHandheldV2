@@ -223,5 +223,31 @@ object ApiClient {
                 }
             }
         }
+
+        override suspend fun updateUserLocation(lat: Double, lon: Double): ApiResponse<Unit> {
+            return withContext(Dispatchers.IO) {
+                try {
+                    val url = "${getBaseUrl()}/api/UserApi/UpdateGeoLocation?lon={${lon}&lat=${lat}"
+
+                    val request = Request.Builder()
+                        .url(url)
+                        .get()
+                        .build()
+
+                    val response = client.newCall(request).execute()
+                    val responseCode = response.code
+                    val isSuccessful = response.isSuccessful
+
+                    if (isSuccessful) {
+                        ApiResponse(true, null, responseCode)
+                    } else {
+                        val errorBody = response.body?.string()
+                        ApiResponse(false, null, responseCode, errorBody)
+                    }
+                } catch (e: Exception) {
+                    ApiResponse(false, null, 0, e.message)
+                }
+            }
+        }
     }
 }

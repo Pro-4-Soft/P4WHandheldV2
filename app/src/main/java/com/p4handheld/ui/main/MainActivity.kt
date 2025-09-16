@@ -1,11 +1,14 @@
 package com.p4handheld.ui.main
 
+import android.Manifest
 import android.content.Context
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -13,14 +16,20 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.p4handheld.R
 import com.p4handheld.scanner.DWCommunicationWrapper
 import com.p4handheld.ui.compose.theme.HandheldP4WTheme
 import com.p4handheld.ui.navigation.AppNavigation
+import com.p4handheld.workers.LocationWorker
+import java.util.concurrent.TimeUnit
 
 // Main activity that handles UI initialization, observes ViewModel state, and interacts with DataWedge.
 class MainActivity : ComponentActivity() {
@@ -61,6 +70,19 @@ class MainActivity : ComponentActivity() {
 
         // Query DataWedge status to initialize the profile and settings.
         viewModel.getStatus()
+
+        //location worker
+        val workRequest = PeriodicWorkRequestBuilder<LocationWorker>(2, TimeUnit.MINUTES) // minimum is 15 min
+            .build()
+
+        WorkManager.getInstance(this)
+            .enqueueUniquePeriodicWork(
+                "LocationWorker",
+                ExistingPeriodicWorkPolicy.UPDATE,
+                workRequest
+            )
+
+
     }
 
     // Sets up LiveData observers to update the UI based on ViewModel changes.
@@ -170,6 +192,23 @@ fun MainActivityContent(
         AppNavigation(
             navController = navController,
             startDestination = startDestination
+        )
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
+            // Start location updates
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        permissionLauncher.launch(
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
         )
     }
 }

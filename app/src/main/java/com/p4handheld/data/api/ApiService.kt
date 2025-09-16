@@ -16,6 +16,7 @@ interface ApiService {
     suspend fun processAction(pageKey: String, processRequest: ProcessRequest): ApiResponse<PromptResponse>
 
     suspend fun completeAction(pageKey: String): ApiResponse<PromptResponse>
+    suspend fun updateUserLocation(lat: Double, lon: Double): ApiResponse<Unit>
 }
 
 data class ApiResponse<T>(

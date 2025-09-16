@@ -18,9 +18,17 @@ data class LoginResponse(
     val token: String? = null
 )
 
-data class MenuResponse(
+data class UserContextResponse(
     @SerializedName("Menu")
-    val menu: List<MenuItem>
+    val menu: List<MenuItem>,
+    @SerializedName("TrackGeoLocation")
+    val trackGeoLocation: Boolean,
+
+    @SerializedName("UserScanType")
+    val userScanType: String,
+
+    @SerializedName("TenantScanType")
+    val tenantScanType: String
 )
 
 data class MenuItem(

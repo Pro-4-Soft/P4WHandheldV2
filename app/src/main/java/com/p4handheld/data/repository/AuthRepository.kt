@@ -6,7 +6,7 @@ import com.p4handheld.data.api.ApiClient
 import com.p4handheld.data.models.ApiError
 import com.p4handheld.data.models.LoginRequest
 import com.p4handheld.data.models.MenuItem
-import com.p4handheld.data.models.MenuResponse
+import com.p4handheld.data.models.UserContextResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -42,7 +42,7 @@ class AuthRepository(context: Context) {
         }
     }
 
-    suspend fun getCurrentMenu(): Result<MenuResponse> {
+    suspend fun getCurrentMenu(): Result<UserContextResponse> {
         return withContext(Dispatchers.IO) {
             try {
                 val response = apiService.getCurrentMenu()
@@ -61,7 +61,7 @@ class AuthRepository(context: Context) {
         }
     }
 
-    private fun storeMenuData(menuResponse: MenuResponse) {
+    private fun storeMenuData(menuResponse: UserContextResponse) {
         val menuArray = JSONArray()
         menuResponse.menu.forEach { menuItem ->
             val menuJson = JSONObject().apply {
@@ -80,7 +80,7 @@ class AuthRepository(context: Context) {
             .apply()
     }
 
-    fun getStoredMenuData(): MenuResponse? {
+    fun getStoredMenuData(): UserContextResponse? {
         val tenant = authSharedPreferences.getString("tenant", null)
         val menuJson = authSharedPreferences.getString("menu_json", null)
 
@@ -102,7 +102,7 @@ class AuthRepository(context: Context) {
                     menuItems.add(menuItem)
                 }
 
-                MenuResponse(menuItems)
+                UserContextResponse(menuItems)
             } catch (e: Exception) {
                 null
             }

@@ -6,9 +6,9 @@ import com.google.gson.Gson
 import com.p4handheld.data.models.LoginRequest
 import com.p4handheld.data.models.LoginResponse
 import com.p4handheld.data.models.MenuItem
-import com.p4handheld.data.models.MenuResponse
 import com.p4handheld.data.models.ProcessRequest
 import com.p4handheld.data.models.PromptResponse
+import com.p4handheld.data.models.UserContextResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -92,7 +92,7 @@ object ApiClient {
             }
         }
 
-        override suspend fun getCurrentMenu(): ApiResponse<MenuResponse> {
+        override suspend fun getCurrentMenu(): ApiResponse<UserContextResponse> {
             return withContext(Dispatchers.IO) {
                 try {
                     val request = Request.Builder()
@@ -108,7 +108,7 @@ object ApiClient {
                         val responseBody = response.body?.string().orEmpty()
 
                         // Parse JSON into MenuResponse
-                        val menuResponse = Gson().fromJson(responseBody, MenuResponse::class.java)
+                        val menuResponse = Gson().fromJson(responseBody, UserContextResponse::class.java)
 
                         // Find Handheld menu item
                         val handheldItem = menuResponse.menu.firstOrNull { it.id == "Handheld" }
@@ -116,7 +116,7 @@ object ApiClient {
                         // Get its children (or empty list if not found)
                         val handheldChildren: List<MenuItem> = handheldItem?.children.orEmpty()
 
-                        val handHeldMenuItems = MenuResponse(handheldChildren)
+                        val handHeldMenuItems = UserContextResponse(handheldChildren)
                         ApiResponse(true, handHeldMenuItems, responseCode)
                     } else {
                         val errorBody = response.body?.string()

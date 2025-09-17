@@ -7,6 +7,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.p4handheld.data.repository.AuthRepository
+import com.p4handheld.firebase.FirebaseManager
 import com.p4handheld.utils.PermissionChecker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -47,6 +48,15 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                     val menuResult = authRepository.getCurrentMenu()
 
                     if (menuResult.isSuccess) {
+                        // Initialize Firebase after successful login
+                        try {
+                            val firebaseManager = FirebaseManager.getInstance(getApplication())
+                            firebaseManager.initialize()
+                        } catch (e: Exception) {
+                            // Log Firebase initialization error but don't fail login
+                            android.util.Log.e("LoginViewModel", "Firebase initialization failed", e)
+                        }
+
                         // Check if we should request location permissions based on user context
                         val shouldRequestPermissions = PermissionChecker.shouldRequestLocationPermissions(getApplication())
 

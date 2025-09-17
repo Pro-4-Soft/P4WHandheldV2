@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.p4handheld.ui.screens.ActionScreen
+import com.p4handheld.ui.screens.FirebaseMessagesScreen
 import com.p4handheld.ui.screens.LoginScreen
 import com.p4handheld.ui.screens.MenuScreen
 import com.p4handheld.ui.screens.TenantSelectScreen
@@ -47,10 +48,21 @@ fun AppNavigation(
                 onNavigateToAction = { menuItemLabel, menuItemState ->
                     navController.navigate(Screen.Action.createRoute(menuItemLabel, menuItemState))
                 },
+                onNavigateToMessages = {
+                    navController.navigate(Screen.Messages.route)
+                },
                 onNavigateToLogin = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Menu.route) { inclusive = true }
                     }
+                }
+            )
+        }
+
+        composable(Screen.Messages.route) {
+            FirebaseMessagesScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }

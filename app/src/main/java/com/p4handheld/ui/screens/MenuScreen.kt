@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -65,6 +66,7 @@ import com.p4handheld.ui.screens.viewmodels.MenuViewModel
 @Composable
 fun MenuScreen(
     onNavigateToAction: (String, String) -> Unit,
+    onNavigateToMessages: () -> Unit,
     onNavigateToLogin: () -> Unit
 ) {
     val viewModel: MenuViewModel = viewModel()
@@ -288,25 +290,42 @@ fun MenuScreenContent(
             }
         }
 
-        // Logout button at bottom
+        // Action buttons at bottom
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
             contentAlignment = Alignment.BottomEnd
         ) {
-            FloatingActionButton(
-                onClick = {
-                    logout()
-                    onNavigateToLogin()
-                },
-                containerColor = MaterialTheme.colorScheme.error
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                    contentDescription = "Logout",
-                    tint = Color.White
-                )
+                // Messages button
+                FloatingActionButton(
+                    onClick = onNavigateToMessages,
+                    containerColor = MaterialTheme.colorScheme.primary
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Message,
+                        contentDescription = "Messages",
+                        tint = Color.White
+                    )
+                }
+                
+                // Logout button
+                FloatingActionButton(
+                    onClick = {
+                        logout()
+                        onNavigateToLogin()
+                    },
+                    containerColor = MaterialTheme.colorScheme.error
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                        contentDescription = "Logout",
+                        tint = Color.White
+                    )
+                }
             }
         }
     }

@@ -1,7 +1,6 @@
-package com.p4handheld.ui.main
+package com.p4handheld.ui.screens
 
 import android.Manifest
-import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -26,9 +25,12 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.p4handheld.R
+import com.p4handheld.firebase.FirebaseManager
 import com.p4handheld.scanner.DWCommunicationWrapper
 import com.p4handheld.ui.compose.theme.HandheldP4WTheme
 import com.p4handheld.ui.navigation.AppNavigation
+import com.p4handheld.ui.navigation.Screen
+import com.p4handheld.ui.screens.viewmodels.MainViewModel
 import com.p4handheld.utils.PermissionChecker
 import com.p4handheld.workers.LocationWorker
 import java.util.concurrent.TimeUnit
@@ -77,12 +79,15 @@ class MainActivity : ComponentActivity() {
         val workRequest = PeriodicWorkRequestBuilder<LocationWorker>(2, TimeUnit.MINUTES) // minimum is 15 min
             .build()
 
-        WorkManager.getInstance(this)
+        WorkManager.Companion.getInstance(this)
             .enqueueUniquePeriodicWork(
                 "LocationWorker",
                 ExistingPeriodicWorkPolicy.UPDATE,
                 workRequest
             )
+
+        val firebaseManager = FirebaseManager.Companion.getInstance(application)
+        firebaseManager.initialize()
     }
 
     // Sets up LiveData observers to update the UI based on ViewModel changes.
@@ -146,13 +151,13 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun getStartDestination(): String {
-        val sharedPreferences = getSharedPreferences("tenant_config", Context.MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences("tenant_config", MODE_PRIVATE)
         val isConfigured = sharedPreferences.getBoolean("is_configured", false)
 
         return if (isConfigured) {
-            com.p4handheld.ui.navigation.Screen.Login.route
+            Screen.Login.route
         } else {
-            com.p4handheld.ui.navigation.Screen.TenantSelect.route
+            Screen.TenantSelect.route
         }
     }
 }
@@ -186,7 +191,7 @@ fun MainActivityContent(
     }
 
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.Companion.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
         AppNavigation(

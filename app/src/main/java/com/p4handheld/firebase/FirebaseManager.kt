@@ -51,18 +51,18 @@ class FirebaseManager private constructor(private val context: Context) {
     /**
      * Initialize Firebase messaging and get FCM token
      */
-    suspend fun initialize(): String? {
+    fun initialize(): String? {
         return try {
-            val token = FirebaseMessaging.getInstance().token.await()
+            val token = FirebaseMessaging.getInstance().token.toString()
             Log.d(TAG, "FCM Token obtained: $token")
 
             // Store token locally
             prefs.edit().putString(KEY_FCM_TOKEN, token).apply()
 
             // Send token to server if user is authenticated
-            if (authRepository.isLoggedIn()) {
-                updateTokenOnServer(token)
-            }
+//            if (authRepository.isLoggedIn()) {
+//                updateTokenOnServer(token)
+//            }
 
             token
         } catch (e: Exception) {

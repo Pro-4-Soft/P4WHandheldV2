@@ -15,7 +15,7 @@ import com.p4handheld.data.models.FirebaseMessage
 import com.p4handheld.data.models.MessagePriority
 import com.p4handheld.data.models.MessageType
 import com.p4handheld.firebase.FirebaseManager
-import com.p4handheld.ui.main.MainActivity
+import com.p4handheld.ui.screens.MainActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

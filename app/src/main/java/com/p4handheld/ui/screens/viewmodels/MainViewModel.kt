@@ -1,9 +1,8 @@
-package com.p4handheld.ui.main
+package com.p4handheld.ui.screens.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.p4handheld.data.DataWedgeConstant.DW_POLLING_DELAY
-import com.p4handheld.data.DataWedgeConstant.PROFILE_SWITCH
+import com.p4handheld.data.DataWedgeConstant
 import com.p4handheld.data.ScanStateHolder
 import com.p4handheld.scanner.ConfigurationManager
 import com.p4handheld.scanner.QueryManager
@@ -29,7 +28,7 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             while (ScanStateHolder.isDataWedgeReady.value == false) {
                 queryManager.getDataWedgeStatus() // Request DataWedge status.
-                delay(DW_POLLING_DELAY) // Delay between status checks.
+                delay(DataWedgeConstant.DW_POLLING_DELAY) // Delay between status checks.
             }
         }
     }
@@ -50,7 +49,7 @@ class MainViewModel : ViewModel() {
             configurationManager.updateProfile1() // Update profile settings.
             configurationManager.registerForNotifications(
                 arrayListOf(
-                    PROFILE_SWITCH // Notification for profile switching.
+                    DataWedgeConstant.PROFILE_SWITCH // Notification for profile switching.
                 )
             )
         }
@@ -61,7 +60,7 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             configurationManager.unregisterForNotifications(
                 arrayListOf(
-                    PROFILE_SWITCH // Notification for profile switching.
+                    DataWedgeConstant.PROFILE_SWITCH // Notification for profile switching.
                 )
             )
         }

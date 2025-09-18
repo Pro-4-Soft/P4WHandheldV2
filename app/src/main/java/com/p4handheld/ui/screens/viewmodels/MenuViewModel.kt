@@ -48,7 +48,7 @@ class MenuViewModel(application: Application) : AndroidViewModel(application) {
                     )
                 } else {
                     // If no stored data, try to fetch from API
-                    val menuResult = authRepository.getCurrentMenu()
+                    val menuResult = authRepository.getUserContext()
 
                     if (menuResult.isSuccess) {
                         val menuResponse = menuResult.getOrNull()!!

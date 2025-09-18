@@ -45,7 +45,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
                 if (loginResult.isSuccess) {
                     // After successful login, get menu data
-                    val menuResult = authRepository.getCurrentMenu()
+                    val menuResult = authRepository.getUserContext()
 
                     if (menuResult.isSuccess) {
                         // Initialize Firebase after successful login

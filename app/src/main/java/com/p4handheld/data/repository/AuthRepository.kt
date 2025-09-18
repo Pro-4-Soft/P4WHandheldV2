@@ -42,7 +42,7 @@ class AuthRepository(context: Context) {
         }
     }
 
-    suspend fun getCurrentMenu(): Result<UserContextResponse> {
+    suspend fun getUserContext(): Result<UserContextResponse> {
         return withContext(Dispatchers.IO) {
             try {
                 val response = apiService.getCurrentMenu()

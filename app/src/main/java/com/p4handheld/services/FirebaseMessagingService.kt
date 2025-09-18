@@ -42,7 +42,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
 
         // Convert RemoteMessage to FirebaseMessage
         val firebaseMessage = convertToFirebaseMessage(remoteMessage)
-        
+
         // Store message locally
         serviceScope.launch {
             try {
@@ -65,7 +65,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         Log.d(TAG, "Refreshed token: $token")
-        
+
         // Send token to server
         serviceScope.launch {
             try {
@@ -81,14 +81,13 @@ class FirebaseMessagingService : FirebaseMessagingService() {
     private fun convertToFirebaseMessage(remoteMessage: RemoteMessage): FirebaseMessage {
         val data = remoteMessage.data
         val notification = remoteMessage.notification
-        
+
         return FirebaseMessage(
             id = data["messageId"] ?: remoteMessage.messageId ?: generateMessageId(),
             title = notification?.title ?: data["title"] ?: "",
             body = notification?.body ?: data["body"] ?: "",
             data = data,
             messageType = parseMessageType(data["messageType"]),
-            groupId = data["groupId"],
             userId = data["userId"],
             timestamp = remoteMessage.sentTime.takeIf { it > 0 } ?: System.currentTimeMillis(),
             isRead = false,
@@ -116,9 +115,9 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         return when (message.messageType) {
             MessageType.ALERT -> true
             MessageType.SYSTEM -> true
-            MessageType.TASK_UPDATE -> message.priority == MessagePriority.HIGH || message.priority == MessagePriority.URGENT
-            MessageType.LOCATION_REQUEST -> true
-            MessageType.GROUP_MESSAGE -> message.priority != MessagePriority.LOW
+            MessageType.TASKS_CHANGED -> message.priority == MessagePriority.HIGH || message.priority == MessagePriority.URGENT
+            MessageType.SCREEN_REQUESTED -> true
+            MessageType.USER_CHAT_MESSAGE -> message.priority != MessagePriority.LOW
             MessageType.NOTIFICATION -> true
         }
     }
@@ -127,7 +126,6 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             putExtra("messageId", message.id)
-            putExtra("groupId", message.groupId)
         }
 
         val pendingIntent = PendingIntent.getActivity(
@@ -145,7 +143,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
 
         // Add action buttons based on message type
         when (message.messageType) {
-            MessageType.LOCATION_REQUEST -> {
+            MessageType.USER_CHAT_MESSAGE -> {
                 val shareLocationIntent = Intent(this, MainActivity::class.java).apply {
                     putExtra("action", "share_location")
                     putExtra("messageId", message.id)
@@ -160,7 +158,8 @@ class FirebaseMessagingService : FirebaseMessagingService() {
                     shareLocationPendingIntent
                 )
             }
-            MessageType.TASK_UPDATE -> {
+
+            MessageType.TASKS_CHANGED -> {
                 val viewTaskIntent = Intent(this, MainActivity::class.java).apply {
                     putExtra("action", "view_task")
                     putExtra("taskId", message.data["taskId"])
@@ -175,6 +174,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
                     viewTaskPendingIntent
                 )
             }
+
             else -> {
                 // Default action - open messages
             }
@@ -197,7 +197,6 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         val intent = Intent("com.p4handheld.FIREBASE_MESSAGE_RECEIVED").apply {
             putExtra("messageId", message.id)
             putExtra("messageType", message.messageType.name)
-            putExtra("groupId", message.groupId)
             putExtra("title", message.title)
             putExtra("body", message.body)
         }

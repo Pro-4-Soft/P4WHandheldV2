@@ -3,9 +3,11 @@ package com.p4handheld.data.api
 import android.annotation.SuppressLint
 import android.content.Context
 import com.google.gson.Gson
+import com.p4handheld.data.models.FirebaseTokenRequest
 import com.p4handheld.data.models.LoginRequest
 import com.p4handheld.data.models.LoginResponse
 import com.p4handheld.data.models.MenuItem
+import com.p4handheld.data.models.MessageResponse
 import com.p4handheld.data.models.ProcessRequest
 import com.p4handheld.data.models.PromptResponse
 import com.p4handheld.data.models.UserContextResponse
@@ -253,6 +255,10 @@ object ApiClient {
                     ApiResponse(false, null, 0, e.message)
                 }
             }
+        }
+
+        override suspend fun updateFirebaseToken(request: FirebaseTokenRequest): ApiResponse<MessageResponse> {
+            TODO("Not yet implemented")
         }
     }
 }

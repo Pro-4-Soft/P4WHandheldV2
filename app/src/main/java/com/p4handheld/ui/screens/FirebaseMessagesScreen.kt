@@ -1,7 +1,7 @@
 package com.p4handheld.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,7 +15,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -39,33 +38,27 @@ fun FirebaseMessagesScreen(
     val viewModel: FirebaseMessagesViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-    
+
     LaunchedEffect(Unit) {
         viewModel.initialize(context)
     }
-    
+
     FirebaseMessagesContent(
         uiState = uiState,
         onNavigateBack = onNavigateBack,
-        onGroupSelected = { groupId ->
-            if (groupId == null) {
-                viewModel.loadAllMessages()
-            } else {
-                viewModel.loadGroupMessages(groupId)
-            }
+        onEventSelected = { eventType ->
+
         },
-        onSubscribeToGroup = { groupId ->
-            viewModel.subscribeToGroup(groupId)
+        onSubscribeToEvent = { eventType ->
+            viewModel.subscribeToEvent(eventType)
         },
-        onUnsubscribeFromGroup = { groupId ->
-            viewModel.unsubscribeFromGroup(groupId)
+        onUnsubscribeFromEvent = { eventType ->
+            viewModel.unsubscribeFromEvent(eventType)
         },
         onMessageClick = { messageId ->
-            viewModel.markMessageAsRead(messageId)
         },
         onRefresh = {
-            viewModel.refreshMessages()
-            viewModel.loadGroups()
+            viewModel.loadEventTypes()
         },
         onClearError = {
             viewModel.clearError()
@@ -78,9 +71,9 @@ fun FirebaseMessagesScreen(
 fun FirebaseMessagesContent(
     uiState: FirebaseMessagesUiState,
     onNavigateBack: () -> Unit = {},
-    onGroupSelected: (String?) -> Unit = {},
-    onSubscribeToGroup: (String) -> Unit = {},
-    onUnsubscribeFromGroup: (String) -> Unit = {},
+    onEventSelected: (String?) -> Unit = {},
+    onSubscribeToEvent: (String) -> Unit = {},
+    onUnsubscribeFromEvent: (String) -> Unit = {},
     onMessageClick: (String) -> Unit = {},
     onRefresh: () -> Unit = {},
     onClearError: () -> Unit = {}
@@ -94,11 +87,7 @@ fun FirebaseMessagesContent(
         TopAppBar(
             title = {
                 Text(
-                    text = if (uiState.selectedGroupId != null) {
-                        uiState.groups.find { it.groupId == uiState.selectedGroupId }?.groupName ?: "Group Messages"
-                    } else {
-                        "All Messages"
-                    }
+                    text = "All Messages"
                 )
             },
             navigationIcon = {
@@ -119,7 +108,7 @@ fun FirebaseMessagesContent(
                 }
             }
         )
-        
+
         // Error message
         uiState.errorMessage?.let { errorMessage ->
             Card(
@@ -149,18 +138,18 @@ fun FirebaseMessagesContent(
                 }
             }
         }
-        
-        // Groups filter
-        if (uiState.groups.isNotEmpty()) {
-            GroupsFilterRow(
-                groups = uiState.groups,
-                selectedGroupId = uiState.selectedGroupId,
-                onGroupSelected = onGroupSelected,
-                onSubscribeToGroup = onSubscribeToGroup,
-                onUnsubscribeFromGroup = onUnsubscribeFromGroup
+
+        // Event types filter
+        if (uiState.eventTypes.isNotEmpty()) {
+            EventTypesFilterRow(
+                eventTypes = uiState.eventTypes,
+                selectedEventType = uiState.selectedEventType,
+                onEventSelected = onEventSelected,
+                onSubscribeToEvent = onSubscribeToEvent,
+                onUnsubscribeFromEvent = onUnsubscribeFromEvent
             )
         }
-        
+
         // Messages list
         if (uiState.messages.isEmpty() && !uiState.isLoading) {
             EmptyMessagesView()
@@ -182,12 +171,12 @@ fun FirebaseMessagesContent(
 }
 
 @Composable
-fun GroupsFilterRow(
-    groups: List<FirebaseGroup>,
-    selectedGroupId: String?,
-    onGroupSelected: (String?) -> Unit,
-    onSubscribeToGroup: (String) -> Unit,
-    onUnsubscribeFromGroup: (String) -> Unit
+fun EventTypesFilterRow(
+    eventTypes: List<FirebaseEventType>,
+    selectedEventType: String?,
+    onEventSelected: (String?) -> Unit,
+    onSubscribeToEvent: (String) -> Unit,
+    onUnsubscribeFromEvent: (String) -> Unit
 ) {
     LazyRow(
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -196,47 +185,47 @@ fun GroupsFilterRow(
         // All messages chip
         item {
             FilterChip(
-                onClick = { onGroupSelected(null) },
+                onClick = { onEventSelected(null) },
                 label = { Text("All Messages") },
-                selected = selectedGroupId == null
+                selected = selectedEventType == null
             )
         }
-        
-        // Group chips
-        items(groups) { group ->
-            GroupChip(
-                group = group,
-                isSelected = selectedGroupId == group.groupId,
-                onSelected = { onGroupSelected(group.groupId) },
-                onSubscribe = { onSubscribeToGroup(group.groupId) },
-                onUnsubscribe = { onUnsubscribeFromGroup(group.groupId) }
+
+        // Event type chips
+        items(eventTypes) { eventType ->
+            EventTypeChip(
+                eventType = eventType,
+                isSelected = selectedEventType == eventType.eventType,
+                onSelected = { onEventSelected(eventType.eventType) },
+                onSubscribe = { onSubscribeToEvent(eventType.eventType) },
+                onUnsubscribe = { onUnsubscribeFromEvent(eventType.eventType) }
             )
         }
     }
 }
 
 @Composable
-fun GroupChip(
-    group: FirebaseGroup,
+fun EventTypeChip(
+    eventType: FirebaseEventType,
     isSelected: Boolean,
     onSelected: () -> Unit,
     onSubscribe: () -> Unit,
     onUnsubscribe: () -> Unit
 ) {
     var showSubscriptionDialog by remember { mutableStateOf(false) }
-    
+
     FilterChip(
         onClick = {
-            if (group.isSubscribed) {
+            if (eventType.isSubscribed) {
                 onSelected()
             } else {
                 showSubscriptionDialog = true
             }
         },
-        label = { 
+        label = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(group.groupName)
-                if (!group.isSubscribed) {
+                Text(eventType.eventName)
+                if (!eventType.isSubscribed) {
                     Icon(
                         Icons.Default.Add,
                         contentDescription = "Subscribe",
@@ -246,14 +235,14 @@ fun GroupChip(
             }
         },
         selected = isSelected,
-        enabled = group.isSubscribed
+        enabled = eventType.isSubscribed
     )
-    
+
     if (showSubscriptionDialog) {
         AlertDialog(
             onDismissRequest = { showSubscriptionDialog = false },
-            title = { Text("Subscribe to ${group.groupName}?") },
-            text = { Text(group.description ?: "Subscribe to receive messages from this group.") },
+            title = { Text("Subscribe to ${eventType.eventName}?") },
+            text = { Text(eventType.description ?: "Subscribe to receive notifications for this event type.") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -315,9 +304,9 @@ fun MessageCard(
                             )
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(4.dp))
-                    
+
                     Text(
                         text = message.body,
                         fontSize = 14.sp,
@@ -326,7 +315,7 @@ fun MessageCard(
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                
+
                 Column(horizontalAlignment = Alignment.End) {
                     MessagePriorityBadge(priority = message.priority)
                     Spacer(modifier = Modifier.height(4.dp))
@@ -337,12 +326,12 @@ fun MessageCard(
                     )
                 }
             }
-            
-            // Group info
-            message.groupId?.let { groupId ->
+
+            // Event type info
+            message.eventType?.let { eventType ->
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Group: $groupId",
+                    text = "Event: $eventType",
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
@@ -360,14 +349,14 @@ fun MessageCard(
 @Composable
 fun MessageTypeIcon(messageType: MessageType) {
     val (icon, color) = when (messageType) {
-        MessageType.NOTIFICATION -> Icons.Default.Notifications to Color(0xFF3B82F6)
-        MessageType.ALERT -> Icons.Default.Warning to Color(0xFFEF4444)
+        MessageType.USER_CHAT_MESSAGE -> Icons.Default.Message to Color(0xFF8B5CF6)
+        MessageType.TASKS_CHANGED -> Icons.Default.Assignment to Color(0xFF10B981)
+        MessageType.SCREEN_REQUESTED -> Icons.Default.ScreenShare to Color(0xFFF59E0B)
         MessageType.SYSTEM -> Icons.Default.Settings to Color(0xFF6B7280)
-        MessageType.TASK_UPDATE -> Icons.Default.Assignment to Color(0xFF10B981)
-        MessageType.LOCATION_REQUEST -> Icons.Default.LocationOn to Color(0xFFF59E0B)
-        MessageType.GROUP_MESSAGE -> Icons.Default.Group to Color(0xFF8B5CF6)
+        MessageType.ALERT -> Icons.Default.Warning to Color(0xFFEF4444)
+        MessageType.NOTIFICATION -> Icons.Default.Notifications to Color(0xFF3B82F6)
     }
-    
+
     Icon(
         imageVector = icon,
         contentDescription = messageType.name,
@@ -384,7 +373,7 @@ fun MessagePriorityBadge(priority: MessagePriority) {
         MessagePriority.HIGH -> "High" to Color(0xFFF59E0B)
         MessagePriority.URGENT -> "Urgent" to Color(0xFFEF4444)
     }
-    
+
     Text(
         text = text,
         fontSize = 10.sp,
@@ -430,7 +419,7 @@ fun EmptyMessagesView() {
 private fun formatTimestamp(timestamp: Long): String {
     val now = System.currentTimeMillis()
     val diff = now - timestamp
-    
+
     return when {
         diff < 60_000 -> "Just now"
         diff < 3600_000 -> "${diff / 60_000}m ago"
@@ -458,23 +447,17 @@ fun FirebaseMessagesScreenPreview() {
                 id = "2",
                 title = "Location Request",
                 body = "Please share your current location for task assignment.",
-                messageType = MessageType.LOCATION_REQUEST,
                 priority = MessagePriority.HIGH,
                 timestamp = System.currentTimeMillis() - 600000,
                 isRead = true,
-                groupId = "warehouse_team"
             )
         )
-        
-        val sampleGroups = listOf(
-            FirebaseGroup("warehouse_team", "Warehouse Team", "Messages for warehouse operations", true),
-            FirebaseGroup("management", "Management", "Management announcements", false)
-        )
-        
+
+
+
         FirebaseMessagesContent(
             uiState = FirebaseMessagesUiState(
                 messages = sampleMessages,
-                groups = sampleGroups,
                 isLoading = false
             )
         )

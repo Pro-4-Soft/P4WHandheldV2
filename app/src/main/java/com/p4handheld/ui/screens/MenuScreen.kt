@@ -302,7 +302,7 @@ fun MenuScreenContent(
             ) {
                 // Messages button
                 FloatingActionButton(
-                    onClick = onNavigateToMessages,
+                    onClick = { },
                     containerColor = MaterialTheme.colorScheme.primary
                 ) {
                     Icon(
@@ -311,7 +311,7 @@ fun MenuScreenContent(
                         tint = Color.White
                     )
                 }
-                
+
                 // Logout button
                 FloatingActionButton(
                     onClick = {

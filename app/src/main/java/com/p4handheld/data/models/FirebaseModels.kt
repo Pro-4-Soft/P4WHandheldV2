@@ -13,7 +13,7 @@ data class FirebaseMessage(
     val body: String = "",
     val data: Map<String, String> = emptyMap(),
     val messageType: MessageType = MessageType.NOTIFICATION,
-    val groupId: String? = null,
+    val eventType: String? = null,
     val userId: String? = null,
     val timestamp: Long = System.currentTimeMillis(),
     val isRead: Boolean = false,
@@ -21,23 +21,23 @@ data class FirebaseMessage(
 )
 
 enum class MessageType {
-    @SerializedName("notification")
-    NOTIFICATION,
+    @SerializedName("user_chat_message")
+    USER_CHAT_MESSAGE,
     
-    @SerializedName("alert")
-    ALERT,
+    @SerializedName("tasks_changed")
+    TASKS_CHANGED,
+    
+    @SerializedName("screen_requested")
+    SCREEN_REQUESTED,
     
     @SerializedName("system")
     SYSTEM,
     
-    @SerializedName("task_update")
-    TASK_UPDATE,
+    @SerializedName("alert")
+    ALERT,
     
-    @SerializedName("location_request")
-    LOCATION_REQUEST,
-    
-    @SerializedName("group_message")
-    GROUP_MESSAGE
+    @SerializedName("notification")
+    NOTIFICATION
 }
 
 enum class MessagePriority {
@@ -54,9 +54,9 @@ enum class MessagePriority {
     URGENT
 }
 
-data class FirebaseGroup(
-    val groupId: String,
-    val groupName: String,
+data class FirebaseEventType(
+    val eventType: String,
+    val eventName: String,
     val description: String? = null,
     val isSubscribed: Boolean = false
 )
@@ -65,12 +65,12 @@ data class FirebaseTokenRequest(
     val token: String,
     val userId: String,
     val deviceId: String,
-    val groups: List<String> = emptyList()
+    val eventTypes: List<String> = emptyList()
 )
 
-data class FirebaseSubscriptionRequest(
+data class FirebaseEventSubscriptionRequest(
     val token: String,
-    val groupId: String,
+    val eventType: String,
     val subscribe: Boolean = true
 )
 
@@ -80,14 +80,14 @@ data class MessageResponse(
     val messageId: String? = null
 )
 
-data class GroupMessagesRequest(
-    val groupId: String,
+data class EventMessagesRequest(
+    val eventType: String? = null,
     val limit: Int = 50,
     val offset: Int = 0,
     val since: Long? = null
 )
 
-data class GroupMessagesResponse(
+data class EventMessagesResponse(
     val messages: List<FirebaseMessage>,
     val hasMore: Boolean = false,
     val totalCount: Int = 0
@@ -102,7 +102,7 @@ data class StoredFirebaseMessage(
     val body: String,
     val data: String, // JSON string of data map
     val messageType: String,
-    val groupId: String?,
+    val eventType: String?,
     val userId: String?,
     val timestamp: Long,
     val isRead: Boolean,
@@ -121,7 +121,7 @@ data class StoredFirebaseMessage(
             body = body,
             data = dataMap,
             messageType = MessageType.valueOf(messageType.uppercase()),
-            groupId = groupId,
+            eventType = eventType,
             userId = userId,
             timestamp = timestamp,
             isRead = isRead,
@@ -137,7 +137,7 @@ fun FirebaseMessage.toStoredMessage(): StoredFirebaseMessage {
         body = body,
         data = com.google.gson.Gson().toJson(data),
         messageType = messageType.name,
-        groupId = groupId,
+        eventType = eventType,
         userId = userId,
         timestamp = timestamp,
         isRead = isRead,

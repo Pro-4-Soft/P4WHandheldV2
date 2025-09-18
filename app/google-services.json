@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "426010502455",
+    "project_id": "p4handheld",
+    "storage_bucket": "p4handheld.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:426010502455:android:a7452ae53fdcf6f6f4e6b2",
+        "android_client_info": {
+          "package_name": "com.p4handheld"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBFY8Rb5G86bd1M-jCp60LzuhEQClx9Pb0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

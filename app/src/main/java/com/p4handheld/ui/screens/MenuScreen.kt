@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -72,13 +73,11 @@ fun MenuScreen(
     val viewModel: MenuViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
 
-    // State for hierarchical navigation
     var currentMenuItems by remember { mutableStateOf<List<MenuItem>>(emptyList()) }
     var menuStack by remember { mutableStateOf<List<List<MenuItem>>>(emptyList()) }
     var breadcrumbStack by remember { mutableStateOf<List<String>>(emptyList()) }
     var selectedMenuItem by remember { mutableStateOf<MenuItem?>(null) }
 
-    // Handle system back button
     BackHandler(enabled = menuStack.isNotEmpty()) {
         viewModel.navigateBack()
         if (menuStack.isNotEmpty()) {
@@ -89,10 +88,18 @@ fun MenuScreen(
         }
     }
 
-    // Initialize menu items when loaded
     LaunchedEffect(uiState.menuItems) {
         if (uiState.menuItems.isNotEmpty() && currentMenuItems.isEmpty()) {
             currentMenuItems = uiState.menuItems
+        }
+        if (uiState.httpStatusCode == 401) {
+            onNavigateToLogin()
+        }
+    }
+
+    LaunchedEffect(viewModel.unauthorizedEvent) {
+        viewModel.unauthorizedEvent.collect {
+            onNavigateToLogin()
         }
     }
 
@@ -136,6 +143,7 @@ fun MenuScreenContent(
             .fillMaxSize()
             .background(Color(0xFFF1F5F9))
             .navigationBarsPadding()
+            .statusBarsPadding()
     )
     {
         // Header with back button and breadcrumb
@@ -208,7 +216,8 @@ fun MenuScreenContent(
 
                 // Refresh button
                 IconButton(
-                    onClick = { refreshMenu() }
+                    onClick = { refreshMenu() },
+                    enabled = !uiState.isLoading
                 )
                 {
                     if (uiState.isLoading) {
@@ -460,21 +469,18 @@ private val sampleMenuItems = listOf(
             )
         ), state = null
     ),
-    MenuItem(label = "Notifications", icon = "fa-bell", children = emptyList(), state = "active"), // ✅ valid
-    MenuItem(label = "Calendar", icon = "fa-clipboard-list", children = emptyList(), state = "inactive"), // fixed
-    MenuItem(label = "Messages", icon = "fa-comments", children = emptyList(), state = "active"), // fixed
-    MenuItem(label = "Search", icon = "fa-barcode", children = emptyList(), state = "active"), // fixed
-    MenuItem(label = "Profile", icon = "fa-user", children = emptyList(), state = "active") // fixed
+    MenuItem(label = "Notifications", icon = "fa-bell", children = emptyList(), state = "active"),
+    MenuItem(label = "Calendar", icon = "fa-clipboard-list", children = emptyList(), state = "inactive"),
+    MenuItem(label = "Messages", icon = "fa-comments", children = emptyList(), state = "active"),
+    MenuItem(label = "Search", icon = "fa-barcode", children = emptyList(), state = "active"),
+    MenuItem(label = "Profile", icon = "fa-user", children = emptyList(), state = "active")
 )
 
 private val sampleUiState = MenuUiState(
     menuItems = sampleMenuItems,
-    isLoading = false,
-    errorMessage = null,
-    tenant = "Sample Tenant"
+    tenant = "Sample Tenant",
 )
 
-// Individual MenuTileCard Previews
 @Preview(name = "Menu Tile - With Children")
 @Composable
 fun MenuTileCardWithChildrenPreview() {
@@ -498,7 +504,6 @@ fun MenuTileCardWithChildrenPreview() {
     }
 }
 
-// MenuScreen Content Preview (without ViewModel)
 @Preview(name = "Menu Screen Content", showBackground = true)
 @Composable
 fun MenuScreenContentPreview() {
@@ -516,7 +521,6 @@ fun MenuScreenContentPreview() {
     }
 }
 
-// MenuScreen Content with Breadcrumbs Preview
 @Preview(name = "Menu Screen - With Breadcrumbs", showBackground = true)
 @Composable
 fun MenuScreenContentWithBreadcrumbsPreview() {
@@ -535,7 +539,6 @@ fun MenuScreenContentWithBreadcrumbsPreview() {
 }
 
 
-// Error State Preview
 @Preview(name = "Menu Screen - Error", showBackground = true)
 @Composable
 fun MenuScreenContentErrorPreview() {
@@ -543,7 +546,6 @@ fun MenuScreenContentErrorPreview() {
         MenuScreenContent(
             uiState = sampleUiState.copy(
                 errorMessage = "Failed to load menu items. Please check your connection and try again.",
-                menuItems = emptyList()
             ),
             currentMenuItems = emptyList(),
             selectedMenuItem = null,
@@ -556,7 +558,6 @@ fun MenuScreenContentErrorPreview() {
     }
 }
 
-// Grid of Menu Tiles Preview
 @Preview(name = "Menu Tiles Grid", showBackground = true)
 @Composable
 fun MenuTilesGridPreview() {

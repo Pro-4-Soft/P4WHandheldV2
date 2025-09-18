@@ -153,11 +153,16 @@ class MainActivity : ComponentActivity() {
     private fun getStartDestination(): String {
         val sharedPreferences = getSharedPreferences("tenant_config", MODE_PRIVATE)
         val isConfigured = sharedPreferences.getBoolean("is_configured", false)
+        val authPreferences = getSharedPreferences("auth_prefs", MODE_PRIVATE)
 
-        return if (isConfigured) {
-            Screen.Login.route
-        } else {
-            Screen.TenantSelect.route
+        // Check if user has valid token (already logged in)
+        val authRepository = com.p4handheld.data.repository.AuthRepository(this)
+        val hasValidToken = authRepository.hasValidToken()
+
+        return when {
+            !isConfigured -> Screen.TenantSelect.route
+            hasValidToken -> Screen.Menu.route
+            else -> Screen.Login.route
         }
     }
 }

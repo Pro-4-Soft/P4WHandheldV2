@@ -42,8 +42,11 @@ object ApiClient {
             .writeTimeout(30, TimeUnit.SECONDS)
             .addInterceptor { chain ->
                 val requestBuilder = chain.request().newBuilder()
+                val authPreferences = context?.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
 
-                authToken?.let { token ->
+                val token = authPreferences?.getString("token", null) ?: authToken
+
+                if (token != null) {
                     requestBuilder.addHeader("Authenticationtoken", token)
                 }
 
@@ -53,6 +56,7 @@ object ApiClient {
     }
 
     val apiService: ApiService = object : ApiService {
+
         override suspend fun login(
             source: String,
             loginRequest: LoginRequest
@@ -110,13 +114,8 @@ object ApiClient {
                     if (isSuccessful) {
                         val responseBody = response.body?.string().orEmpty()
 
-                        // Parse JSON into MenuResponse
                         val userContextResponse = Gson().fromJson(responseBody, UserContextResponse::class.java)
-
-                        // Find Handheld menu item
                         val handheldItem = userContextResponse.menu.firstOrNull { it.id == "Handheld" }
-
-                        // Get its children (or empty list if not found)
                         val handheldChildren: List<MenuItem> = handheldItem?.children.orEmpty()
 
                         val handHeldMenuItems = UserContextResponse(

@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -99,7 +100,6 @@ fun ActionScreen(
     // Observe scan data from DataWedge
     val scanViewState by ScanStateHolder.scanViewStatus.observeAsState()
 
-    // Handle system back button
     BackHandler {
         onNavigateBack()
     }
@@ -198,7 +198,6 @@ fun ActionScreen(
         }
     }
 
-    // now pass it to wrapper
     ActionScreenWrapper(
         menuItemLabel = menuItemLabel,
         menuItemState = menuItemState,
@@ -220,6 +219,8 @@ fun ActionScreenWrapper(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF1F5F9))
+            .statusBarsPadding()
+            .navigationBarsPadding()
     ) {
         // Header
         Surface(
@@ -427,11 +428,11 @@ fun MessageCard(
         border = BorderStroke(
             width = 1.dp,
             color = when (message.severity) {
-                "Info" -> Color(0xFFBBDEFB)   // darker than E3F2FD
-                "Warn" -> Color(0xFFFFE0B2)   // darker than FFF3E0
-                "Error" -> Color(0xFFFFCDD2)   // darker than FFEBEE
-                "Success" -> Color(0xFFC8E6C9) // darker than E8F5E8
-                else -> Color(0xFFE0E0E0)      // darker than F5F5F5
+                "Info" -> Color(0xFFBBDEFB)
+                "Warn" -> Color(0xFFFFE0B2)
+                "Error" -> Color(0xFFFFCDD2)
+                "Success" -> Color(0xFFC8E6C9)
+                else -> Color(0xFFE0E0E0)
             }
         )
     ) {

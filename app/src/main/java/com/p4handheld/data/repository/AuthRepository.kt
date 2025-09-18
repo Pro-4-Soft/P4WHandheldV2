@@ -3,6 +3,7 @@ package com.p4handheld.data.repository
 import android.content.Context
 import android.content.SharedPreferences
 import com.p4handheld.data.api.ApiClient
+import com.p4handheld.data.api.ApiService
 import com.p4handheld.data.models.ApiError
 import com.p4handheld.data.models.LoginRequest
 import com.p4handheld.data.models.MenuItem
@@ -20,19 +21,21 @@ class AuthRepository(context: Context) {
     private val firebaseSharedPreferences: SharedPreferences =
         context.getSharedPreferences(FIREBASE_PREFS_NAME, Context.MODE_PRIVATE)
 
-    private val apiService = ApiClient.apiService
+    private val apiService: ApiService
+
+    init {
+        ApiClient.initialize(context.applicationContext)
+        apiService = ApiClient.apiService
+    }
 
     suspend fun login(username: String, password: String): Result<Boolean> {
         return withContext(Dispatchers.IO) {
             try {
-                // Get FCM token from SharedPreferences
                 val fcmToken = firebaseSharedPreferences.getString(FIREBASE_KEY_FCM_TOKEN, null)
-
                 val loginRequest = LoginRequest(username, password, fcmToken)
                 val response = apiService.login(loginRequest = loginRequest)
 
                 if (response.isSuccessful) {
-                    // Store login success flag
                     authSharedPreferences
                         .edit()
                         .putBoolean("is_logged_in", true)
@@ -56,7 +59,6 @@ class AuthRepository(context: Context) {
 
                 if (response.isSuccessful && response.body != null) {
                     val menuResponse = response.body
-                    // Store menu data
                     storeMenuData(menuResponse)
                     Result.success(menuResponse)
                 } else {
@@ -107,7 +109,7 @@ class AuthRepository(context: Context) {
                         state = if (menuObj.isNull("State")) null else menuObj.getString("State"),
                         stateParams = if (menuObj.isNull("StateParams")) null else menuObj.get("StateParams"),
                         icon = if (menuObj.isNull("Icon")) null else menuObj.getString("Icon"),
-                        children = emptyList() // Simplified for now
+                        children = emptyList()
                     )
                     menuItems.add(menuItem)
                 }
@@ -132,6 +134,16 @@ class AuthRepository(context: Context) {
 
     fun isLoggedIn(): Boolean {
         return authSharedPreferences.getBoolean("is_logged_in", false)
+    }
+
+    fun hasValidToken(): Boolean {
+        val token = authSharedPreferences.getString("token", null)
+        val isLoggedIn = authSharedPreferences.getBoolean("is_logged_in", false)
+        return !token.isNullOrEmpty() && isLoggedIn
+    }
+
+    fun getStoredToken(): String? {
+        return authSharedPreferences.getString("token", null)
     }
 
     fun logout() {

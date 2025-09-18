@@ -38,7 +38,6 @@ class TenantViewModel(application: Application) : AndroidViewModel(application) 
             )
 
             try {
-                // Validate inputs
                 if (tenantName.isBlank()) {
                     throw IllegalArgumentException("Tenant name cannot be empty")
                 }
@@ -47,7 +46,6 @@ class TenantViewModel(application: Application) : AndroidViewModel(application) 
                     throw IllegalArgumentException("Base URL cannot be empty")
                 }
 
-                // Validate URL format
                 val normalizedUrl =
                     if (!baseUrl.startsWith("http://") && !baseUrl.startsWith("https://")) {
                         "https://$baseUrl"
@@ -61,7 +59,6 @@ class TenantViewModel(application: Application) : AndroidViewModel(application) 
                     throw IllegalArgumentException("Invalid URL format")
                 }
 
-                // Save to SharedPreferences
                 with(sharedPreferences.edit()) {
                     putString("tenant_name", tenantName)
                     putString("base_url", normalizedUrl)

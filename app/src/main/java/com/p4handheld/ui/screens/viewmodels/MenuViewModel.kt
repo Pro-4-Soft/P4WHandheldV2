@@ -3,8 +3,10 @@ package com.p4handheld.ui.screens.viewmodels
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.p4handheld.data.models.ApiError
 import com.p4handheld.data.models.MenuItem
 import com.p4handheld.data.repository.AuthRepository
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,12 +20,13 @@ data class MenuUiState(
     val breadcrumbStack: List<String> = emptyList(),
     val tenant: String = "",
     val errorMessage: String? = null,
-    val selectedMenuItem: MenuItem? = null
+    val selectedMenuItem: MenuItem? = null,
+    val httpStatusCode: Int? = null
 )
 
 class MenuViewModel(application: Application) : AndroidViewModel(application) {
     private val authRepository = AuthRepository(application)
-
+    val unauthorizedEvent = MutableSharedFlow<Unit>()
     private val _uiState = MutableStateFlow(MenuUiState())
     val uiState: StateFlow<MenuUiState> = _uiState.asStateFlow()
 
@@ -41,10 +44,8 @@ class MenuViewModel(application: Application) : AndroidViewModel(application) {
 
                 if (storedMenu != null) {
                     _uiState.value = _uiState.value.copy(
-                        isLoading = false,
                         menuItems = storedMenu.menu,
                         currentMenuItems = storedMenu.menu,
-                        errorMessage = null
                     )
                 } else {
                     // If no stored data, try to fetch from API
@@ -53,22 +54,31 @@ class MenuViewModel(application: Application) : AndroidViewModel(application) {
                     if (menuResult.isSuccess) {
                         val menuResponse = menuResult.getOrNull()!!
                         _uiState.value = _uiState.value.copy(
-                            isLoading = false,
                             menuItems = menuResponse.menu,
                             currentMenuItems = menuResponse.menu,
-                            errorMessage = null
+                            isLoading = false
                         )
                     } else {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            errorMessage = "Failed to load menu: ${menuResult.exceptionOrNull()?.message}"
-                        )
+                        val exception = menuResult.exceptionOrNull()
+                        if (exception is ApiError && exception.code == 401) {
+                            _uiState.value = _uiState.value.copy(
+                                isLoading = false,
+                                errorMessage = "Failed to load menu: ${menuResult.exceptionOrNull()?.message}",
+                                httpStatusCode = exception.code
+                            )
+                            unauthorizedEvent.emit(Unit)
+                        } else {
+                            _uiState.value = _uiState.value.copy(
+                                isLoading = false,
+                                errorMessage = "Failed to load menu: ${menuResult.exceptionOrNull()?.message}",
+                            )
+                        }
                     }
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    errorMessage = "Unexpected error: ${e.message}"
+                    errorMessage = "Unexpected error: ${e.message}",
+                    isLoading = false
                 )
             }
         }
@@ -89,12 +99,12 @@ class MenuViewModel(application: Application) : AndroidViewModel(application) {
             _uiState.value = currentState.copy(
                 currentMenuItems = menuItem.children,
                 menuStack = currentState.menuStack + listOf(currentState.currentMenuItems),
-                breadcrumbStack = currentState.breadcrumbStack + listOf(menuItem.label)
+                breadcrumbStack = currentState.breadcrumbStack + listOf(menuItem.label),
             )
         } else {
             // Set selected menu item for action navigation
             _uiState.value = currentState.copy(
-                selectedMenuItem = menuItem
+                selectedMenuItem = menuItem,
             )
         }
     }
@@ -106,7 +116,6 @@ class MenuViewModel(application: Application) : AndroidViewModel(application) {
                 currentMenuItems = currentState.menuStack.last(),
                 menuStack = currentState.menuStack.dropLast(1),
                 breadcrumbStack = currentState.breadcrumbStack.dropLast(1),
-                selectedMenuItem = null
             )
         }
     }
@@ -115,9 +124,6 @@ class MenuViewModel(application: Application) : AndroidViewModel(application) {
         val currentState = _uiState.value
         _uiState.value = currentState.copy(
             currentMenuItems = currentState.menuItems,
-            menuStack = emptyList(),
-            breadcrumbStack = emptyList(),
-            selectedMenuItem = null
         )
     }
 }

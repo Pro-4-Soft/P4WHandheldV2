@@ -14,7 +14,6 @@ import com.p4handheld.R
 import com.p4handheld.data.models.FirebaseMessage
 import com.p4handheld.data.models.MessagePriority
 import com.p4handheld.data.models.MessageType
-import com.p4handheld.firebase.FirebaseManager
 import com.p4handheld.ui.screens.MainActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -46,8 +45,8 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         // Store message locally
         serviceScope.launch {
             try {
-                FirebaseManager.getInstance(this@FirebaseMessagingService)
-                    .storeMessage(firebaseMessage)
+//                FirebaseManager.getInstance(this@FirebaseMessagingService)
+//                    .storeMessage(firebaseMessage)
                 Log.d(TAG, "Message stored locally: ${firebaseMessage.id}")
             } catch (e: Exception) {
                 Log.e(TAG, "Error storing message locally", e)
@@ -63,21 +62,6 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         broadcastMessage(firebaseMessage)
     }
 
-    override fun onNewToken(token: String) {
-        Log.d(TAG, "Refreshed token: $token")
-
-        // Send token to server
-        serviceScope.launch {
-            try {
-                FirebaseManager.getInstance(this@FirebaseMessagingService)
-                    .updateTokenOnServer(token)
-                Log.d(TAG, "Token sent to server successfully")
-            } catch (e: Exception) {
-                Log.e(TAG, "Error sending token to server", e)
-            }
-        }
-    }
-
     private fun convertToFirebaseMessage(remoteMessage: RemoteMessage): FirebaseMessage {
         val data = remoteMessage.data
         val notification = remoteMessage.notification
@@ -91,7 +75,6 @@ class FirebaseMessagingService : FirebaseMessagingService() {
             userId = data["userId"],
             timestamp = remoteMessage.sentTime.takeIf { it > 0 } ?: System.currentTimeMillis(),
             isRead = false,
-            priority = parseMessagePriority(data["priority"])
         )
     }
 
@@ -100,14 +83,6 @@ class FirebaseMessagingService : FirebaseMessagingService() {
             MessageType.valueOf(type?.uppercase() ?: "NOTIFICATION")
         } catch (e: IllegalArgumentException) {
             MessageType.NOTIFICATION
-        }
-    }
-
-    private fun parseMessagePriority(priority: String?): MessagePriority {
-        return try {
-            MessagePriority.valueOf(priority?.uppercase() ?: "NORMAL")
-        } catch (e: IllegalArgumentException) {
-            MessagePriority.NORMAL
         }
     }
 
@@ -139,7 +114,6 @@ class FirebaseMessagingService : FirebaseMessagingService() {
             .setContentText(message.body)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
-            .setPriority(getNotificationPriority(message.priority))
 
         // Add action buttons based on message type
         when (message.messageType) {
@@ -184,14 +158,6 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         notificationManager.notify(message.id.hashCode(), notificationBuilder.build())
     }
 
-    private fun getNotificationPriority(priority: MessagePriority): Int {
-        return when (priority) {
-            MessagePriority.LOW -> NotificationCompat.PRIORITY_LOW
-            MessagePriority.NORMAL -> NotificationCompat.PRIORITY_DEFAULT
-            MessagePriority.HIGH -> NotificationCompat.PRIORITY_HIGH
-            MessagePriority.URGENT -> NotificationCompat.PRIORITY_MAX
-        }
-    }
 
     private fun broadcastMessage(message: FirebaseMessage) {
         val intent = Intent("com.p4handheld.FIREBASE_MESSAGE_RECEIVED").apply {

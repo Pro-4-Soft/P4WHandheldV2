@@ -6,7 +6,9 @@ data class LoginRequest(
     @SerializedName("Username")
     val username: String,
     @SerializedName("Password")
-    val password: String
+    val password: String,
+    @SerializedName("HandheldNotificationToken")
+    val handheldNotificationToken: String? = null
 )
 
 data class LoginResponse(

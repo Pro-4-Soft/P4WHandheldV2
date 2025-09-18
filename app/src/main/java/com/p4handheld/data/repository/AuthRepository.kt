@@ -15,13 +15,18 @@ import org.json.JSONObject
 class AuthRepository(context: Context) {
     private val authSharedPreferences: SharedPreferences =
         context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+    private val firebaseSharedPreferences: SharedPreferences =
+        context.getSharedPreferences("firebase_prefs", Context.MODE_PRIVATE)
 
     private val apiService = ApiClient.apiService
 
     suspend fun login(username: String, password: String): Result<Boolean> {
         return withContext(Dispatchers.IO) {
             try {
-                val loginRequest = LoginRequest(username, password)
+                // Get FCM token from SharedPreferences
+                val fcmToken = firebaseSharedPreferences.getString("fcm_token", null)
+                
+                val loginRequest = LoginRequest(username, password, fcmToken)
                 val response = apiService.login(loginRequest = loginRequest)
 
                 if (response.isSuccessful) {

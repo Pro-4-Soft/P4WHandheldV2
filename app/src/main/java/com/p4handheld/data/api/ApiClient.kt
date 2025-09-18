@@ -62,6 +62,7 @@ object ApiClient {
                     val jsonBody = JSONObject().apply {
                         put("Username", loginRequest.username)
                         put("Password", loginRequest.password)
+                        put("HandheldNotificationToken", loginRequest.handheldNotificationToken)
                     }.toString()
 
                     val requestBody = jsonBody.toRequestBody("application/json".toMediaType())

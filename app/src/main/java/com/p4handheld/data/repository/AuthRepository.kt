@@ -7,6 +7,8 @@ import com.p4handheld.data.models.ApiError
 import com.p4handheld.data.models.LoginRequest
 import com.p4handheld.data.models.MenuItem
 import com.p4handheld.data.models.UserContextResponse
+import com.p4handheld.firebase.FIREBASE_KEY_FCM_TOKEN
+import com.p4handheld.firebase.FIREBASE_PREFS_NAME
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -16,7 +18,7 @@ class AuthRepository(context: Context) {
     private val authSharedPreferences: SharedPreferences =
         context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
     private val firebaseSharedPreferences: SharedPreferences =
-        context.getSharedPreferences("firebase_prefs", Context.MODE_PRIVATE)
+        context.getSharedPreferences(FIREBASE_PREFS_NAME, Context.MODE_PRIVATE)
 
     private val apiService = ApiClient.apiService
 
@@ -24,8 +26,8 @@ class AuthRepository(context: Context) {
         return withContext(Dispatchers.IO) {
             try {
                 // Get FCM token from SharedPreferences
-                val fcmToken = firebaseSharedPreferences.getString("fcm_token", null)
-                
+                val fcmToken = firebaseSharedPreferences.getString(FIREBASE_KEY_FCM_TOKEN, null)
+
                 val loginRequest = LoginRequest(username, password, fcmToken)
                 val response = apiService.login(loginRequest = loginRequest)
 

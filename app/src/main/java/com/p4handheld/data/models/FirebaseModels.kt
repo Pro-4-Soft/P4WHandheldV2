@@ -1,65 +1,29 @@
 package com.p4handheld.data.models
 
 import com.google.gson.annotations.SerializedName
-import java.util.Date
-
-/**
- * Firebase Cloud Messaging data models for P4WHandheldV2
- */
 
 data class FirebaseMessage(
     val id: String = "",
     val title: String = "",
     val body: String = "",
     val data: Map<String, String> = emptyMap(),
-    val messageType: MessageType = MessageType.NOTIFICATION,
-    val eventType: String? = null,
+    val eventType: P4WEventType = P4WEventType.USER_CHAT_MESSAGE,
     val userId: String? = null,
     val timestamp: Long = System.currentTimeMillis(),
-    val isRead: Boolean = false,
-    val priority: MessagePriority = MessagePriority.NORMAL
 )
 
-enum class MessageType {
-    @SerializedName("user_chat_message")
+enum class P4WEventType {
+    @SerializedName("UserChatMessage")
     USER_CHAT_MESSAGE,
-    
-    @SerializedName("tasks_changed")
-    TASKS_CHANGED,
-    
-    @SerializedName("screen_requested")
+
+    @SerializedName("ScreenRequested")
     SCREEN_REQUESTED,
-    
-    @SerializedName("system")
-    SYSTEM,
-    
-    @SerializedName("alert")
-    ALERT,
-    
-    @SerializedName("notification")
-    NOTIFICATION
-}
 
-enum class MessagePriority {
-    @SerializedName("low")
-    LOW,
-    
-    @SerializedName("normal")
-    NORMAL,
-    
-    @SerializedName("high")
-    HIGH,
-    
-    @SerializedName("urgent")
-    URGENT
-}
+    @SerializedName("TasksChanged")
+    TASKS_CHANGED,
 
-data class FirebaseEventType(
-    val eventType: String,
-    val eventName: String,
-    val description: String? = null,
-    val isSubscribed: Boolean = false
-)
+    UNKNOWN
+}
 
 data class FirebaseTokenRequest(
     val token: String,
@@ -68,29 +32,10 @@ data class FirebaseTokenRequest(
     val eventTypes: List<String> = emptyList()
 )
 
-data class FirebaseEventSubscriptionRequest(
-    val token: String,
-    val eventType: String,
-    val subscribe: Boolean = true
-)
-
 data class MessageResponse(
     val success: Boolean,
     val message: String? = null,
     val messageId: String? = null
-)
-
-data class EventMessagesRequest(
-    val eventType: String? = null,
-    val limit: Int = 50,
-    val offset: Int = 0,
-    val since: Long? = null
-)
-
-data class EventMessagesResponse(
-    val messages: List<FirebaseMessage>,
-    val hasMore: Boolean = false,
-    val totalCount: Int = 0
 )
 
 /**
@@ -114,33 +59,15 @@ data class StoredFirebaseMessage(
         } catch (e: Exception) {
             emptyMap<String, String>()
         }
-        
+
         return FirebaseMessage(
             id = id,
             title = title,
             body = body,
             data = dataMap,
-            messageType = MessageType.valueOf(messageType.uppercase()),
-            eventType = eventType,
+            eventType = P4WEventType.valueOf(messageType.uppercase()),
             userId = userId,
-            timestamp = timestamp,
-            isRead = isRead,
-            priority = MessagePriority.valueOf(priority.uppercase())
+            timestamp = timestamp
         )
     }
-}
-
-fun FirebaseMessage.toStoredMessage(): StoredFirebaseMessage {
-    return StoredFirebaseMessage(
-        id = id,
-        title = title,
-        body = body,
-        data = com.google.gson.Gson().toJson(data),
-        messageType = messageType.name,
-        eventType = eventType,
-        userId = userId,
-        timestamp = timestamp,
-        isRead = isRead,
-        priority = priority.name
-    )
 }

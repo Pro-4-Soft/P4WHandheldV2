@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.p4handheld.data.models.MenuItem
+import com.p4handheld.ui.components.TopBarWithIcons
 import com.p4handheld.ui.compose.FontAwesome
 import com.p4handheld.ui.compose.getFontAwesomeIcon
 import com.p4handheld.ui.compose.theme.HandheldP4WTheme
@@ -110,6 +111,7 @@ fun MenuScreen(
         breadcrumbStack = breadcrumbStack,
         refreshMenu = { viewModel.refreshMenu() },
         onNavigateToLogin = onNavigateToLogin,
+        onNavigateToMessages = onNavigateToMessages,
         logout = { viewModel.logout() },
         onMenuItemClick = { item: MenuItem ->
             if (item.children.isNotEmpty()) {
@@ -134,6 +136,7 @@ fun MenuScreenContent(
     breadcrumbStack: List<String>,
     refreshMenu: () -> Unit,
     onNavigateToLogin: () -> Unit,
+    onNavigateToMessages: () -> Unit,
     logout: () -> Unit,
     onMenuItemClick: (MenuItem) -> Unit = {}
 ) {
@@ -146,6 +149,15 @@ fun MenuScreenContent(
             .statusBarsPadding()
     )
     {
+        // Top bar with geolocation and message icons
+        TopBarWithIcons(
+            isTrackingLocation = uiState.isTrackingLocation,
+            hasUnreadMessages = uiState.hasUnreadMessages,
+            hasNotifications = false,
+            onMessageClick = onNavigateToMessages,
+            onNotificationClick = { /* Handle notifications */ }
+        )
+
         // Header with back button and breadcrumb
         Surface(
             modifier = Modifier.fillMaxWidth(),
@@ -311,7 +323,7 @@ fun MenuScreenContent(
             ) {
                 // Messages button
                 FloatingActionButton(
-                    onClick = { },
+                    onClick = onNavigateToMessages,
                     containerColor = MaterialTheme.colorScheme.primary
                 ) {
                     Icon(
@@ -516,7 +528,8 @@ fun MenuScreenContentPreview() {
             refreshMenu = {},
             onNavigateToLogin = {},
             logout = {},
-            onMenuItemClick = {}
+            onMenuItemClick = {},
+            onNavigateToMessages = {}
         )
     }
 }
@@ -533,7 +546,9 @@ fun MenuScreenContentWithBreadcrumbsPreview() {
             refreshMenu = {},
             onNavigateToLogin = {},
             logout = {},
-            onMenuItemClick = {}
+            onMenuItemClick = {},
+            onNavigateToMessages = {}
+
         )
     }
 }
@@ -553,7 +568,9 @@ fun MenuScreenContentErrorPreview() {
             refreshMenu = {},
             onNavigateToLogin = {},
             logout = {},
-            onMenuItemClick = {}
+            onMenuItemClick = {},
+            onNavigateToMessages = {}
+            
         )
     }
 }

@@ -48,4 +48,27 @@ class FirebaseManager private constructor(private val context: Context) {
         }
     }
 
+    /**
+     * Check if there are unread messages
+     */
+    fun hasUnreadMessages(): Boolean {
+        // For now, return false as a placeholder
+        // This should be implemented based on your message storage logic
+        return prefs.getBoolean("has_unread_messages", false)
+    }
+
+    /**
+     * Mark messages as read
+     */
+    fun markMessagesAsRead() {
+        prefs.edit { putBoolean("has_unread_messages", false) }
+    }
+
+    /**
+     * Set unread message status
+     */
+    fun setHasUnreadMessages(hasUnread: Boolean) {
+        prefs.edit { putBoolean("has_unread_messages", hasUnread) }
+    }
+
 }

@@ -7,6 +7,8 @@ import com.p4handheld.data.models.MessageResponse
 import com.p4handheld.data.models.ProcessRequest
 import com.p4handheld.data.models.PromptResponse
 import com.p4handheld.data.models.UserContextResponse
+import com.p4handheld.data.models.UserChatMessage
+import com.p4handheld.data.models.UserContact
 
 interface ApiService {
     suspend fun login(source: String = "LoginWeb", loginRequest: LoginRequest): ApiResponse<LoginResponse>
@@ -22,6 +24,15 @@ interface ApiService {
     suspend fun updateUserLocation(lat: Double, lon: Double): ApiResponse<Unit>
 
     suspend fun updateFirebaseToken(request: FirebaseTokenRequest): ApiResponse<MessageResponse>
+
+    // Chats
+    suspend fun getContacts(): ApiResponse<List<UserContact>>
+
+    /**
+     * Returns messages for a conversation. If contactId is provided, fetch messages with that contact.
+     * Some backends may return recent messages for all chats if contactId is null.
+     */
+    suspend fun getMessages(contactId: String? = null): ApiResponse<List<UserChatMessage>>
 }
 
 data class ApiResponse<T>(

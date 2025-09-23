@@ -11,6 +11,8 @@ import com.p4handheld.data.models.MessageResponse
 import com.p4handheld.data.models.ProcessRequest
 import com.p4handheld.data.models.PromptResponse
 import com.p4handheld.data.models.UserContextResponse
+import com.p4handheld.data.models.UserChatMessage
+import com.p4handheld.data.models.UserContact
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -259,6 +261,66 @@ object ApiClient {
 
         override suspend fun updateFirebaseToken(request: FirebaseTokenRequest): ApiResponse<MessageResponse> {
             TODO("Not yet implemented")
+        }
+
+        override suspend fun getContacts(): ApiResponse<List<UserContact>> {
+            return withContext(Dispatchers.IO) {
+                try {
+                    val request = Request.Builder()
+                        .url("${getBaseUrl()}api/UserMessageApi/GetContacts")
+                        .get()
+                        .build()
+
+                    val response = client.newCall(request).execute()
+                    val responseCode = response.code
+                    val isSuccessful = response.isSuccessful
+
+                    if (isSuccessful) {
+                        val responseBody = response.body?.string().orEmpty()
+                        val contacts = Gson().fromJson(responseBody, Array<UserContact>::class.java).toList()
+                        ApiResponse(true, contacts, responseCode)
+                    } else {
+                        val errorBody = response.body?.string()
+                        ApiResponse(false, null, responseCode, errorBody)
+                    }
+                } catch (e: Exception) {
+                    ApiResponse(false, null, 0, e.message)
+                }
+            }
+        }
+
+        override suspend fun getMessages(contactId: String?): ApiResponse<List<UserChatMessage>> {
+            return withContext(Dispatchers.IO) {
+                try {
+                    val url = buildString {
+                        append("${getBaseUrl()}api/UserMessageApi/GetMessages")
+                        if (!contactId.isNullOrEmpty()) {
+                            append("?contactId=")
+                            append(contactId)
+                        }
+                    }
+
+                    val request = Request.Builder()
+                        .url(url)
+                        .get()
+                        .build()
+
+                    val response = client.newCall(request).execute()
+                    val responseCode = response.code
+                    val isSuccessful = response.isSuccessful
+
+                    if (isSuccessful) {
+                        val responseBody = response.body?.string().orEmpty()
+                        val messages = Gson().fromJson(responseBody, Array<UserChatMessage>::class.java).toList()
+                        ApiResponse(true, messages, responseCode)
+                    } else {
+                        val errorBody = response.body?.string()
+                        ApiResponse(false, null, responseCode, errorBody)
+                    }
+                } catch (e: Exception) {
+                    ApiResponse(false, null, 0, e.message)
+                }
+            }
         }
     }
 }

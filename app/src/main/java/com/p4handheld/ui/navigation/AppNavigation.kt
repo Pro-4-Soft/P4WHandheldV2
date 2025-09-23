@@ -9,6 +9,7 @@ import com.p4handheld.ui.screens.ActionScreen
 import com.p4handheld.ui.screens.LoginScreen
 import com.p4handheld.ui.screens.MenuScreen
 import com.p4handheld.ui.screens.TenantSelectScreen
+import com.p4handheld.ui.screens.MessagesScreen
 
 @Composable
 fun AppNavigation(
@@ -55,6 +56,12 @@ fun AppNavigation(
                         popUpTo(Screen.Menu.route) { inclusive = true }
                     }
                 }
+            )
+        }
+
+        composable(Screen.Messages.route) {
+            MessagesScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 

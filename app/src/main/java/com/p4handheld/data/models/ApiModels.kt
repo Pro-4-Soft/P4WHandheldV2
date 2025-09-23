@@ -153,3 +153,37 @@ data class ProcessRequest(
     @SerializedName("ToolbarActions")
     val toolbarActions: List<String>? = null
 )
+
+// ==================== USER MESSAGES / CHATS ====================
+
+data class UserContact(
+    @SerializedName("Id")
+    val id: String,
+    @SerializedName("LastSeen")
+    val lastSeen: String? = null,
+    @SerializedName("Username")
+    val username: String,
+    @SerializedName("IsOnline")
+    val isOnline: Boolean = false,
+    @SerializedName("NewMessages")
+    val newMessages: Int = 0
+)
+
+data class UserChatMessage(
+    @SerializedName("MessageId")
+    val messageId: String,
+    @SerializedName("Timestamp")
+    val timestamp: String,
+    @SerializedName("FromUserId")
+    val fromUserId: String,
+    @SerializedName("FromUsername")
+    val fromUsername: String,
+    @SerializedName("ToUserId")
+    val toUserId: String,
+    @SerializedName("ToUsername")
+    val toUsername: String,
+    @SerializedName("IsNew")
+    val isNew: Boolean,
+    @SerializedName("Message")
+    val message: String
+)

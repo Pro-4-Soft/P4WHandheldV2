@@ -166,8 +166,7 @@ fun MenuScreenContent(
         ) {
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                    .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
@@ -211,7 +210,7 @@ fun MenuScreenContent(
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
                         )
                     }
 
@@ -493,29 +492,6 @@ private val sampleUiState = MenuUiState(
     tenant = "Sample Tenant",
 )
 
-@Preview(name = "Menu Tile - With Children")
-@Composable
-fun MenuTileCardWithChildrenPreview() {
-    HandheldP4WTheme {
-        MenuTileCard(
-            menuItem = MenuItem(
-                label = "Users",
-                icon = "fa-users",
-                children = listOf(
-                    MenuItem(
-                        label = "User A",
-                        icon = "fa-user",
-                        children = emptyList(),
-                        state = "active"
-                    )
-                ),
-                state = null
-            ),
-            onItemClick = {}
-        )
-    }
-}
-
 @Preview(name = "Menu Screen Content", showBackground = true)
 @Composable
 fun MenuScreenContentPreview() {
@@ -570,29 +546,7 @@ fun MenuScreenContentErrorPreview() {
             logout = {},
             onMenuItemClick = {},
             onNavigateToMessages = {}
-            
-        )
-    }
-}
 
-@Preview(name = "Menu Tiles Grid", showBackground = true)
-@Composable
-fun MenuTilesGridPreview() {
-    HandheldP4WTheme {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(8.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(sampleMenuItems.take(6)) { menuItem ->
-                MenuTileCard(
-                    menuItem = menuItem,
-                    onItemClick = {}
-                )
-            }
-        }
+        )
     }
 }

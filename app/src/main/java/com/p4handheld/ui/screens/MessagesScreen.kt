@@ -53,12 +53,6 @@ fun MessagesScreenContent(
         topBar = {
             TopAppBar(
                 title = { Text("Chats") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        // simple back chevron using less dependency: draw text
-                        Text("<")
-                    }
-                }
             )
         }
     ) { padding ->

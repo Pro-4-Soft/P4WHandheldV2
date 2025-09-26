@@ -8,6 +8,17 @@ sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Menu : Screen("menu")
     object Messages : Screen("messages")
+    object Contacts : Screen("contacts")
+    object Chat : Screen("chat/{contactId}/{contactName}") {
+        fun createRoute(contactId: String, contactName: String): String {
+            return "chat/$contactId/$contactName"
+        }
+
+        val arguments = listOf(
+            navArgument("contactId") { type = NavType.StringType },
+            navArgument("contactName") { type = NavType.StringType }
+        )
+    }
     object Action : Screen("action/{menuItemLabel}/{menuItemState}") {
         fun createRoute(menuItemLabel: String, menuItemState: String): String {
             return "action/$menuItemLabel/$menuItemState"

@@ -40,33 +40,39 @@ fun TopBarWithIcons(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.End,
+                .padding(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Location tracking indicator
+
             if (isTrackingLocation) {
-                Icon(
-                    imageVector = Icons.Default.LocationOn,
-                    contentDescription = "Location tracking active",
-                    tint = Color(0xFF10B981), // Green color for active tracking
-                    modifier = Modifier
-                        .size(24.dp)
-                        .padding(end = 8.dp)
-                )
+                // Notifications icon with indicator
+                Box {
+                    IconButton(
+                        onClick = { },
+                        modifier = Modifier.size(24.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = "Location tracking active",
+                            tint = Color(0xFF10B981),
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+                }
             }
 
             // Notifications icon with indicator
             Box {
                 IconButton(
                     onClick = onNotificationClick,
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(24.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Notifications,
                         contentDescription = "Notifications",
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(14.dp)
                     )
                 }
 
@@ -74,7 +80,7 @@ fun TopBarWithIcons(
                 if (hasNotifications) {
                     Box(
                         modifier = Modifier
-                            .size(12.dp)
+                            .size(8.dp)
                             .background(Color.Red, CircleShape)
                             .align(Alignment.TopEnd),
                         contentAlignment = Alignment.Center
@@ -88,13 +94,13 @@ fun TopBarWithIcons(
             Box {
                 IconButton(
                     onClick = onMessageClick,
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(24.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Message,
                         contentDescription = "Messages",
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(14.dp)
                     )
                 }
 
@@ -102,7 +108,7 @@ fun TopBarWithIcons(
                 if (hasUnreadMessages) {
                     Box(
                         modifier = Modifier
-                            .size(12.dp)
+                            .size(8.dp)
                             .background(Color.Red, CircleShape)
                             .align(Alignment.TopEnd),
                         contentAlignment = Alignment.Center

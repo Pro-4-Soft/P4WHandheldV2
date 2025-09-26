@@ -39,10 +39,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -133,12 +138,6 @@ fun LoginScreenContent(
                     contentDescription = "App Logo",
                     modifier = Modifier.size(120.dp)
                 )
-                Text(
-                    text = logoUrl,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
             }
         }
         Card(
@@ -158,7 +157,7 @@ fun LoginScreenContent(
 
                 Text(
                     text = "Login",
-                    fontSize = 24.sp,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -227,11 +226,30 @@ fun LoginScreenContent(
                 }
             }
         }
-
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                buildAnnotatedString {
+                    append("Powered by ")
+                    withLink(
+                        LinkAnnotation.Url(
+                            "https://www.p4warehouse.com/",
+                            TextLinkStyles(style = SpanStyle(color = Color.Blue))
+                        )
+                    ) {
+                        append("P4 Warehouse © 2025")
+                    }
+                }, fontSize = 10.sp
+            )
+        }
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.BottomEnd
         ) {
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,

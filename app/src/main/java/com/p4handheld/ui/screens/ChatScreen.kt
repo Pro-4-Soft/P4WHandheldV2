@@ -3,6 +3,7 @@ package com.p4handheld.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -22,9 +24,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.p4handheld.data.models.UserChatMessage
@@ -73,11 +77,20 @@ fun ChatScreen(
                             Text(text = "No messages", color = Color.Gray)
                         }
                     } else {
-                        LazyColumn(modifier = Modifier
-                            .fillMaxSize()
-                            .padding(8.dp)) {
+                        val context = LocalContext.current
+                        val currentUsername = remember {
+                            context.getSharedPreferences("auth_prefs", android.content.Context.MODE_PRIVATE)
+                                .getString("username", null)
+                        }
+
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(8.dp)
+                        ) {
                             items(uiState.messages) { msg ->
-                                MessageBubble(message = msg, isMine = false)
+                                val isMine = currentUsername != null && msg.fromUsername == currentUsername
+                                MessageBubble(message = msg, isMine = isMine)
                                 Spacer(modifier = Modifier.size(8.dp))
                             }
                         }
@@ -90,28 +103,34 @@ fun ChatScreen(
 
 @Composable
 private fun MessageBubble(message: UserChatMessage, isMine: Boolean) {
-    val containerColor = if (isMine) Color(0xFFD1FAE5) else Color(0xFFF3F4F6)
-    Column(
-        horizontalAlignment = if (isMine) Alignment.End else Alignment.Start,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text(
-            text = message.fromUsername,
-            style = MaterialTheme.typography.labelMedium,
-            color = Color.Gray
-        )
-        Box(
-            modifier = Modifier
-                .background(containerColor, shape = MaterialTheme.shapes.medium)
-                .padding(10.dp)
-                .fillMaxWidth()
+    val containerColor = if (isMine) Color(0xFFDCFCE7) else Color(0xFFF1F5F9)
+    val textColor = Color(0xFF111827)
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = if (isMine) androidx.compose.foundation.layout.Arrangement.End else androidx.compose.foundation.layout.Arrangement.Start
         ) {
-            Text(text = message.message)
+            Column(horizontalAlignment = if (isMine) Alignment.End else Alignment.Start) {
+                Text(
+                    text = message.fromUsername,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color.Gray
+                )
+                Box(
+                    modifier = Modifier
+                        .background(containerColor, shape = RoundedCornerShape(12.dp))
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                ) {
+                    Text(text = message.message, color = textColor)
+                }
+                Spacer(modifier = Modifier.size(2.dp))
+                Text(
+                    text = message.timestamp,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.Gray
+                )
+            }
         }
-        Text(
-            text = message.timestamp,
-            style = MaterialTheme.typography.labelSmall,
-            color = Color.Gray
-        )
     }
 }

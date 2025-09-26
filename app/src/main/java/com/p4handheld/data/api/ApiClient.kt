@@ -10,9 +10,9 @@ import com.p4handheld.data.models.MenuItem
 import com.p4handheld.data.models.MessageResponse
 import com.p4handheld.data.models.ProcessRequest
 import com.p4handheld.data.models.PromptResponse
-import com.p4handheld.data.models.UserContextResponse
 import com.p4handheld.data.models.UserChatMessage
 import com.p4handheld.data.models.UserContact
+import com.p4handheld.data.models.UserContextResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -295,7 +295,7 @@ object ApiClient {
                     val url = buildString {
                         append("${getBaseUrl()}api/UserMessageApi/GetMessages")
                         if (!contactId.isNullOrEmpty()) {
-                            append("?contactId=")
+                            append("?fromUserId=")
                             append(contactId)
                         }
                     }

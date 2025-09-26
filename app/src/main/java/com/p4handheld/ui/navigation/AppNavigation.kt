@@ -6,12 +6,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.p4handheld.ui.screens.ActionScreen
+import com.p4handheld.ui.screens.ChatScreen
+import com.p4handheld.ui.screens.ContactsScreen
 import com.p4handheld.ui.screens.LoginScreen
 import com.p4handheld.ui.screens.MenuScreen
 import com.p4handheld.ui.screens.TenantSelectScreen
-import com.p4handheld.ui.screens.MessagesScreen
-import com.p4handheld.ui.screens.ContactsScreen
-import com.p4handheld.ui.screens.ChatScreen
 
 @Composable
 fun AppNavigation(
@@ -62,10 +61,13 @@ fun AppNavigation(
             )
         }
 
-        // Backward-compat: old Messages route shows the combined screen
+        // Backward-compat: old Messages route now shows Contacts and navigates to Chat
         composable(Screen.Messages.route) {
-            MessagesScreen(
-                onNavigateBack = { navController.popBackStack() }
+            ContactsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onOpenChat = { id, name ->
+                    navController.navigate(Screen.Chat.createRoute(id, name))
+                }
             )
         }
 

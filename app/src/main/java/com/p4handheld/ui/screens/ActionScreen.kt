@@ -1,9 +1,16 @@
 package com.p4handheld.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.Paint
+import android.util.Base64
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -58,7 +65,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
@@ -69,6 +78,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.p4handheld.data.ScanStateHolder
 import com.p4handheld.data.models.Message
@@ -79,7 +89,7 @@ import com.p4handheld.ui.compose.theme.HandheldP4WTheme
 import com.p4handheld.ui.screens.viewmodels.ActionUiState
 import com.p4handheld.ui.screens.viewmodels.ActionViewModel
 import kotlinx.coroutines.launch
-import androidx.compose.ui.graphics.Path as ComposePath
+import java.io.ByteArrayOutputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -665,6 +675,46 @@ fun PhotoPromptScreen(
     onSendImage: (String) -> Unit,
     onRetakePhoto: () -> Unit
 ) {
+    val context = LocalContext.current
+
+    // Convert Bitmap to Base64 JPEG
+    fun Bitmap.toBase64Jpeg(quality: Int = 85): String {
+        val output = ByteArrayOutputStream()
+        this.compress(Bitmap.CompressFormat.JPEG, quality, output)
+        val bytes = output.toByteArray()
+        val base64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
+        return "data:image/jpeg;base64,$base64"
+    }
+
+    var previewBitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+    val previewLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap: Bitmap? ->
+        previewBitmap = bitmap
+        bitmap?.let {
+            val base64 = it.toBase64Jpeg()
+            onImageCaptured(base64)
+        }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            previewLauncher.launch(null)
+        }
+    }
+
+    fun launchCameraWithPermission() {
+        val permissionStatus = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
+        if (permissionStatus == PackageManager.PERMISSION_GRANTED) {
+            previewLauncher.launch(null)
+        } else {
+            permissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -672,8 +722,8 @@ fun PhotoPromptScreen(
             .navigationBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (capturedImage != null) {
-            // Show captured image placeholder
+        if (previewBitmap != null) {
+            // Show captured image
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -681,7 +731,12 @@ fun PhotoPromptScreen(
                     .background(Color.LightGray, RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Captured Image")
+                previewBitmap?.let { bmp ->
+                    Image(
+                        bitmap = bmp.asImageBitmap(),
+                        contentDescription = "Captured Photo"
+                    )
+                }
             }
 
             Row(
@@ -691,7 +746,10 @@ fun PhotoPromptScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 Button(
-                    onClick = { onSendImage(capturedImage) },
+                    onClick = {
+                        // Send currently captured image as base64
+                        capturedImage?.let { onSendImage(it) }
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF4CAF50)
                     ),
@@ -703,7 +761,11 @@ fun PhotoPromptScreen(
                 }
 
                 Button(
-                    onClick = onRetakePhoto,
+                    onClick = {
+                        previewBitmap = null
+                        onRetakePhoto()
+                        launchCameraWithPermission()
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFFF9800)
                     ),
@@ -715,7 +777,7 @@ fun PhotoPromptScreen(
                 }
             }
         } else {
-            // Show camera placeholder
+            // Initial state: show capture prompt
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -731,14 +793,13 @@ fun PhotoPromptScreen(
                         contentDescription = null,
                         modifier = Modifier.size(64.dp)
                     )
-                    Text("Camera Preview")
+                    Text("Tap Capture to open Camera")
                 }
             }
 
             Button(
                 onClick = {
-                    // Simulate capturing an image
-                    onImageCaptured("data:image/jpeg;base64,fake_image_data")
+                    launchCameraWithPermission()
                 },
                 shape = RoundedCornerShape(5.dp),
                 modifier = Modifier
@@ -758,7 +819,7 @@ fun SignaturePromptScreen(
     onCancel: () -> Unit
 ) {
 
-    var paths by remember { mutableStateOf(listOf<ComposePath>()) }
+    var paths by remember { mutableStateOf(listOf<Path>()) }
     val paint = remember {
         Paint().apply {
             color = Color.Black.toArgb()
@@ -792,13 +853,13 @@ fun SignaturePromptScreen(
                 .pointerInput(Unit) {
                     detectDragGestures(
                         onDragStart = { offset ->
-                            paths = paths + ComposePath().apply {
+                            paths = paths + Path().apply {
                                 moveTo(offset.x, offset.y)
                             }
                         },
                         onDrag = { change, _ ->
                             if (paths.isNotEmpty()) {
-                                val newPath = ComposePath().apply {
+                                val newPath = Path().apply {
                                     addPath(paths.last())
                                     lineTo(change.position.x, change.position.y)
                                 }

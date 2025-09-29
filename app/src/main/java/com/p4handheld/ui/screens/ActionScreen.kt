@@ -39,6 +39,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
@@ -53,6 +54,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -668,6 +671,7 @@ fun PromptInputArea(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PhotoPromptScreen(
     capturedImage: String?,
@@ -715,6 +719,11 @@ fun PhotoPromptScreen(
         }
     }
 
+    // Auto-launch camera when the Photo prompt appears
+    LaunchedEffect(Unit) {
+        launchCameraWithPermission()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -722,7 +731,18 @@ fun PhotoPromptScreen(
             .navigationBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // When we have a captured bitmap, show it with a top bar containing a single check action.
         if (previewBitmap != null) {
+            // Top bar with 'check' to send immediately
+            TopAppBar(
+                title = { Text("") },
+                actions = {
+                    IconButton(onClick = { capturedImage?.let(onSendImage) }) {
+                        Icon(Icons.Default.Check, contentDescription = "Send")
+                    }
+                }
+            )
+
             // Show captured image
             Box(
                 modifier = Modifier
@@ -738,76 +758,20 @@ fun PhotoPromptScreen(
                     )
                 }
             }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Button(
-                    onClick = {
-                        // Send currently captured image as base64
-                        capturedImage?.let { onSendImage(it) }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4CAF50)
-                    ),
-                    shape = RoundedCornerShape(5.dp)
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Send")
-                }
-
-                Button(
-                    onClick = {
-                        previewBitmap = null
-                        onRetakePhoto()
-                        launchCameraWithPermission()
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFF9800)
-                    ),
-                    shape = RoundedCornerShape(5.dp)
-                ) {
-                    Icon(Icons.Default.Refresh, contentDescription = null)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Retake")
-                }
-            }
         } else {
-            // Initial state: show capture prompt
+            // No UI needed here because camera auto-launches on entering this prompt
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth()
-                    .background(Color.LightGray, RoundedCornerShape(8.dp)),
+                    .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CameraAlt,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp)
-                    )
-                    Text("Tap Capture to open Camera")
-                }
-            }
-
-            Button(
-                onClick = {
-                    launchCameraWithPermission()
-                },
-                shape = RoundedCornerShape(5.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-            ) {
-                Icon(Icons.Default.CameraAlt, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Capture")
+                // Optional placeholder while waiting for camera result
+                Icon(
+                    imageVector = Icons.Default.CameraAlt,
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp)
+                )
             }
         }
     }

@@ -15,5 +15,4 @@ object ScanStateHolder {
 
     private val _scanViewStatus = MutableLiveData(ScanViewState())
     val scanViewStatus: MutableLiveData<ScanViewState> get() = _scanViewStatus
-
 }

@@ -32,7 +32,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
@@ -43,7 +42,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -65,11 +63,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -510,59 +506,10 @@ fun PromptInputArea(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.Bottom
                     ) {
-                        OutlinedTextField(
-                            value = promptValue,
-                            onValueChange = onPromptValueChange,
-                            textStyle = TextStyle(textAlign = TextAlign.Center),
-                            label = {
-                                if (prompt.promptPlaceholder != null && prompt.promptPlaceholder.length <= 20) {
-                                    Text(prompt.promptPlaceholder)
-                                } else {
-                                    Text(
-                                        text = prompt.promptPlaceholder.take(20) + "...",
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                            },
-                            modifier = Modifier.weight(1f),
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Send
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onSend = {
-                                    if (promptValue.isNotEmpty()) {
-                                        onSendPrompt(promptValue)
-                                    }
-                                }
-                            ),
-                            trailingIcon = {
-                                if (promptValue.isNotEmpty()) {
-                                    IconButton(onClick = { onPromptValueChange("") }) {
-                                        Icon(Icons.Default.Clear, contentDescription = "Clear")
-                                    }
-                                }
-                            }
+                        Text(
+                            text = prompt.promptPlaceholder,
+                            modifier = Modifier.align(Alignment.CenterVertically)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
-                            onClick = {
-                                if (promptValue.isNotEmpty()) {
-                                    onSendPrompt(promptValue)
-                                }
-                            },
-                            enabled = promptValue.isNotEmpty(),
-                            modifier = Modifier.height(56.dp),
-                            shape = RoundedCornerShape(5.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF4CAF50)
-                            )
-                        ) {
-                            Text(
-                                text = "Send",
-                                fontSize = 15.sp
-                            )
-                        }
                     }
                 }
             }
@@ -571,11 +518,11 @@ fun PromptInputArea(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(vertical = 4.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     Text(
-                        text = "Confirm?",
+                        text = prompt.promptPlaceholder,
                         modifier = Modifier.align(Alignment.CenterVertically)
                     )
                     Button(
@@ -585,7 +532,11 @@ fun PromptInputArea(
                         ),
                         shape = RoundedCornerShape(5.dp)
                     ) {
-                        Text("Yes")
+                        Text(
+                            text = "Yes",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                     Button(
                         onClick = { onSendPrompt("false") },
@@ -594,7 +545,11 @@ fun PromptInputArea(
                         ),
                         shape = RoundedCornerShape(5.dp)
                     ) {
-                        Text("No")
+                        Text(
+                            text = "No",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 }
             }
@@ -658,8 +613,10 @@ fun PromptInputArea(
             else -> {
                 // Text input
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.Bottom
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 4.dp),
+                    verticalAlignment = Alignment.Bottom,
                 ) {
                     OutlinedTextField(
                         value = promptValue,
@@ -969,7 +926,7 @@ private val sampleSignPrompt = Prompt(
 // Sample scan prompt for previews
 private val sampleScanPrompt = Prompt(
     promptType = PromptType.SCAN,
-    promptPlaceholder = "Scan barcode or enter manually",
+    promptPlaceholder = "Scan barcode",
     items = emptyList()
 )
 

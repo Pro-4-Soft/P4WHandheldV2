@@ -54,18 +54,20 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
 //                        return@launch
                     }
 
-                    val photoMessage = if (promptValue?.startsWith("data:image") == true) {
-                        listOf(
-                            Message(
-                                title = "Photo sent",
-                                severity = "Success",
-                                imageResource = promptValue,
-                                isCommitted = false
-                            )
-                        )
-                    } else emptyList()
-
-                    val newMessages = response.messages + photoMessage
+                    // If we just sent a photo, attach it to the first Success/Info message from server
+                    val newMessages = if (promptValue?.startsWith("data:image") == true && response.messages.isNotEmpty()) {
+                        val idx = response.messages.indexOfFirst {
+                            it.severity.equals("Success", ignoreCase = true) || it.severity.equals("Info", ignoreCase = true)
+                        }
+                        if (idx >= 0) {
+                            val updated = response.messages[idx].copy(imageResource = promptValue)
+                            response.messages.toMutableList().apply { this[idx] = updated }
+                        } else {
+                            response.messages
+                        }
+                    } else {
+                        response.messages
+                    }
 
                     val updatedMessageStack = currentState.messageStack + newMessages;
 

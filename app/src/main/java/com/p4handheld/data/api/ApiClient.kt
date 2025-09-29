@@ -101,6 +101,39 @@ object ApiClient {
             }
         }
 
+        override suspend fun sendMessage(toUserId: String, message: String): ApiResponse<MessageResponse> {
+            return withContext(Dispatchers.IO) {
+                try {
+                    val jsonBody = JSONObject().apply {
+                        put("toUserId", toUserId)
+                        put("Message", message)
+                    }.toString()
+
+                    val requestBody = jsonBody.toRequestBody("application/json".toMediaType())
+
+                    val request = Request.Builder()
+                        .url("${getBaseUrl()}api/UserMessageApi/SendMessage")
+                        .post(requestBody)
+                        .build()
+
+                    val response = client.newCall(request).execute()
+                    val responseCode = response.code
+                    val isSuccessful = response.isSuccessful
+
+                    if (isSuccessful) {
+                        val responseBody = response.body?.string().orEmpty()
+                        val msg = Gson().fromJson(responseBody, MessageResponse::class.java)
+                        ApiResponse(true, msg, responseCode)
+                    } else {
+                        val errorBody = response.body?.string()
+                        ApiResponse(false, null, responseCode, errorBody)
+                    }
+                } catch (e: Exception) {
+                    ApiResponse(false, null, 0, e.message)
+                }
+            }
+        }
+
         override suspend fun getCurrentMenu(): ApiResponse<UserContextResponse> {
             return withContext(Dispatchers.IO) {
                 try {

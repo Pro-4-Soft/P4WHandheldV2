@@ -13,7 +13,8 @@ import kotlinx.coroutines.launch
 data class ChatUiState(
     val isLoading: Boolean = false,
     val messages: List<UserChatMessage> = emptyList(),
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val isSending: Boolean = false
 )
 
 class ChatViewModel(application: Application) : AndroidViewModel(application) {
@@ -34,6 +35,25 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     errorMessage = result.errorMessage ?: "Failed to load messages (code ${result.code})"
+                )
+            }
+        }
+    }
+
+    fun sendMessage(toUserId: String, message: String, after: (() -> Unit)? = null) {
+        if (message.isBlank()) return
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isSending = true, errorMessage = null)
+            val result = ApiClient.apiService.sendMessage(toUserId, message)
+            if (result.isSuccessful) {
+                // Reload messages to include the newly sent one
+                loadMessages(toUserId)
+                after?.invoke()
+                _uiState.value = _uiState.value.copy(isSending = false)
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    isSending = false,
+                    errorMessage = result.errorMessage ?: "Failed to send (code ${result.code})"
                 )
             }
         }

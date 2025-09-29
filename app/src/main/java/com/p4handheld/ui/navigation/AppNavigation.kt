@@ -104,7 +104,7 @@ fun AppNavigation(
 
             ActionScreen(
                 menuItemLabel = menuItemLabel,
-                menuItemState = menuItemState,
+                pageKey = menuItemState,
                 onNavigateBack = {
                     navController.popBackStack()
                 }

@@ -30,46 +30,7 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
     private val _uiState = MutableStateFlow(ActionUiState())
     val uiState: StateFlow<ActionUiState> = _uiState.asStateFlow()
 
-    fun initAction(pageKey: String, initialValue: String? = null) {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                isLoading = true,
-                currentPrompt = null,
-                currentResponse = null,
-                messageStack = emptyList(),
-                errorMessage = null
-            )
-
-            try {
-                val result = apiService.initAction(pageKey, initialValue)
-
-                if (result.isSuccessful && result.body != null) {
-                    val response = result.body
-                    val newMessages = response.messages
-
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        currentPrompt = response.prompt,
-                        currentResponse = response,
-                        messageStack = _uiState.value.messageStack + newMessages,
-                        showSignature = response.prompt.promptType == PromptType.SIGN
-                    )
-                } else {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = result.errorMessage ?: "Failed to initialize action"
-                    )
-                }
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    errorMessage = "Error: ${e.message}"
-                )
-            }
-        }
-    }
-
-    fun processAction(pageKey: String, promptValue: Any?, actionFor: String? = null) {
+    fun processAction(pageKey: String, promptValue: String? = null, actionFor: String? = null) {
         viewModelScope.launch {
             val currentState = _uiState.value
             _uiState.value = currentState.copy(isLoading = true)
@@ -77,9 +38,7 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
             try {
                 val processRequest = ProcessRequest(
                     promptValue = promptValue,
-                    actionFor = actionFor ?: currentState.currentPrompt?.actionName ?: "",
-                    context = currentState.currentResponse?.context,
-                    toolbarActions = currentState.currentResponse?.toolbarActions
+                    actionFor = actionFor ?: currentState.currentPrompt?.actionName ?: ""
                 )
 
                 val result = apiService.processAction(pageKey, processRequest)
@@ -90,9 +49,9 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
                     // Handle GoToNewPage prompt type
                     if (response.prompt.promptType == PromptType.GO_TO_NEW_PAGE) {
                         // For now, just reinitialize with the new page
-                        val selectedItemId = response.context?.get("SelectedItemId")?.toString()
-                        initAction(response.prompt.defaultValue, selectedItemId)
-                        return@launch
+//                        val selectedItemId = response.context?.get("SelectedItemId")?.toString()
+//                        processAction(response.prompt.defaultValue, selectedItemId)
+//                        return@launch
                     }
 
                     val newMessages = response.messages
@@ -100,11 +59,11 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
                     val updatedMessageStack = currentState.messageStack + newMessages;
 
                     // Add divider if IsStart is true
-                    val finalMessageStack = if (response.isStart && updatedMessageStack.lastOrNull()?.value != "divider"
+                    val finalMessageStack = if (response.commitAllMessages && updatedMessageStack.lastOrNull()?.title != "divider"
                     ) {
                         val commitedMessages = updatedMessageStack.map { it.copy(isCommitted = true) }
                         commitedMessages + Message(
-                            value = "divider",
+                            title = "divider",
                             severity = "Info",
                             isCommitted = true
                         )
@@ -123,7 +82,7 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
                     )
                 } else {
                     val errorMessages = currentState.messageStack + Message(
-                        value = result.errorMessage ?: "Process failed",
+                        title = result.errorMessage ?: "Process failed",
                         severity = "Error"
                     )
 
@@ -134,7 +93,7 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
                 }
             } catch (e: Exception) {
                 val errorMessages = currentState.messageStack + Message(
-                    value = "Error: ${e.message}",
+                    title = "Error: ${e.message}",
                     severity = "Error"
                 )
 
@@ -154,11 +113,6 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
         val currentState = _uiState.value
 
         if (message.isCommitted) return
-
-        if (currentState.currentPrompt?.promptType == PromptType.LIST) {
-            processAction("", message.id)
-            return
-        }
 
         // Restore to clicked message state
         val clickedState = message.state as? PromptResponse

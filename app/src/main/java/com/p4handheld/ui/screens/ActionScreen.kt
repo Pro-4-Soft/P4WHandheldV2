@@ -65,6 +65,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -88,7 +89,7 @@ import androidx.compose.ui.graphics.Path as ComposePath
 @Composable
 fun ActionScreen(
     menuItemLabel: String,
-    menuItemState: String,
+    pageKey: String,
     onNavigateBack: () -> Unit
 ) {
     val viewModel: ActionViewModel = viewModel()
@@ -105,10 +106,10 @@ fun ActionScreen(
     }
 
     // Initialize action on first composition with debug logging
-    LaunchedEffect(menuItemState) {
-        if (menuItemState.isNotEmpty()) {
-            println("ActionScreen: Initializing action with state: $menuItemState")
-            viewModel.initAction(menuItemState)
+    LaunchedEffect(pageKey) {
+        if (pageKey.isNotEmpty()) {
+            println("ActionScreen: Initializing action with state: $pageKey")
+            viewModel.processAction(pageKey)
         } else {
             println("ActionScreen: Warning - menuItemState is empty, cannot initialize action")
         }
@@ -138,7 +139,7 @@ fun ActionScreen(
                 println("ActionScreen: Scan data received from DataWedge: ${outputData.data}")
                 viewModel.updatePromptValue(outputData.data)
                 // Automatically send the scanned data
-                viewModel.processAction(menuItemState, outputData.data)
+                viewModel.processAction(pageKey, outputData.data)
             }
         }
     }
@@ -152,7 +153,7 @@ fun ActionScreen(
                         viewModel.setCapturedImage(imageBase64)
                     },
                     onSendImage = { imageBase64 ->
-                        viewModel.processAction(menuItemState, imageBase64)
+                        viewModel.processAction(pageKey, imageBase64)
                     },
                     onRetakePhoto = {
                         viewModel.setCapturedImage(null)
@@ -166,7 +167,7 @@ fun ActionScreen(
                 {
                     SignaturePromptScreen(
                         onSignatureSaved = { signatureBase64 ->
-                            viewModel.processAction(menuItemState, signatureBase64)
+                            viewModel.processAction(pageKey, signatureBase64)
                             viewModel.setShowSignature(false)
                         },
                         onCancel = {
@@ -179,7 +180,7 @@ fun ActionScreen(
                     DefaultActionScreen(
                         uiState = uiState,
                         listState = listState,
-                        menuItemState = menuItemState,
+                        menuItemState = pageKey,
                         viewModel = viewModel
                     )
                 }
@@ -191,7 +192,7 @@ fun ActionScreen(
                 DefaultActionScreen(
                     uiState = uiState,
                     listState = listState,
-                    menuItemState = menuItemState,
+                    menuItemState = pageKey,
                     viewModel = viewModel
                 )
             }
@@ -200,7 +201,7 @@ fun ActionScreen(
 
     ActionScreenWrapper(
         menuItemLabel = menuItemLabel,
-        menuItemState = menuItemState,
+        menuItemState = pageKey,
         prompt = prompt,
         uiState = uiState
     )
@@ -322,7 +323,7 @@ fun DefaultActionScreen(
                             MessageCard(
                                 message = message,
                                 onClick = {
-                                    println("ActionScreen: Message clicked: ${message.value}")
+                                    println("ActionScreen: Message clicked: ${message.title}")
                                     viewModel.onMessageClick(message, index)
                                 }
                             )
@@ -336,6 +337,8 @@ fun DefaultActionScreen(
                             .padding(32.dp),
                         contentAlignment = Alignment.Center
                     ) {
+
+
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -403,7 +406,7 @@ fun MessageCard(
     message: Message,
     onClick: () -> Unit
 ) {
-    if (message.value == "divider") {
+    if (message.title == "divider") {
         HorizontalDivider(
             modifier = Modifier.padding(vertical = 8.dp),
             color = Color.Gray
@@ -448,8 +451,8 @@ fun MessageCard(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = message.value,
-                    fontSize = 14.sp,
+                    text = message.title,
+                    fontSize = 18.sp,
                     color = when (message.severity) {
                         "Error" -> Color(0xFFD32F2F)
                         "Warn" -> Color(0xFFF57C00)
@@ -458,12 +461,21 @@ fun MessageCard(
                     },
                 )
 
-                if (message.actionName?.isNotEmpty() == true) {
+                if (message.subtitle?.isNotEmpty() == true) {
                     Text(
-                        text = "message.actionName",
+                        text = spaceCamel(message.subtitle),
                         fontSize = 12.sp,
                         color = Color(0xFF1976D2),
                         modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+
+                if (message.subtitle2?.isNotEmpty() == true) {
+                    Text(
+                        text = spaceCamel(message.subtitle2),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1976D2)
                     )
                 }
             }
@@ -501,8 +513,9 @@ fun PromptInputArea(
                         OutlinedTextField(
                             value = promptValue,
                             onValueChange = onPromptValueChange,
+                            textStyle = TextStyle(textAlign = TextAlign.Center),
                             label = {
-                                if (prompt.promptPlaceholder.length <= 20) {
+                                if (prompt.promptPlaceholder != null && prompt.promptPlaceholder.length <= 20) {
                                     Text(prompt.promptPlaceholder)
                                 } else {
                                     Text(
@@ -586,29 +599,6 @@ fun PromptInputArea(
                 }
             }
 
-            PromptType.COMPLETE -> {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    Text(
-                        text = "Complete",
-                        modifier = Modifier.align(Alignment.CenterVertically)
-                    )
-                    Button(
-                        onClick = { onSendPrompt("true") },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF4CAF50)
-                        ),
-                        shape = RoundedCornerShape(5.dp)
-                    ) {
-                        Text("OK")
-                    }
-                }
-            }
-
             PromptType.SIGN -> {
                 Button(
                     onClick = onShowSignature,
@@ -626,17 +616,6 @@ fun PromptInputArea(
                     )
                     Text("Sign")
                 }
-            }
-
-            PromptType.LIST -> {
-                Text(
-                    text = prompt.promptPlaceholder,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    textAlign = TextAlign.Center,
-                    fontSize = 16.sp
-                )
             }
 
             PromptType.PICKER -> {
@@ -657,6 +636,22 @@ fun PromptInputArea(
                             Text(item.label)
                         }
                     }
+                }
+            }
+
+            PromptType.GO_TO_NEW_PAGE -> {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    OutlinedTextField(
+                        value = promptValue,
+                        onValueChange = onPromptValueChange,
+                        label = { Text(prompt.promptPlaceholder) },
+                        modifier = Modifier.weight(1f),
+                        enabled = false
+                    )
                 }
             }
 
@@ -909,30 +904,34 @@ fun SignaturePromptScreen(
 // Sample data for previews
 private val sampleMessages = listOf(
     Message(
-        value = "Welcome to the action screen",
+        title = "Welcome to the action screen",
+        subtitle = "Partially Received",
+        subtitle2 = "Walmart",
         severity = "Info",
         isCommitted = false,
         actionName = ""
     ),
     Message(
-        value = "Processing your request...",
+        title = "Processing your request...",
         severity = "Warn",
+        subtitle = "Received",
+        subtitle2 = "Amazon",
         isCommitted = true,
         actionName = "process"
     ),
     Message(
-        value = "Action completed successfully",
+        title = "Action completed successfully",
         severity = "Success",
         isCommitted = true,
         actionName = "complete"
     ),
     Message(
-        value = "Error occurred during processing",
+        title = "Error occurred during processing",
         severity = "Error",
         isCommitted = false,
         actionName = "error"
     ),
-    Message(value = "divider", severity = "", isCommitted = false, actionName = "")
+    Message(title = "divider", severity = "", isCommitted = false, actionName = "")
 )
 
 private val sampleTextPrompt = Prompt(
@@ -940,6 +939,10 @@ private val sampleTextPrompt = Prompt(
     promptPlaceholder = "Enter your response here",
     items = emptyList()
 )
+
+fun spaceCamel(s: String?): String {
+    return s?.replace(Regex("([a-z])([A-Z])"), "$1 $2") ?: ""
+}
 
 private val samplePickerPrompt = Prompt(
     promptType = PromptType.PICKER,
@@ -954,18 +957,6 @@ private val samplePickerPrompt = Prompt(
 private val sampleConfirmPrompt = Prompt(
     promptType = PromptType.CONFIRM,
     promptPlaceholder = "Confirm action",
-    items = emptyList()
-)
-
-private val sampleCompletePrompt = Prompt(
-    promptType = PromptType.COMPLETE,
-    promptPlaceholder = "Action complete",
-    items = emptyList()
-)
-
-private val sampleListPrompt = Prompt(
-    promptType = PromptType.LIST,
-    promptPlaceholder = "Select an item from the list above",
     items = emptyList()
 )
 
@@ -1090,28 +1081,6 @@ fun AllPromptTypesPreview() {
                 Text("Confirm Prompt:", fontWeight = FontWeight.Bold)
                 PromptInputArea(
                     prompt = sampleConfirmPrompt,
-                    promptValue = "",
-                    onPromptValueChange = {},
-                    onSendPrompt = {},
-                    onShowSignature = {}
-                )
-            }
-
-            item {
-                Text("Complete Prompt:", fontWeight = FontWeight.Bold)
-                PromptInputArea(
-                    prompt = sampleCompletePrompt,
-                    promptValue = "",
-                    onPromptValueChange = {},
-                    onSendPrompt = {},
-                    onShowSignature = {}
-                )
-            }
-
-            item {
-                Text("List Prompt:", fontWeight = FontWeight.Bold)
-                PromptInputArea(
-                    prompt = sampleListPrompt,
                     promptValue = "",
                     onPromptValueChange = {},
                     onSendPrompt = {},

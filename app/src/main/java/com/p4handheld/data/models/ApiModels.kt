@@ -61,11 +61,8 @@ enum class PromptType {
     @SerializedName("Picker")
     PICKER,
 
-    @SerializedName("List")
-    LIST,
-
-    @SerializedName("Complete")
-    COMPLETE,
+    @SerializedName("Scan")
+    SCAN,
 
     @SerializedName("GoToNewPage")
     GO_TO_NEW_PAGE,
@@ -76,41 +73,62 @@ enum class PromptType {
     @SerializedName("Sign")
     SIGN,
 
+    @SerializedName("Date")
+    DATE,
+
     @SerializedName("Confirm")
     CONFIRM,
 
-    @SerializedName("Scan")
-    SCAN
+    @SerializedName("Number")
+    NUMBER
 }
 
 data class PromptResponse(
     @SerializedName("Prompt")
     val prompt: Prompt,
-    @SerializedName("Context")
-    val context: Map<String, Any>? = null,
     @SerializedName("Messages")
     val messages: List<Message> = emptyList(),
     @SerializedName("ToolbarActions")
     val toolbarActions: List<String> = emptyList(),
-    @SerializedName("IsStart")
-    val isStart: Boolean = false
+    @SerializedName("CommitAllMessages")
+    val commitAllMessages: Boolean = false,
+    @SerializedName("CleanLastMessages")
+    val cleanLastMessages: Number = 0
 )
 
 data class Message(
     @SerializedName("Id")
     val id: String = "",
-    @SerializedName("Value")
-    val value: String,
-    @SerializedName("Severity")
-    val severity: String = "",
+
+    @SerializedName("Title")
+    val title: String = "",
+
+    @SerializedName("Subtitle")
+    val subtitle: String? = "",
+
+    @SerializedName("Subtitle2")
+    val subtitle2: String? = "",
+
     @SerializedName("ImageResource")
     val imageResource: String? = null,
+
+    @SerializedName("Severity")
+    val severity: String = "",
+
+    @SerializedName("Localize")
+    val localize: Boolean = false,
+
+    @SerializedName("IsActionable")
+    val isActionable: Boolean = false,
+
+    @SerializedName("HandlerName")
+    val handlerName: String? = null,
+
     @SerializedName("ActionName")
-    val actionName: String? = "",
-    @SerializedName("Subtitle")
-    val Subtitle: String? = "",
-    @SerializedName("GoToLink")
-    val GoToLink: String = "",
+    val actionName: String? = null,
+
+    @SerializedName("PromptValue")
+    val promptValue: String? = null,
 
     var isCommitted: Boolean = false,
     val state: PromptResponse? = null
@@ -145,13 +163,9 @@ data class PromptItem(
 
 data class ProcessRequest(
     @SerializedName("PromptValue")
-    val promptValue: Any?,
+    val promptValue: String?,
     @SerializedName("ActionFor")
-    val actionFor: String,
-    @SerializedName("Context")
-    val context: Map<String, Any>? = null,
-    @SerializedName("ToolbarActions")
-    val toolbarActions: List<String>? = null
+    val actionFor: String?
 )
 
 // ==================== USER MESSAGES / CHATS ====================

@@ -14,9 +14,7 @@ interface ApiService {
     suspend fun login(source: String = "LoginWeb", loginRequest: LoginRequest): ApiResponse<LoginResponse>
 
     suspend fun getCurrentMenu(): ApiResponse<UserContextResponse>
-
-    suspend fun initAction(pageKey: String, initialValue: String? = null): ApiResponse<PromptResponse>
-
+    
     suspend fun processAction(pageKey: String, processRequest: ProcessRequest): ApiResponse<PromptResponse>
 
     suspend fun completeAction(pageKey: String): ApiResponse<PromptResponse>

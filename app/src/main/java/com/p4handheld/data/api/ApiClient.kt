@@ -33,8 +33,9 @@ object ApiClient {
 
     private fun getBaseUrl(): String {
         val sharedPreferences = context?.getSharedPreferences("tenant_config", Context.MODE_PRIVATE)
-        return "http://costa.pro4soft-demo.com:2020/";
-        //return "http://10.0.2.2:2020/";//sharedPreferences?.getString("base_url", "http://10.0.2.2:2020/") ?: "http://10.0.2.2:2020/"
+        //return "v";
+        //return "http://10.0.2.2:2020/";
+        return sharedPreferences?.getString("base_url", "https:api.p4warehouse.com") ?: "http://costa.pro4soft-demo.com:2020/"
     }
 
     private val client: OkHttpClient by lazy {
@@ -160,42 +161,6 @@ object ApiClient {
                             tenantScanType = userContextResponse.tenantScanType
                         )
                         ApiResponse(true, handHeldMenuItems, responseCode)
-                    } else {
-                        val errorBody = response.body?.string()
-                        ApiResponse(false, null, responseCode, errorBody)
-                    }
-                } catch (e: Exception) {
-                    ApiResponse(false, null, 0, e.message)
-                }
-            }
-        }
-
-        override suspend fun initAction(
-            pageKey: String,
-            initialValue: String?
-        ): ApiResponse<PromptResponse> {
-            return withContext(Dispatchers.IO) {
-                try {
-                    val url = if (initialValue != null) {
-                        "${getBaseUrl()}hh/$pageKey/init?initialValue=$initialValue"
-                    } else {
-                        "${getBaseUrl()}hh/$pageKey/init"
-                    }
-
-                    val request = Request.Builder()
-                        .url(url)
-                        .get()
-                        .build()
-
-                    val response = client.newCall(request).execute()
-                    val responseCode = response.code
-                    val isSuccessful = response.isSuccessful
-
-                    if (isSuccessful) {
-                        val responseBody = response.body?.string().orEmpty()
-                        val promptResponse =
-                            Gson().fromJson(responseBody, PromptResponse::class.java)
-                        ApiResponse(true, promptResponse, responseCode)
                     } else {
                         val errorBody = response.body?.string()
                         ApiResponse(false, null, responseCode, errorBody)

@@ -54,7 +54,18 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
 //                        return@launch
                     }
 
-                    val newMessages = response.messages
+                    val photoMessage = if (promptValue?.startsWith("data:image") == true) {
+                        listOf(
+                            Message(
+                                title = "Photo sent",
+                                severity = "Success",
+                                imageResource = promptValue,
+                                isCommitted = false
+                            )
+                        )
+                    } else emptyList()
+
+                    val newMessages = response.messages + photoMessage
 
                     val updatedMessageStack = currentState.messageStack + newMessages;
 

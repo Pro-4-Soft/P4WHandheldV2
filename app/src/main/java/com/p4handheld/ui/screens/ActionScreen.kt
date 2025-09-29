@@ -83,6 +83,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.draw.clip
+import android.graphics.BitmapFactory
 import com.p4handheld.data.ScanStateHolder
 import com.p4handheld.data.models.Message
 import com.p4handheld.data.models.Prompt
@@ -451,9 +453,21 @@ fun MessageCard(
         Row(
             modifier = Modifier.padding(12.dp)
         ) {
-            // Image if available
-            message.imageResource?.let { imageResource ->
-                Spacer(modifier = Modifier.width(8.dp))
+            // Image if available (supports base64 data URI)
+            message.imageResource?.let { src ->
+                val bmp = remember(src) { decodeBase64Image(src) }
+                if (bmp != null) {
+                    Image(
+                        bitmap = bmp.asImageBitmap(),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                } else {
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
             }
 
             Column(
@@ -691,6 +705,8 @@ fun PhotoPromptScreen(
     }
 
     var previewBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var captureAttempted by remember { mutableStateOf(false) }
+    var errorMsg by remember { mutableStateOf<String?>(null) }
 
     val previewLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
@@ -698,7 +714,15 @@ fun PhotoPromptScreen(
         previewBitmap = bitmap
         bitmap?.let {
             val base64 = it.toBase64Jpeg()
+            // Update local state and immediately send
             onImageCaptured(base64)
+            onSendImage(base64)
+            errorMsg = null
+        }
+        if (bitmap == null) {
+            // User cancelled or camera failed
+            captureAttempted = true
+            errorMsg = "No photo captured"
         }
     }
 
@@ -707,6 +731,11 @@ fun PhotoPromptScreen(
     ) { granted ->
         if (granted) {
             previewLauncher.launch(null)
+            errorMsg = null
+        }
+        if (!granted) {
+            captureAttempted = true
+            errorMsg = "Camera permission denied"
         }
     }
 
@@ -731,47 +760,28 @@ fun PhotoPromptScreen(
             .navigationBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // When we have a captured bitmap, show it with a top bar containing a single check action.
-        if (previewBitmap != null) {
-            // Top bar with 'check' to send immediately
-            TopAppBar(
-                title = { Text("") },
-                actions = {
-                    IconButton(onClick = { capturedImage?.let(onSendImage) }) {
-                        Icon(Icons.Default.Check, contentDescription = "Send")
-                    }
-                }
+        // Minimal placeholder; camera auto-launches and submission happens immediately
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            // Optional placeholder icon while waiting for camera result
+            Icon(
+                imageVector = Icons.Default.CameraAlt,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp)
             )
-
-            // Show captured image
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .background(Color.LightGray, RoundedCornerShape(8.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                previewBitmap?.let { bmp ->
-                    Image(
-                        bitmap = bmp.asImageBitmap(),
-                        contentDescription = "Captured Photo"
-                    )
-                }
+            errorMsg?.let { msg ->
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(text = msg, color = Color.Gray)
             }
-        } else {
-            // No UI needed here because camera auto-launches on entering this prompt
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                // Optional placeholder while waiting for camera result
-                Icon(
-                    imageVector = Icons.Default.CameraAlt,
-                    contentDescription = null,
-                    modifier = Modifier.size(64.dp)
-                )
+            if (captureAttempted) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Button(onClick = { launchCameraWithPermission() }, shape = RoundedCornerShape(5.dp)) {
+                    Text("Retry")
+                }
             }
         }
     }
@@ -924,6 +934,16 @@ private val sampleTextPrompt = Prompt(
 
 fun spaceCamel(s: String?): String {
     return s?.replace(Regex("([a-z])([A-Z])"), "$1 $2") ?: ""
+}
+
+private fun decodeBase64Image(dataUri: String): Bitmap? {
+    return try {
+        val base64Part = dataUri.substringAfter(",", missingDelimiterValue = dataUri)
+        val bytes = Base64.decode(base64Part, Base64.DEFAULT)
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+    } catch (e: Exception) {
+        null
+    }
 }
 
 private val samplePickerPrompt = Prompt(

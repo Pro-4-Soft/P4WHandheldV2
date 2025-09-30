@@ -44,6 +44,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -780,22 +782,69 @@ fun PromptInputArea(
             }
 
             PromptType.PICKER -> {
-                LazyRow(
+                var showPicker by remember { mutableStateOf(true) }
+
+                if (showPicker) {
+                    AlertDialog(
+                        onDismissRequest = { showPicker = false },
+                        title = { Text(text = prompt.promptPlaceholder.ifBlank { "Select an option" }) },
+                        text = {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                prompt.items.forEach { item ->
+                                    Button(
+                                        onClick = {
+                                            onSendPrompt(item.value)
+                                            showPicker = false
+                                        },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(5.dp)
+                                    ) {
+                                        Text(item.label)
+                                    }
+                                }
+                            }
+                        },
+                        confirmButton = {
+                            TextButton(onClick = { showPicker = false }) {
+                                Text("Close")
+                            }
+                        }
+                    )
+                }
+
+                // Re-open control similar to DATE read-only field
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                        .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 8.dp),
+                    verticalAlignment = Alignment.Bottom,
                 ) {
-                    items(prompt.items) { item ->
-                        Button(
-                            onClick = { onSendPrompt(item.value) },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
+                    OutlinedTextField(
+                        value = "",
+                        onValueChange = {},
+                        label = { Text(prompt.promptPlaceholder.ifBlank { "Select option" }) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = LocalIndication.current,
+                                onClick = { showPicker = true }
                             ),
-                            shape = RoundedCornerShape(5.dp)
-                        ) {
-                            Text(item.label)
-                        }
+                        readOnly = true,
+                        enabled = true
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        onClick = { showPicker = true },
+                        modifier = Modifier.height(56.dp),
+                        shape = RoundedCornerShape(5.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Text(text = "Choose")
                     }
                 }
             }

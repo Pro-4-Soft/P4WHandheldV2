@@ -371,7 +371,7 @@ fun MenuTileCard(
     ) {
 
         var columnWidth by remember { mutableStateOf(0.dp) }
-        val density = LocalDensity.current // read inside @Composable
+        val density = LocalDensity.current
 
         Column(
             modifier = Modifier
@@ -394,15 +394,14 @@ fun MenuTileCard(
                 if (menuItem.children.isNotEmpty()) {
                     Box(
                         modifier = Modifier
-                            .offset(x = 12.dp, y = (-8).dp)
+                            .offset(x = 12.dp, y = (-12).dp)
                             .size(16.dp)
-                            .background(Color(0xFF10B981), CircleShape)
-                            .border(2.dp, Color(0xFFD1FAE5), CircleShape),
+                            .background(Color(0xFF10B981), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = menuItem.children.size.toString(),
-                            fontSize = 8.sp,
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White,
                             modifier = Modifier.offset(x = 0.dp, y = (-4).dp)

@@ -46,6 +46,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -53,6 +55,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -515,6 +518,7 @@ fun MessageCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PromptInputArea(
     prompt: Prompt,
@@ -529,6 +533,93 @@ fun PromptInputArea(
         colors = CardDefaults.cardColors(MaterialTheme.colorScheme.background)
     ) {
         when (prompt.promptType) {
+            PromptType.DATE -> {
+                var showPicker by remember { mutableStateOf(true) }
+                val dateState = rememberDatePickerState()
+
+                // Helper to format selected millis to yyyy-MM-dd
+                fun formatSelectedDate(): String? {
+                    val millis = dateState.selectedDateMillis ?: return null
+                    return try {
+                        val localDate = java.time.Instant.ofEpochMilli(millis)
+                            .atZone(java.time.ZoneId.systemDefault())
+                            .toLocalDate()
+                        localDate.toString() // yyyy-MM-dd
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+
+                if (showPicker) {
+                    DatePickerDialog(
+                        onDismissRequest = { showPicker = false },
+                        confirmButton = {
+                            Button(onClick = {
+                                val formatted = formatSelectedDate()
+                                if (formatted != null) {
+                                    onPromptValueChange(formatted)
+                                }
+                                showPicker = false
+                            }) {
+                                Text("OK")
+                            }
+                        },
+                        dismissButton = {
+                            Button(onClick = { showPicker = false }) { Text("Cancel") }
+                        }
+                    ) {
+                        DatePicker(state = dateState)
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 8.dp),
+                    verticalAlignment = Alignment.Bottom,
+                ) {
+                    OutlinedTextField(
+                        value = promptValue,
+                        onValueChange = {},
+                        label = { Text(prompt.promptPlaceholder.ifBlank { "Select date" }) },
+                        modifier = Modifier.weight(1f),
+                        enabled = false
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        onClick = { showPicker = true },
+                        modifier = Modifier.height(56.dp),
+                        shape = RoundedCornerShape(5.dp)
+                    ) {
+                        Text("Pick")
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        onClick = {
+                            if (promptValue.isNotEmpty()) {
+                                onSendPrompt(promptValue)
+                            } else {
+                                // If not yet set but selected in dialog, try to send it
+                                val formatted = formatSelectedDate()
+                                if (formatted != null) onSendPrompt(formatted)
+                            }
+                        },
+                        enabled = promptValue.isNotEmpty() || dateState.selectedDateMillis != null,
+                        modifier = Modifier.height(56.dp),
+                        shape = RoundedCornerShape(5.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4CAF50)
+                        )
+                    ) {
+                        Text(text = "Send", fontSize = 18.sp)
+                    }
+                }
+            }
+
             PromptType.NUMBER -> {
                 Row(
                     modifier = Modifier
@@ -576,6 +667,7 @@ fun PromptInputArea(
                     }
                 }
             }
+
             PromptType.SCAN -> {
                 Column(
                     modifier = Modifier
@@ -984,8 +1076,12 @@ private val sampleMessages = listOf(
 
 private val sampleTextPrompt = Prompt(
     promptType = PromptType.TEXT,
-    promptPlaceholder = "Enter your response here",
-    items = emptyList()
+    promptPlaceholder = "Enter your response here"
+)
+
+private val sampleDatePrompt = Prompt(
+    promptType = PromptType.DATE,
+    promptPlaceholder = "Enter your response here"
 )
 
 fun spaceCamel(s: String?): String {
@@ -1167,6 +1263,33 @@ fun MultipleMessagesPreview2() {
             prompt = {
                 PromptInputArea(
                     prompt = sampleTextPrompt,
+                    promptValue = "",
+                    onPromptValueChange = {},
+                    onSendPrompt = {},
+                    onShowSignature = {}
+                )
+            },
+            uiState
+        )
+    }
+}
+
+// Multiple Message Types Preview
+@Preview(name = "Multiple Messages", showBackground = true)
+@Composable
+fun MultipleMessagesPreview22() {
+    val currentResponse = PromptResponse(
+        prompt = sampleDatePrompt,
+        messages = sampleMessages
+    );
+    val uiState = ActionUiState(currentResponse = currentResponse);
+    HandheldP4WTheme {
+        ActionScreenWrapper(
+            menuItemLabel = "Adjust In",
+            menuItemState = "main.AdjustIn",
+            prompt = {
+                PromptInputArea(
+                    prompt = sampleDatePrompt,
                     promptValue = "",
                     onPromptValueChange = {},
                     onSendPrompt = {},

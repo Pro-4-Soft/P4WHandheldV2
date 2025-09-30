@@ -12,10 +12,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -97,6 +99,8 @@ import com.p4handheld.ui.screens.viewmodels.ActionUiState
 import com.p4handheld.ui.screens.viewmodels.ActionViewModel
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
+import java.time.Instant
+import java.time.ZoneId
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -313,7 +317,7 @@ fun DefaultActionScreen(
                                 message = message,
                                 onClick = {
                                     println("ActionScreen: Message clicked: ${message.title}")
-                                    viewModel.onMessageClick(message, index)
+                                    viewModel.onMessageClick(menuItemState, message, index)
                                 }
                             )
                         }
@@ -440,10 +444,13 @@ fun MessageCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
+            .clickable(
+                enabled = message.isActionable,
+                onClick = { onClick() }
+            ),
         colors = CardDefaults.cardColors(
             containerColor = when (message.severity) {
-                "Info" -> if (message.isCommitted) Color(0xFFE3F2FD) else Color.White
+                "Info" -> if (message.isCommitted || !message.isActionable) Color(0xFFE3F2FD) else Color.White
                 "Warn" -> Color(0xFFFFF3E0)
                 "Error" -> Color(0xFFFFEBEE)
                 "Success" -> Color(0xFFE8F5E8)
@@ -541,8 +548,8 @@ fun PromptInputArea(
                 fun formatSelectedDate(): String? {
                     val millis = dateState.selectedDateMillis ?: return null
                     return try {
-                        val localDate = java.time.Instant.ofEpochMilli(millis)
-                            .atZone(java.time.ZoneId.systemDefault())
+                        val localDate = Instant.ofEpochMilli(millis)
+                            .atZone(ZoneId.systemDefault())
                             .toLocalDate()
                         localDate.toString() // yyyy-MM-dd
                     } catch (e: Exception) {
@@ -585,8 +592,8 @@ fun PromptInputArea(
                         modifier = Modifier
                             .weight(1f)
                             .clickable(
-                                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
-                                indication = androidx.compose.foundation.LocalIndication.current,
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = LocalIndication.current,
                                 onClick = { showPicker = true }
                             ),
                         readOnly = true,

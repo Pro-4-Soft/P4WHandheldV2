@@ -173,15 +173,24 @@ object ApiClient {
 
         override suspend fun processAction(
             pageKey: String,
-            processRequest: ProcessRequest
+            processRequest: ProcessRequest,
+            taskId: String?
         ): ApiResponse<PromptResponse> {
             return withContext(Dispatchers.IO) {
                 try {
                     val jsonBody = Gson().toJson(processRequest)
                     val requestBody = jsonBody.toRequestBody("application/json".toMediaType())
 
+                    val url = buildString {
+                        append("${getBaseUrl()}hh/$pageKey/process")
+                        if (!taskId.isNullOrEmpty()) {
+                            append("?taskId=")
+                            append(taskId)
+                        }
+                    }
+
                     val request = Request.Builder()
-                        .url("${getBaseUrl()}hh/$pageKey/process")
+                        .url(url)
                         .post(requestBody)
                         .build()
 

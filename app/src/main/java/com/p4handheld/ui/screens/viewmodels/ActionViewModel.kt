@@ -30,7 +30,7 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
     private val _uiState = MutableStateFlow(ActionUiState())
     val uiState: StateFlow<ActionUiState> = _uiState.asStateFlow()
 
-    fun processAction(pageKey: String, promptValue: String? = null, actionFor: String? = null) {
+    fun processAction(pageKey: String, promptValue: String? = null, actionFor: String? = null, taskId: String? = null) {
         viewModelScope.launch {
             val currentState = _uiState.value
             _uiState.value = currentState.copy(isLoading = true)
@@ -41,7 +41,7 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
                     actionFor = actionFor ?: currentState.currentPrompt?.actionName ?: ""
                 )
 
-                val result = apiService.processAction(pageKey, processRequest)
+                val result = apiService.processAction(pageKey, processRequest, taskId)
 
                 if (result.isSuccessful && result.body != null) {
                     val response = result.body
@@ -122,15 +122,22 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
         _uiState.value = _uiState.value.copy(promptValue = value)
     }
 
-    fun onMessageClick(message: Message, index: Int) {
+    fun onMessageClick(pageKey: String, message: Message, index: Int) {
         val currentState = _uiState.value
 
         if (message.isCommitted) return
 
         // Restore to clicked message state
         val clickedState = message.state as? PromptResponse
+        val truncatedMessages = currentState.messageStack.take(index)
+
+        if (message.isActionable) {
+            _uiState.value = currentState.copy(messageStack = truncatedMessages)
+            processAction(pageKey, currentState.promptValue.ifBlank { message.promptValue ?: "" }, message.actionName ?: message.handlerName, taskId = message.taskId)
+            return
+        }
+
         if (clickedState != null) {
-            val truncatedMessages = currentState.messageStack.take(index)
             _uiState.value = currentState.copy(
                 currentPrompt = clickedState.prompt,
                 currentResponse = clickedState,

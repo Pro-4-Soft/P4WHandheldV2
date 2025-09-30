@@ -15,7 +15,7 @@ interface ApiService {
 
     suspend fun getCurrentMenu(): ApiResponse<UserContextResponse>
     
-    suspend fun processAction(pageKey: String, processRequest: ProcessRequest): ApiResponse<PromptResponse>
+    suspend fun processAction(pageKey: String, processRequest: ProcessRequest, taskId: String? = null): ApiResponse<PromptResponse>
 
     suspend fun completeAction(pageKey: String): ApiResponse<PromptResponse>
 

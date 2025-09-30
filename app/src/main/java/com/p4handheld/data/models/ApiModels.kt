@@ -45,7 +45,7 @@ data class MenuItem(
     @SerializedName("Icon")
     val icon: String? = null,
     @SerializedName("Children")
-    val children: List<MenuItem> = emptyList()
+    val children: List<MenuItem> = emptyList(),
 )
 
 data class ApiError(

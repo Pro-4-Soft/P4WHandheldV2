@@ -3,7 +3,7 @@ package com.p4handheld.ui.compose.theme
 import androidx.compose.ui.graphics.Color
 
 // Primary brand
-val BluePrimary = Color(0xFF1D4ED8)
+val BluePrimary = Color(0xFF020617)
 val BluePrimaryContainer = Color(0xFFD0E2FF)
 val OnBluePrimary = Color.White
 val OnBluePrimaryContainer = Color(0xFF001F4D)

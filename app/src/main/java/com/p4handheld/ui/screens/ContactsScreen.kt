@@ -15,11 +15,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
+import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -50,7 +52,7 @@ fun ContactsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Contacts") },
+                title = { Text("Contacts") }
             )
         }
     ) { padding ->
@@ -61,7 +63,8 @@ fun ContactsScreen(
         ) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                shape = RoundedCornerShape(0.dp)
             ) {
                 if (uiState.isLoading) {
                     Box(
@@ -85,7 +88,7 @@ fun ContactsScreen(
                                     contact = contact,
                                     onClick = { onOpenChat(contact.id, contact.username) }
                                 )
-                                Divider()
+                                HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
                             }
                         }
                     }
@@ -144,52 +147,62 @@ private fun ContactRow(contact: UserContact, onClick: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
-fun PreviewContactRow() {
+fun PreviewContactsScree2n() {
+    val contacts = listOf(
+        UserContact(
+            id = "1",
+            lastSeen = "10 min ago",
+            username = "Alice",
+            isOnline = true,
+            newMessages = 2
+        ),
+        UserContact(
+            id = "2",
+            lastSeen = "just now",
+            username = "Bob",
+            isOnline = true,
+            newMessages = 0
+        ),
+        UserContact(
+            id = "3",
+            lastSeen = "yesterday",
+            username = "Charlie",
+            isOnline = false,
+            newMessages = 5
+        )
+    )
     MaterialTheme {
-        Surface {
-            ContactRow(
-                contact = UserContact(
-                    id = "1",
-                    username = "Alice Johnson",
-                    isOnline = true,
-                    lastSeen = null,
-                    newMessages = 3
-                ),
-                onClick = {}
-            )
-        }
-    }
-}
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Contacts") }
+                )
+            }
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                ) {
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewContactsScreen() {
-    MaterialTheme {
-        Surface(modifier = Modifier.fillMaxSize().padding(8.dp)) {
-            // Fake UI state instead of ViewModel
-            Column {
-                ContactRow(
-                    contact = UserContact(
-                        id = "2",
-                        username = "Bob Smith",
-                        isOnline = false,
-                        lastSeen = "Yesterday",
-                        newMessages = 0
-                    ),
-                    onClick = {}
-                )
-                ContactRow(
-                    contact = UserContact(
-                        id = "3",
-                        username = "Charlie",
-                        isOnline = true,
-                        lastSeen = null,
-                        newMessages = 12
-                    ),
-                    onClick = {}
-                )
+                    LazyColumn {
+                        items(contacts) { contact ->
+                            ContactRow(
+                                contact = contact,
+                                onClick = {  }
+                            )
+                            HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+                        }
+                    }
+                }
+
             }
         }
     }

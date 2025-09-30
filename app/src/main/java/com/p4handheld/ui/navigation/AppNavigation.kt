@@ -64,7 +64,7 @@ fun AppNavigation(
         // Backward-compat: old Messages route now shows Contacts and navigates to Chat
         composable(Screen.Messages.route) {
             ContactsScreen(
-                onNavigateBack = { navController.popBackStack() },
+//                onNavigateBack = { navController.popBackStack() },
                 onOpenChat = { id, name ->
                     navController.navigate(Screen.Chat.createRoute(id, name))
                 }
@@ -74,7 +74,7 @@ fun AppNavigation(
         // New split chats flow
         composable(Screen.Contacts.route) {
             ContactsScreen(
-                onNavigateBack = { navController.popBackStack() },
+//                onNavigateBack = { navController.popBackStack() },
                 onOpenChat = { id, name ->
                     navController.navigate(Screen.Chat.createRoute(id, name))
                 }

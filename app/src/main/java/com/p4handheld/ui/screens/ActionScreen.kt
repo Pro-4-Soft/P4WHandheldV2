@@ -452,7 +452,7 @@ fun MessageCard(
             ),
         colors = CardDefaults.cardColors(
             containerColor = when (message.severity) {
-                "Info" -> if (message.isCommitted || !message.isActionable) Color(0xFFE3F2FD) else Color.White
+                "Info" -> if (message.isCommitted || !message.isActionable) Color(0xFFF1F1F1) else Color.White
                 "Warn" -> Color(0xFFFFF3E0)
                 "Error" -> Color(0xFFFFEBEE)
                 "Success" -> Color(0xFFE8F5E8)
@@ -463,7 +463,7 @@ fun MessageCard(
         border = BorderStroke(
             width = 1.dp,
             color = when (message.severity) {
-                "Info" -> Color(0xFFBBDEFB)
+                "Info" -> Color(0xFFDADADA)
                 "Warn" -> Color(0xFFFFE0B2)
                 "Error" -> Color(0xFFFFCDD2)
                 "Success" -> Color(0xFFC8E6C9)
@@ -509,7 +509,7 @@ fun MessageCard(
                     Text(
                         text = spaceCamel(message.subtitle),
                         fontSize = 12.sp,
-                        color = Color(0xFF1976D2),
+                        color = Color(0xFF595959),
                         modifier = Modifier.padding(top = 4.dp)
                     )
                 }
@@ -519,7 +519,7 @@ fun MessageCard(
                         text = spaceCamel(message.subtitle2),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1976D2)
+                        color = Color(0xFF676767)
                     )
                 }
             }

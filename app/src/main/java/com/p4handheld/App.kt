@@ -10,7 +10,6 @@ class App : Application() {
         @Volatile
         private var instance: App? = null
 
-        // Synchronized method to get the singleton instance
         fun getInstance(): App =
             instance ?: synchronized(this) {
                 instance ?: throw IllegalStateException("Application is not created yet!")

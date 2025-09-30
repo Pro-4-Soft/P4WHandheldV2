@@ -805,9 +805,7 @@ fun PromptInputArea(
                             }
                         },
                         confirmButton = {
-                            TextButton(onClick = { showPicker = false }) {
-                                Text("Close")
-                            }
+
                         }
                     )
                 }

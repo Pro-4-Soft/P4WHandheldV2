@@ -11,18 +11,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-// ViewModel for MainActivity, responsible for managing DataWedge configurations and status checks.
 class MainViewModel : ViewModel() {
     private val queryManager = QueryManager()
     private val configurationManager = ConfigurationManager()
 
-    // LiveData to track the loading state.
     val isLoading = ScanStateHolder.isLoading
 
-    // LiveData to observe the scan view status.
     val scanViewStatus = ScanStateHolder.scanViewStatus
 
-    // Initiates a loop to check DataWedge status until it is ready.
     fun getStatus() {
         isLoading.value = ScanStateHolder.isDataWedgeReady.value == false
         viewModelScope.launch(Dispatchers.IO) {
@@ -33,7 +29,6 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    // Creates a DataWedge profile for the first activity.
     fun createProfile() {
         isLoading.value = true
         viewModelScope.launch {
@@ -43,7 +38,6 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    // Sets the configuration for the DataWedge profile and registers for notifications.
     fun setConfig() {
         viewModelScope.launch(Dispatchers.IO) {
             configurationManager.updateProfile1() // Update profile settings.
@@ -55,7 +49,6 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    // Unregisters from DataWedge notifications.
     fun unregisterNotifications() {
         viewModelScope.launch(Dispatchers.IO) {
             configurationManager.unregisterForNotifications(

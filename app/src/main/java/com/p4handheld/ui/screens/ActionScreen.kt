@@ -3,6 +3,7 @@ package com.p4handheld.ui.screens
 import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Paint
 import android.util.Base64
 import androidx.activity.compose.BackHandler
@@ -18,6 +19,7 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,11 +39,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -54,8 +53,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -67,6 +64,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.RectangleShape
@@ -83,13 +81,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.ui.draw.clip
-import android.graphics.BitmapFactory
 import com.p4handheld.data.ScanStateHolder
 import com.p4handheld.data.models.Message
 import com.p4handheld.data.models.Prompt
 import com.p4handheld.data.models.PromptItem
+import com.p4handheld.data.models.PromptResponse
 import com.p4handheld.data.models.PromptType
+import com.p4handheld.data.models.ToolbarAction
 import com.p4handheld.ui.compose.theme.HandheldP4WTheme
 import com.p4handheld.ui.screens.viewmodels.ActionUiState
 import com.p4handheld.ui.screens.viewmodels.ActionViewModel
@@ -271,44 +269,20 @@ fun DefaultActionScreen(
     menuItemState: String,
     viewModel: ActionViewModel
 ) {
-    val context = LocalContext.current
-
     Column(
         modifier = Modifier
             .fillMaxSize()
             .navigationBarsPadding()
     ) {
-        // Toolbar actions
         if (uiState.currentResponse?.toolbarActions?.isNotEmpty() == true) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-            ) {
-                LazyRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(uiState.currentResponse.toolbarActions) { action ->
-                        Button(
-                            onClick = {
-                                println("ActionScreen: Toolbar action clicked: $action")
-                                viewModel.processAction(menuItemState, null, action)
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.secondary
-                            )
-                        ) {
-                            Text(action)
-                        }
-                    }
+            ToolBarActions(
+                toolbarActions = uiState.currentResponse.toolbarActions,
+                onToolBarActionClick = { actionFor ->
+                    viewModel.processAction(menuItemState, null, actionFor)
                 }
-            }
+            )
         }
 
-        // Messages panel with enhanced scrollable area
         Card(
             modifier = Modifier
                 .weight(1f)
@@ -385,7 +359,6 @@ fun DefaultActionScreen(
                 }
             )
         } ?: run {
-            // Show placeholder when no prompt is available
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -405,6 +378,41 @@ fun DefaultActionScreen(
                         text = if (uiState.isLoading) "Loading..." else "Waiting for prompt...",
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ToolBarActions(
+    toolbarActions: List<ToolbarAction>,
+    onToolBarActionClick: (String) -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(0.dp),
+    ) {
+        LazyRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White),
+            horizontalArrangement = Arrangement.End,
+            contentPadding = PaddingValues(horizontal = 4.dp),
+        ) {
+            items(toolbarActions) { action ->
+                Button(
+                    onClick = {
+                        println("ActionScreen: Toolbar action clicked: $action")
+                        onToolBarActionClick(action.action)
+                    },
+                    shape = RoundedCornerShape(5.dp),
+                ) {
+                    Text(
+                        text = action.label,
+                        fontSize = 16.sp
                     )
                 }
             }
@@ -642,7 +650,7 @@ fun PromptInputArea(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 4.dp),
+                        .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 8.dp),
                     verticalAlignment = Alignment.Bottom,
                 ) {
                     OutlinedTextField(
@@ -677,7 +685,7 @@ fun PromptInputArea(
                             containerColor = Color(0xFF4CAF50)
                         )
                     ) {
-                        Text("Send")
+                        Text(text = "Send", fontSize = 18.sp)
                     }
                 }
             }
@@ -975,20 +983,6 @@ private val sampleScanPrompt = Prompt(
     items = emptyList()
 )
 
-// Photo Prompt Previews
-@Preview(name = "Photo Prompt - No Image")
-@Composable
-fun PhotoPromptScreenNoImagePreview() {
-    HandheldP4WTheme {
-        PhotoPromptScreen(
-            capturedImage = null,
-            onImageCaptured = {},
-            onSendImage = {},
-            onRetakePhoto = {}
-        )
-    }
-}
-
 @Preview(name = "Photo Prompt - With Image")
 @Composable
 fun PhotoPromptScreenWithImagePreview() {
@@ -1109,7 +1103,15 @@ fun AllPromptTypesPreview() {
 @Composable
 fun MultipleMessagesPreview2() {
 
-    val uiState = ActionUiState();
+    val toolbar = listOf(
+        ToolbarAction(label = "Option 1", action = "opt1"),
+    )
+    val currentResponse = PromptResponse(
+        toolbarActions = toolbar,
+        prompt = sampleTextPrompt,
+        messages = sampleMessages
+    );
+    val uiState = ActionUiState(currentResponse = currentResponse);
     HandheldP4WTheme {
         ActionScreenWrapper(
             menuItemLabel = "Adjust In",
@@ -1124,6 +1126,19 @@ fun MultipleMessagesPreview2() {
                 )
             },
             uiState
+        )
+    }
+}
+
+@Preview(name = "Multiple Messages", showBackground = true)
+@Composable
+fun ToolBarButtonPreview() {
+    HandheldP4WTheme {
+        ToolBarActions(
+            toolbarActions = listOf(
+                ToolbarAction(label = "Option 1", action = "opt1"),
+            ),
+            onToolBarActionClick = {}
         )
     }
 }

@@ -191,8 +191,7 @@ object ApiClient {
 
                     if (isSuccessful) {
                         val responseBody = response.body?.string().orEmpty()
-                        val promptResponse =
-                            Gson().fromJson(responseBody, PromptResponse::class.java)
+                        val promptResponse = Gson().fromJson(responseBody, PromptResponse::class.java)
                         ApiResponse(true, promptResponse, responseCode)
                     } else {
                         val errorBody = response.body?.string()

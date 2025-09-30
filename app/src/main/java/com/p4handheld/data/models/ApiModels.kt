@@ -89,11 +89,20 @@ data class PromptResponse(
     @SerializedName("Messages")
     val messages: List<Message> = emptyList(),
     @SerializedName("ToolbarActions")
-    val toolbarActions: List<String> = emptyList(),
+    val toolbarActions: List<ToolbarAction> = emptyList(),
     @SerializedName("CommitAllMessages")
     val commitAllMessages: Boolean = false,
     @SerializedName("CleanLastMessages")
     val cleanLastMessages: Number = 0
+)
+
+data class ToolbarAction(
+    @SerializedName("\$id")
+    val id: String? = null,
+    @SerializedName("Action")
+    val action: String,
+    @SerializedName("Label")
+    val label: String
 )
 
 data class Message(

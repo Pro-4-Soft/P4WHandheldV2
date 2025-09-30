@@ -78,6 +78,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -626,6 +628,10 @@ fun PromptInputArea(
             }
 
             PromptType.NUMBER -> {
+                val numberFocusRequester = remember { FocusRequester() }
+                LaunchedEffect(Unit) {
+                    numberFocusRequester.requestFocus()
+                }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -639,7 +645,9 @@ fun PromptInputArea(
                             onPromptValueChange(digitsOnly)
                         },
                         label = { Text(prompt.promptPlaceholder.ifBlank { "Enter number" }) },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .focusRequester(numberFocusRequester),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Number,
                             imeAction = ImeAction.Send
@@ -792,6 +800,10 @@ fun PromptInputArea(
 
             else -> {
                 // Text input
+                val textFocusRequester = remember { FocusRequester() }
+                LaunchedEffect(Unit) {
+                    textFocusRequester.requestFocus()
+                }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -802,7 +814,9 @@ fun PromptInputArea(
                         value = promptValue,
                         onValueChange = onPromptValueChange,
                         label = { Text(prompt.promptPlaceholder) },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .focusRequester(textFocusRequester),
                         keyboardOptions = KeyboardOptions(
                             imeAction = ImeAction.Send
                         ),

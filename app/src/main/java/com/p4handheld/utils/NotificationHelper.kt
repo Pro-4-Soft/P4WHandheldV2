@@ -1,5 +1,6 @@
-package com.p4handheld.workers
+package com.p4handheld.utils
 
+import android.R
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -31,7 +32,7 @@ object NotificationHelper {
         return NotificationCompat.Builder(context, CHANNEL_ID)
             .setContentTitle(title)
             .setContentText(text)
-            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+            .setSmallIcon(R.drawable.ic_menu_mylocation)
             .setOngoing(true)
             .build()
     }

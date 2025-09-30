@@ -38,6 +38,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.tooling.preview.Preview
 import com.p4handheld.data.models.UserContact
 import com.p4handheld.ui.screens.viewmodels.ContactsViewModel
+import com.p4handheld.utils.formatDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
@@ -128,7 +129,7 @@ private fun ContactRow(contact: UserContact, onClick: () -> Unit) {
                 val statusText = if (contact.isOnline) {
                     "Online"
                 } else {
-                    val human = contact.lastSeen?.let { formatLastSeen(it) }
+                    val human = contact.lastSeen?.let { formatDateTime(it) }
                     human?.let { "Last seen: $it" } ?: "Offline"
                 }
                 Text(text = statusText, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
@@ -146,19 +147,6 @@ private fun ContactRow(contact: UserContact, onClick: () -> Unit) {
                 Text(text = contact.newMessages.toString(), color = Color.White, fontWeight = FontWeight.Bold)
             }
         }
-    }
-}
-
-private fun formatLastSeen(isoString: String): String? {
-    // Expected format like 2025-09-21T18:29:20.120349-06:00
-    return try {
-        val odt = OffsetDateTime.parse(isoString)
-        val formatter = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a")
-        odt.format(formatter)
-    } catch (e: DateTimeParseException) {
-        null
-    } catch (e: Exception) {
-        null
     }
 }
 

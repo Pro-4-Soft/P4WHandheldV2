@@ -1,6 +1,8 @@
 package com.p4handheld.ui.screens
 
+import android.content.Context
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,15 +11,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -29,10 +35,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.p4handheld.data.models.UserChatMessage
 import com.p4handheld.ui.screens.viewmodels.ChatViewModel
+import com.p4handheld.utils.formatDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,7 +88,7 @@ fun ChatScreen(
                     } else {
                         val context = LocalContext.current
                         val currentUsername = remember {
-                            context.getSharedPreferences("auth_prefs", android.content.Context.MODE_PRIVATE)
+                            context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
                                 .getString("username", null)
                         }
 
@@ -97,6 +106,24 @@ fun ChatScreen(
                     }
                 }
             }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                OutlinedTextField(
+
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Button(
+                   
+                ) {
+                    Text(text = "Send", fontSize = 18.sp)
+                }
+            }
         }
     }
 }
@@ -109,7 +136,7 @@ private fun MessageBubble(message: UserChatMessage, isMine: Boolean) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = if (isMine) androidx.compose.foundation.layout.Arrangement.End else androidx.compose.foundation.layout.Arrangement.Start
+            horizontalArrangement = if (isMine) Arrangement.End else Arrangement.Start
         ) {
             Column(horizontalAlignment = if (isMine) Alignment.End else Alignment.Start) {
                 Text(
@@ -126,11 +153,63 @@ private fun MessageBubble(message: UserChatMessage, isMine: Boolean) {
                 }
                 Spacer(modifier = Modifier.size(2.dp))
                 Text(
-                    text = message.timestamp,
+                    text = formatDateTime(message.timestamp),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.Gray
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MessageBubblePreview() {
+    Surface(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .padding(16.dp)
+    ) {
+        Column {
+            MessageBubble(
+                message = UserChatMessage(
+                    fromUsername = "Alice",
+                    message = "Hello! How are you?",
+                    timestamp = "10:32 AM",
+                    messageId = "1",
+                    fromUserId = "2",
+                    toUserId = "3",
+                    toUsername = "hh",
+                    isNew = true
+                ),
+                isMine = false
+            )
+            MessageBubble(
+                message = UserChatMessage(
+                    fromUsername = "Me",
+                    message = "I’m good, thanks! What about you?",
+                    timestamp = "10:33 AM",
+                    messageId = "2",
+                    fromUserId = "3",
+                    toUserId = "2",
+                    toUsername = "hh",
+                    isNew = true
+                ),
+                isMine = true
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ChatScreenPreview() {
+    MaterialTheme {
+        ChatScreen(
+            contactId = "1",
+            contactName = "Alice",
+            onNavigateBack = {}
+        )
     }
 }

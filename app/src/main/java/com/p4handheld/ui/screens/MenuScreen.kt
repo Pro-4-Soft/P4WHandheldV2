@@ -3,7 +3,6 @@ package com.p4handheld.ui.screens
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,8 +25,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -124,6 +123,9 @@ fun MenuScreen(
                 selectedMenuItem = item
                 onNavigateToAction(item.label, item.state ?: "")
             }
+        },
+        onNavigateToTasks = {
+
         }
     )
 }
@@ -137,6 +139,7 @@ fun MenuScreenContent(
     refreshMenu: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToMessages: () -> Unit,
+    onNavigateToTasks: () -> Unit,
     logout: () -> Unit,
     onMenuItemClick: (MenuItem) -> Unit = {}
 ) {
@@ -153,9 +156,9 @@ fun MenuScreenContent(
         TopBarWithIcons(
             isTrackingLocation = uiState.isTrackingLocation,
             hasUnreadMessages = uiState.hasUnreadMessages,
-            hasNotifications = false,
+            hasNotifications = true,
             onMessageClick = onNavigateToMessages,
-            onNotificationClick = { /* Handle notifications */ }
+            onNotificationClick = onNavigateToTasks
         )
 
         // Header with back button and breadcrumb
@@ -165,8 +168,7 @@ fun MenuScreenContent(
             shadowElevation = 2.dp
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
@@ -209,16 +211,6 @@ fun MenuScreenContent(
                             text = "Main Menu",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-                        )
-                    }
-
-                    if (uiState.tenant.isNotEmpty()) {
-                        Text(
-                            text = "Tenant: ${uiState.tenant}",
-                            fontSize = 12.sp,
-                            color = Color.Gray,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -326,7 +318,7 @@ fun MenuScreenContent(
                     containerColor = MaterialTheme.colorScheme.primary
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Message,
+                        imageVector = Icons.AutoMirrored.Filled.Message,
                         contentDescription = "Messages",
                         tint = Color.White
                     )
@@ -504,7 +496,8 @@ fun MenuScreenContentPreview() {
             onNavigateToLogin = {},
             logout = {},
             onMenuItemClick = {},
-            onNavigateToMessages = {}
+            onNavigateToMessages = {},
+            onNavigateToTasks = {}
         )
     }
 }
@@ -522,8 +515,8 @@ fun MenuScreenContentWithBreadcrumbsPreview() {
             onNavigateToLogin = {},
             logout = {},
             onMenuItemClick = {},
-            onNavigateToMessages = {}
-
+            onNavigateToMessages = {},
+            onNavigateToTasks = {}
         )
     }
 }
@@ -544,8 +537,8 @@ fun MenuScreenContentErrorPreview() {
             onNavigateToLogin = {},
             logout = {},
             onMenuItemClick = {},
-            onNavigateToMessages = {}
-
+            onNavigateToMessages = {},
+            onNavigateToTasks = {}
         )
     }
 }

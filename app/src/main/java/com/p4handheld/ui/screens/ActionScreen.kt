@@ -75,6 +75,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -528,6 +529,53 @@ fun PromptInputArea(
         colors = CardDefaults.cardColors(MaterialTheme.colorScheme.background)
     ) {
         when (prompt.promptType) {
+            PromptType.NUMBER -> {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 8.dp),
+                    verticalAlignment = Alignment.Bottom,
+                ) {
+                    OutlinedTextField(
+                        value = promptValue,
+                        onValueChange = { newVal ->
+                            val digitsOnly = newVal.filter { it.isDigit() }
+                            onPromptValueChange(digitsOnly)
+                        },
+                        label = { Text(prompt.promptPlaceholder.ifBlank { "Enter number" }) },
+                        modifier = Modifier.weight(1f),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Send
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onSend = {
+                                if (promptValue.isNotEmpty()) {
+                                    onSendPrompt(promptValue)
+                                }
+                            }
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        onClick = {
+                            if (promptValue.isNotEmpty()) {
+                                onSendPrompt(promptValue)
+                            }
+                        },
+                        enabled = promptValue.isNotEmpty(),
+                        modifier = Modifier.height(56.dp),
+                        shape = RoundedCornerShape(5.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4CAF50)
+                        )
+                    ) {
+                        Text(text = "Send", fontSize = 18.sp)
+                    }
+                }
+            }
             PromptType.SCAN -> {
                 Column(
                     modifier = Modifier

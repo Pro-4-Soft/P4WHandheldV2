@@ -403,7 +403,7 @@ fun ToolBarActions(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color.White),
-            horizontalArrangement = Arrangement.End,
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
             contentPadding = PaddingValues(horizontal = 4.dp),
         ) {
             items(toolbarActions) { action ->
@@ -582,19 +582,16 @@ fun PromptInputArea(
                         value = promptValue,
                         onValueChange = {},
                         label = { Text(prompt.promptPlaceholder.ifBlank { "Select date" }) },
-                        modifier = Modifier.weight(1f),
-                        enabled = false
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable(
+                                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                                indication = androidx.compose.foundation.LocalIndication.current,
+                                onClick = { showPicker = true }
+                            ),
+                        readOnly = true,
+                        enabled = true
                     )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Button(
-                        onClick = { showPicker = true },
-                        modifier = Modifier.height(56.dp),
-                        shape = RoundedCornerShape(5.dp)
-                    ) {
-                        Text("Pick")
-                    }
 
                     Spacer(modifier = Modifier.width(8.dp))
 
@@ -1308,6 +1305,8 @@ fun ToolBarButtonPreview() {
         ToolBarActions(
             toolbarActions = listOf(
                 ToolbarAction(label = "Option 1", action = "opt1"),
+                ToolbarAction(label = "Option 2", action = "opt1"),
+                ToolbarAction(label = "Option 3", action = "opt1"),
             ),
             onToolBarActionClick = {}
         )

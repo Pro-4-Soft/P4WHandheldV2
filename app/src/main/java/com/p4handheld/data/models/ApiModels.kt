@@ -139,6 +139,9 @@ data class Message(
     @SerializedName("PromptValue")
     val promptValue: String? = null,
 
+    @SerializedName("TaskId")
+    val taskId: String? = null,
+
     var isCommitted: Boolean = false,
     val state: PromptResponse? = null
 )

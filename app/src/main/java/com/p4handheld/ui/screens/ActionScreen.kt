@@ -151,14 +151,32 @@ fun ActionScreen(
         }
     }
 
-    // Handle scan data from DataWedge for Scan prompt type
+    // Handle scan data from DataWedge for SCAN, TEXT and NUMBER prompt types
     LaunchedEffect(scanViewState?.dwOutputData) {
         scanViewState?.dwOutputData?.let { outputData ->
-            if (uiState.currentPrompt?.promptType == PromptType.SCAN && outputData.data.isNotEmpty()) {
-                println("ActionScreen: Scan data received from DataWedge: ${outputData.data}")
-                viewModel.updatePromptValue(outputData.data)
-                // Automatically send the scanned data
-                viewModel.processAction(pageKey, outputData.data)
+            val data = outputData.data
+            if (data.isNotEmpty()) {
+                when (uiState.currentPrompt?.promptType) {
+                    PromptType.SCAN -> {
+                        println("ActionScreen: Scan data received (SCAN): $data")
+                        viewModel.updatePromptValue(data)
+                        // Automatically send the scanned data for SCAN prompts
+                        viewModel.processAction(pageKey, data)
+                    }
+                    PromptType.TEXT -> {
+                        println("ActionScreen: Scan data received (TEXT): $data")
+                        // Populate the text input, let user edit or press Send
+                        viewModel.updatePromptValue(data)
+                    }
+                    PromptType.NUMBER -> {
+                        val digitsOnly = data.filter { it.isDigit() }
+                        println("ActionScreen: Scan data received (NUMBER): $digitsOnly")
+                        viewModel.updatePromptValue(digitsOnly)
+                    }
+                    else -> {
+                        // Ignore for other prompt types
+                    }
+                }
             }
         }
     }

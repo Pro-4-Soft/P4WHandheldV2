@@ -11,10 +11,10 @@ import com.p4handheld.data.models.UserContact
 import com.p4handheld.data.models.UserContextResponse
 
 interface ApiService {
-    suspend fun login(source: String = "LoginWeb", loginRequest: LoginRequest): ApiResponse<LoginResponse>
+    suspend fun login(source: String = "LoginHandheld", loginRequest: LoginRequest): ApiResponse<LoginResponse>
 
     suspend fun getCurrentMenu(): ApiResponse<UserContextResponse>
-    
+
     suspend fun processAction(pageKey: String, processRequest: ProcessRequest, taskId: String? = null): ApiResponse<PromptResponse>
 
     suspend fun completeAction(pageKey: String): ApiResponse<PromptResponse>

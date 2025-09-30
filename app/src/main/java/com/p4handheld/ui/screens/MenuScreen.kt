@@ -46,6 +46,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
@@ -309,13 +310,19 @@ fun MenuScreenContent(
                 .padding(16.dp),
             contentAlignment = Alignment.BottomEnd
         ) {
+
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Messages button
                 FloatingActionButton(
-                    onClick = onNavigateToMessages,
-                    containerColor = MaterialTheme.colorScheme.primary
+                    onClick = {
+                        if (!uiState.isLoading) {
+                            onNavigateToMessages()
+                        }
+                    },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.alpha(if (uiState.isLoading) 0.5f else 1f)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Message,
@@ -327,10 +334,13 @@ fun MenuScreenContent(
                 // Logout button
                 FloatingActionButton(
                     onClick = {
-                        logout()
-                        onNavigateToLogin()
+                        if (!uiState.isLoading) {
+                            logout()
+                            onNavigateToLogin()
+                        }
                     },
-                    containerColor = MaterialTheme.colorScheme.error
+                    containerColor = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.alpha(if (uiState.isLoading) 0.5f else 1f)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ExitToApp,
@@ -339,6 +349,7 @@ fun MenuScreenContent(
                     )
                 }
             }
+
         }
     }
 }

@@ -90,7 +90,7 @@ fun AppNavigation(
             ChatScreen(
                 contactId = contactId,
                 contactName = contactName,
-                onNavigateBack = { navController.popBackStack() }
+                /*onNavigateBack = { navController.popBackStack() }*/
             )
         }
 

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -37,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -49,6 +51,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.p4handheld.data.models.UserChatMessage
 import com.p4handheld.ui.screens.viewmodels.ChatViewModel
 import com.p4handheld.utils.formatDateTime
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,6 +61,8 @@ fun ChatScreen(
 ) {
     val viewModel: ChatViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(contactId) {
         viewModel.loadMessages(contactId)
@@ -99,6 +104,7 @@ fun ChatScreen(
                         }
 
                         LazyColumn(
+                            state = listState,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(8.dp)
@@ -109,6 +115,15 @@ fun ChatScreen(
                                 Spacer(modifier = Modifier.size(8.dp))
                             }
                         }
+                    }
+                }
+            }
+
+            // Auto-scroll to bottom when messages list changes
+            LaunchedEffect(uiState.messages.size) {
+                if (uiState.messages.isNotEmpty()) {
+                    coroutineScope.launch {
+                        listState.animateScrollToItem(uiState.messages.size - 1)
                     }
                 }
             }

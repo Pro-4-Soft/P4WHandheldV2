@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.time.OffsetDateTime
+import java.util.UUID
 
 data class ChatUiState(
     val isLoading: Boolean = false,
@@ -46,10 +48,24 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             _uiState.value = _uiState.value.copy(isSending = true, errorMessage = null)
             val result = ApiClient.apiService.sendMessage(toUserId, message)
             if (result.isSuccessful) {
-                // Reload messages to include the newly sent one
-                loadMessages(toUserId)
+                val context = getApplication<Application>()
+                val username = context.getSharedPreferences("auth_prefs", Application.MODE_PRIVATE)
+                    .getString("username", "Me") ?: "Me"
+
+                val newMsg = UserChatMessage(
+                    messageId = UUID.randomUUID().toString(),
+                    fromUserId = "",//me
+                    toUserId = toUserId,
+                    fromUsername = username,
+                    toUsername = "",
+                    message = message,
+                    timestamp = OffsetDateTime.now().toString(),
+                    isNew = true
+                )
+
+                val updated = _uiState.value.messages + newMsg
+                _uiState.value = _uiState.value.copy(isSending = false, messages = updated)
                 after?.invoke()
-                _uiState.value = _uiState.value.copy(isSending = false)
             } else {
                 _uiState.value = _uiState.value.copy(
                     isSending = false,

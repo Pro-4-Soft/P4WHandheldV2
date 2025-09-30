@@ -177,7 +177,9 @@ data class ProcessRequest(
     @SerializedName("PromptValue")
     val promptValue: String?,
     @SerializedName("ActionFor")
-    val actionFor: String?
+    val actionFor: String?,
+    @SerializedName("StateParams")
+    val stateParams: Any? = null
 )
 
 // ==================== USER MESSAGES / CHATS ====================

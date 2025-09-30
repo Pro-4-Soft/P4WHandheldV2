@@ -565,6 +565,7 @@ fun PromptInputArea(
                                 val formatted = formatSelectedDate()
                                 if (formatted != null) {
                                     onPromptValueChange(formatted)
+                                    onSendPrompt(formatted)
                                 }
                                 showPicker = false
                             }) {

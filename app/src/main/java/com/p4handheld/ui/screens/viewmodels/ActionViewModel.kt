@@ -9,6 +9,7 @@ import com.p4handheld.data.models.ProcessRequest
 import com.p4handheld.data.models.Prompt
 import com.p4handheld.data.models.PromptResponse
 import com.p4handheld.data.models.PromptType
+import com.p4handheld.data.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,6 +28,7 @@ data class ActionUiState(
 
 class ActionViewModel(application: Application) : AndroidViewModel(application) {
     private val apiService = ApiClient.apiService
+    private val authRepository = AuthRepository(application.applicationContext)
     private val _uiState = MutableStateFlow(ActionUiState())
     val uiState: StateFlow<ActionUiState> = _uiState.asStateFlow()
 
@@ -36,9 +38,16 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
             _uiState.value = currentState.copy(isLoading = true)
 
             try {
+               
+                val stateParams: Any? = authRepository.getStoredMenuData()
+                    ?.menu
+                    ?.firstOrNull { it.state == pageKey }
+                    ?.stateParams
+
                 val processRequest = ProcessRequest(
                     promptValue = promptValue,
-                    actionFor = actionFor ?: currentState.currentPrompt?.actionName ?: ""
+                    actionFor = actionFor ?: currentState.currentPrompt?.actionName ?: "",
+                    stateParams = stateParams
                 )
 
                 val result = apiService.processAction(pageKey, processRequest, taskId)

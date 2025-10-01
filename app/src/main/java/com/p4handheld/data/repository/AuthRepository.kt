@@ -81,6 +81,7 @@ class AuthRepository(context: Context) {
                 put("Icon", menuItem.icon)
                 put("Children", JSONArray()) // Simplified for now
             }
+
             menuArray.put(menuJson)
         }
 
@@ -111,7 +112,10 @@ class AuthRepository(context: Context) {
                         icon = if (menuObj.isNull("Icon")) null else menuObj.getString("Icon"),
                         children = emptyList()
                     )
-                    menuItems.add(menuItem)
+
+                    if (menuItem.state != "main.contacts") {
+                        menuItems.add(menuItem)
+                    }
                 }
 
                 UserContextResponse(

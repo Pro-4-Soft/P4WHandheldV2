@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
@@ -44,6 +45,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
@@ -65,8 +67,8 @@ fun LoginScreen(
     val viewModel: LoginViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
 
-    var username by remember { mutableStateOf("sa") }
-    var password by remember { mutableStateOf("sa") }
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
 
     val context = LocalContext.current
     val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
@@ -176,16 +178,24 @@ fun LoginScreenContent(
 
                 OutlinedTextField(
                     value = password,
-                    onValueChange = {
-                        onPasswordChange(it)
-                    },
+                    onValueChange = { onPasswordChange(it) },
                     label = { Text("Password") },
                     modifier = Modifier
                         .fillMaxWidth(),
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    enabled = !uiState.isLoading
+                    enabled = !uiState.isLoading,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Send // uncommented and included
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onSend = {
+                            if (password.isNotEmpty() && username.isNotEmpty()) {
+                                onLoginClick()
+                            }
+                        }
+                    )
                 )
 
                 // Error message

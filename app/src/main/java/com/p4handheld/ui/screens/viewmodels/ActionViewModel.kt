@@ -110,7 +110,11 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
 
                     _uiState.value = currentState.copy(
                         isLoading = false,
-                        messageStack = errorMessages
+                        messageStack = errorMessages,
+                        // Always clear input even on error
+                        promptValue = "",
+                        capturedImage = null,
+                        showSignature = false
                     )
                 }
             } catch (e: Exception) {
@@ -121,7 +125,11 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
 
                 _uiState.value = currentState.copy(
                     isLoading = false,
-                    messageStack = errorMessages
+                    messageStack = errorMessages,
+                    // Always clear input even on exceptions
+                    promptValue = "",
+                    capturedImage = null,
+                    showSignature = false
                 )
             }
         }

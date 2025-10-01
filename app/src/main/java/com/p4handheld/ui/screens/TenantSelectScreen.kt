@@ -141,7 +141,7 @@ fun TenantSelectScreenContent(
             colors = CardDefaults.cardColors(
                 containerColor = Color.White
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            border = CardDefaults.outlinedCardBorder()
         ) {
             Column(
                 modifier = Modifier

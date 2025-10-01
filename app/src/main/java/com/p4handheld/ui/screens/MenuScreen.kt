@@ -194,7 +194,7 @@ fun MenuScreenContent(
                             breadcrumbStack.forEachIndexed { index, item ->
                                 Text(
                                     text = item,
-                                    fontSize = 16.sp,
+                                    fontSize = 20.sp,
                                     fontWeight = FontWeight.Medium
                                 )
                                 if (index < breadcrumbStack.size - 1) {

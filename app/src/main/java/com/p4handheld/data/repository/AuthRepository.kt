@@ -112,10 +112,7 @@ class AuthRepository(context: Context) {
                         icon = if (menuObj.isNull("Icon")) null else menuObj.getString("Icon"),
                         children = emptyList()
                     )
-
-                    if (menuItem.state != "main.contacts") {
-                        menuItems.add(menuItem)
-                    }
+                    menuItems.add(menuItem)
                 }
 
                 UserContextResponse(

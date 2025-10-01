@@ -80,7 +80,9 @@ enum class PromptType {
     CONFIRM,
 
     @SerializedName("Number")
-    NUMBER
+    NUMBER,
+
+    NOT_SELECTED
 }
 
 data class PromptResponse(
@@ -155,7 +157,7 @@ data class Prompt(
     @SerializedName("ActionName")
     val actionName: String = "",
     @SerializedName("PromptType")
-    val promptType: PromptType,
+    val promptType: PromptType = PromptType.NOT_SELECTED,
     @SerializedName("PromptPlaceholder")
     val promptPlaceholder: String = "",
     @SerializedName("Items")

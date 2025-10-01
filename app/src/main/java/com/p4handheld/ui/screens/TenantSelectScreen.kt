@@ -42,12 +42,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.p4handheld.ui.compose.theme.HandheldP4WTheme
 import com.p4handheld.ui.screens.viewmodels.TenantUiState
 import com.p4handheld.ui.screens.viewmodels.TenantViewModel
 
@@ -59,7 +57,7 @@ fun TenantSelectScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     var tenantName by remember { mutableStateOf("") }
-    var baseUrl by remember { mutableStateOf("http://costa.pro4soft-demo.com:2020/") }
+    var baseUrl by remember { mutableStateOf("") }
 
     // Load existing tenant configuration on screen initialization
     LaunchedEffect(Unit) {
@@ -113,10 +111,9 @@ fun TenantSelectScreenContent(
             .navigationBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Header
+        //region Header with Company Logo
         Card(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
                 containerColor = Color(0xFFF1F5F9)
             ),
@@ -134,8 +131,9 @@ fun TenantSelectScreenContent(
                 )
             }
         }
+        //endregion
 
-        // Input Form
+        //region Input Form
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
@@ -157,7 +155,7 @@ fun TenantSelectScreenContent(
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
-                // Tenant Name Input
+                //region Tenant Name Input
                 OutlinedTextField(
                     value = tenantName,
                     onValueChange = onTenantNameChange,
@@ -170,8 +168,9 @@ fun TenantSelectScreenContent(
                     singleLine = true,
                     enabled = !uiState.isLoading
                 )
+                //endregion
 
-                // Base URL Input
+                //region Base URL Input
                 if (showBaseUrl.value) {
                     OutlinedTextField(
                         value = baseUrl ?: "https://app.pro4soft.com",
@@ -194,8 +193,9 @@ fun TenantSelectScreenContent(
                         enabled = !uiState.isLoading
                     )
                 }
+                //endregion
 
-                // Error message
+                //region Error message
                 uiState.errorMessage?.let { errorMessage ->
                     Card(
                         colors = CardDefaults.cardColors(
@@ -210,8 +210,9 @@ fun TenantSelectScreenContent(
                         )
                     }
                 }
+                //endregion
 
-                // Apply Button
+                //region Apply Button Button
                 Button(
                     onClick = onApplyClick,
                     modifier = Modifier
@@ -241,10 +242,12 @@ fun TenantSelectScreenContent(
                         )
                     }
                 }
+                //endregion
             }
         }
+        //endregion
 
-        // Advanced Settings
+        //region Advanced Settings Button
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.BottomStart
@@ -269,48 +272,6 @@ fun TenantSelectScreenContent(
                 )
             }
         }
+        //endregion
     }
 }
-
-@Preview(showBackground = true, device = "spec:width=340dp,height=650dp,dpi=320")
-@Composable
-fun TenantSelectScreenPreview() {
-    HandheldP4WTheme {
-        TenantSelectScreenContent(
-            uiState = TenantUiState(
-                isLoading = false,
-                isConfigurationSaved = false,
-                errorMessage = null
-            ),
-            tenantName = "Demo Tenant",
-            baseUrl = "https://api.example.com",
-            onTenantNameChange = {},
-            onBaseUrlChange = {},
-            onApplyClick = {},
-            showAdvanced = false,
-            logoUrl = "https://p4dev.p4warehouse.com/data/logo"
-        )
-    }
-}
-
-@Preview(showBackground = true, device = "spec:width=340dp,height=650dp,dpi=320")
-@Composable
-fun TenantSelectScreenAdvancedPreview() {
-    HandheldP4WTheme {
-        TenantSelectScreenContent(
-            uiState = TenantUiState(
-                isLoading = false,
-                isConfigurationSaved = false,
-                errorMessage = null
-            ),
-            tenantName = "Demo Tenant",
-            baseUrl = "https://api.example.com",
-            onTenantNameChange = {},
-            onBaseUrlChange = {},
-            onApplyClick = {},
-            showAdvanced = true,
-            logoUrl = "https://p4dev.p4warehouse.com/data/logo"
-        )
-    }
-}
-

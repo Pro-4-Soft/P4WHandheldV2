@@ -137,6 +137,13 @@ class AuthRepository(context: Context) {
         return authSharedPreferences.getBoolean("is_logged_in", false)
     }
 
+    fun getStateParamsForPage(pageKey: String): Any? {
+        return getStoredMenuData()
+            ?.menu
+            ?.firstOrNull { it.state == pageKey }
+            ?.stateParams
+    }
+
     fun hasValidToken(): Boolean {
         val token = authSharedPreferences.getString("token", null)
         val isLoggedIn = authSharedPreferences.getBoolean("is_logged_in", false)

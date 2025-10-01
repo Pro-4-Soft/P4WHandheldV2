@@ -9,6 +9,7 @@ import com.p4handheld.data.models.ProcessRequest
 import com.p4handheld.data.models.Prompt
 import com.p4handheld.data.models.PromptResponse
 import com.p4handheld.data.models.PromptType
+import com.p4handheld.data.models.ToolbarAction
 import com.p4handheld.data.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,20 +18,20 @@ import kotlinx.coroutines.launch
 
 data class ActionUiState(
     val isLoading: Boolean = false,
-    val currentPrompt: Prompt? = null,
-    val currentResponse: PromptResponse? = null,
+    val pageTitle: String? = null,
+    val currentPrompt: Prompt = Prompt(),
+    val toolbarActions: List<ToolbarAction> = emptyList(),
     val messageStack: List<Message> = emptyList(),
     val promptValue: String = "",
     val errorMessage: String? = null,
-    val showSignature: Boolean = false,
     val capturedImage: String? = null
 )
 
 class ActionViewModel(application: Application) : AndroidViewModel(application) {
     private val apiService = ApiClient.apiService
     private val authRepository = AuthRepository(application.applicationContext)
-    private val currentPageKey = ""
     private val _uiState = MutableStateFlow(ActionUiState())
+
     val uiState: StateFlow<ActionUiState> = _uiState.asStateFlow()
 
     fun processAction(pageKey: String, promptValue: String? = null, actionFor: String? = null, taskId: String? = null) {
@@ -40,87 +41,39 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
 
             try {
 
-                val stateParams: Any? = authRepository.getStoredMenuData()
-                    ?.menu
-                    ?.firstOrNull { it.state == pageKey }
-                    ?.stateParams
-
                 val processRequest = ProcessRequest(
                     promptValue = promptValue,
-                    actionFor = actionFor ?: currentState.currentPrompt?.actionName ?: "",
-                    stateParams = stateParams
+                    actionFor = actionFor ?: currentState.currentPrompt.actionName,
+                    stateParams = authRepository.getStateParamsForPage(pageKey)
                 )
 
                 val result = apiService.processAction(pageKey, processRequest, taskId)
 
                 if (result.isSuccessful && result.body != null) {
                     val response = result.body
-                    // If we just sent a photo, attach it to the first Success/Info message from server
                     val newMessages = if (promptValue?.startsWith("data:image") == true && response.messages.isNotEmpty()) {
-                        val idx = response.messages.indexOfFirst {
-                            it.severity.equals("Success", ignoreCase = true) || it.severity.equals("Info", ignoreCase = true)
-                        }
-                        if (idx >= 0) {
-                            val updated = response.messages[idx].copy(imageResource = promptValue)
-                            response.messages.toMutableList().apply { this[idx] = updated }
-                        } else {
-                            response.messages
-                        }
+                        // If we just sent a photo, attach it to the first Success/Info message from server
+                        appendLastMessageWithPhoto(response.messages, promptValue)
                     } else {
                         response.messages
                     }
-                    val updatedMessageStack = currentState.messageStack.take(response.cleanLastMessages) + newMessages;
 
-                    // Add divider if IsStart is true
-                    val finalMessageStack = if (response.commitAllMessages && updatedMessageStack.lastOrNull()?.title != "divider"
-                    ) {
-                        val commitedMessages = updatedMessageStack.map { it.copy(isCommitted = true) }
-                        commitedMessages + Message(
-                            title = "divider",
-                            severity = "Info",
-                            isCommitted = true
-                        )
-                    } else {
-                        updatedMessageStack
-                    }
+                    val updatedMessageStack = currentState.messageStack.take(response.cleanLastMessages) + newMessages
+
+                    val finalMessageStack = tryCommitMessagesWithDivider(updatedMessageStack, response.commitAllMessages)
 
                     _uiState.value = currentState.copy(
                         isLoading = false,
                         currentPrompt = response.prompt,
-                        currentResponse = response,
                         messageStack = finalMessageStack,
-                        promptValue = "",
-                        showSignature = response.prompt.promptType == PromptType.SIGN,
-                        capturedImage = null
+                        pageTitle = response.title,
+                        toolbarActions = response.toolbarActions
                     )
                 } else {
-                    val errorMessages = currentState.messageStack + Message(
-                        title = result.errorMessage ?: "Process failed",
-                        severity = "Error"
-                    )
-
-                    _uiState.value = currentState.copy(
-                        isLoading = false,
-                        messageStack = errorMessages,
-                        promptValue = "",
-                        capturedImage = null,
-                        showSignature = false
-                    )
+                    updateUiStateWithErrorMessage(currentState, "Process failed")
                 }
             } catch (e: Exception) {
-                val errorMessages = currentState.messageStack + Message(
-                    title = "Error: ${e.message}",
-                    severity = "Error"
-                )
-
-                _uiState.value = currentState.copy(
-                    isLoading = false,
-                    messageStack = errorMessages,
-                    // Always clear input even on exceptions
-                    promptValue = "",
-                    capturedImage = null,
-                    showSignature = false
-                )
+                updateUiStateWithErrorMessage(currentState, "Error: ${e.message}")
             }
         }
     }
@@ -158,7 +111,6 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
         if (clickedState != null) {
             _uiState.value = currentState.copy(
                 currentPrompt = clickedState.prompt,
-                currentResponse = clickedState,
                 messageStack = truncatedMessages
             )
         }
@@ -168,7 +120,39 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
         _uiState.value = _uiState.value.copy(capturedImage = imageBase64)
     }
 
-    fun setShowSignature(show: Boolean) {
-        _uiState.value = _uiState.value.copy(showSignature = show)
+    //region Private methods
+    private fun appendLastMessageWithPhoto(messages: List<Message>, promptValue: String): List<Message> {
+        val idx = messages.indexOfFirst {
+            it.severity.equals("Success", ignoreCase = true) || it.severity.equals("Info", ignoreCase = true)
+        }
+        return if (idx >= 0) {
+            val updated = messages[idx].copy(imageResource = promptValue)
+            messages.toMutableList().apply { this[idx] = updated }
+        } else {
+            messages
+        }
     }
+
+    private fun updateUiStateWithErrorMessage(currentState: ActionUiState, errorMessage: String) {
+        val errorMessages = currentState.messageStack + Message(
+            title = "Error: $errorMessage",
+            severity = "Error"
+        )
+
+        _uiState.value = currentState.copy(messageStack = errorMessages)
+    }
+
+    private fun tryCommitMessagesWithDivider(updatedMessageStack: List<Message>, commitAllMessages: Boolean): List<Message> {
+        return if (commitAllMessages) {
+            val commitedMessages = updatedMessageStack.map { it.copy(isCommitted = true) }
+            commitedMessages + Message(
+                title = "divider",
+                severity = "Info",
+                isCommitted = true
+            )
+        } else {
+            updatedMessageStack
+        }
+    }
+    //endregion
 }

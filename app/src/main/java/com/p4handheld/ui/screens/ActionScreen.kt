@@ -94,7 +94,6 @@ import com.p4handheld.data.ScanStateHolder
 import com.p4handheld.data.models.Message
 import com.p4handheld.data.models.Prompt
 import com.p4handheld.data.models.PromptItem
-import com.p4handheld.data.models.PromptResponse
 import com.p4handheld.data.models.PromptType
 import com.p4handheld.data.models.ToolbarAction
 import com.p4handheld.ui.components.TopBarWithIcons
@@ -214,15 +213,13 @@ fun ActionScreen(
         }
 
         PromptType.SIGN -> {
-            if (uiState.showSignature) {
+            if (uiState.currentPrompt.promptType == PromptType.SIGN) {
                 {
                     SignaturePromptScreen(
                         onSignatureSaved = { signatureBase64 ->
                             viewModel.processAction(pageKey, signatureBase64)
-                            viewModel.setShowSignature(false)
                         },
                         onCancel = {
-                            viewModel.setShowSignature(false)
                         }
                     )
                 }
@@ -305,7 +302,7 @@ fun ActionScreenWrapper(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text =  uiState.currentResponse?.title ?: menuItemLabel,
+                    text = uiState?.pageTitle ?: menuItemLabel,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f),
@@ -334,9 +331,9 @@ fun DefaultActionScreen(
             .fillMaxSize()
             .navigationBarsPadding()
     ) {
-        if (uiState.currentResponse?.toolbarActions?.isNotEmpty() == true) {
+        if (uiState?.toolbarActions?.isNotEmpty() == true) {
             ToolBarActions(
-                toolbarActions = uiState.currentResponse.toolbarActions,
+                toolbarActions = uiState.toolbarActions,
                 onToolBarActionClick = { actionFor ->
                     viewModel.processAction(menuItemState, null, actionFor)
                 }
@@ -401,9 +398,9 @@ fun DefaultActionScreen(
         }
 
         // Input area based on prompt type
-        uiState.currentPrompt?.let { prompt ->
+        if (uiState.currentPrompt.promptType != PromptType.NOT_SELECTED) {
             PromptInputArea(
-                prompt = prompt,
+                prompt = uiState.currentPrompt,
                 promptValue = uiState.promptValue,
                 onPromptValueChange = {
                     println("ActionScreen: Prompt value changed: $it")
@@ -415,10 +412,9 @@ fun DefaultActionScreen(
                 },
                 onShowSignature = {
                     println("ActionScreen: Showing signature prompt")
-                    viewModel.setShowSignature(true)
                 }
             )
-        } ?: run {
+        } else {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1358,12 +1354,12 @@ fun MultipleMessagesPreview2() {
     val toolbar = listOf(
         ToolbarAction(label = "Option 1", action = "opt1"),
     )
-    val currentResponse = PromptResponse(
-        toolbarActions = toolbar,
-        prompt = sampleTextPrompt,
-        messages = sampleMessages
+
+    val uiState = ActionUiState(
+        messageStack = sampleMessages,
+        currentPrompt = sampleTextPrompt,
+        toolbarActions = toolbar
     );
-    val uiState = ActionUiState(currentResponse = currentResponse);
     HandheldP4WTheme {
         ActionScreenWrapper(
             menuItemLabel = "Adjust In",

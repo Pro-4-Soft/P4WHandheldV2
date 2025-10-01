@@ -19,7 +19,6 @@ data class MenuUiState(
     val currentMenuItems: List<MenuItem> = emptyList(),
     val menuStack: List<List<MenuItem>> = emptyList(),
     val breadcrumbStack: List<String> = emptyList(),
-    val tenant: String = "",
     val errorMessage: String? = null,
     val selectedMenuItem: MenuItem? = null,
     val httpStatusCode: Int? = null,

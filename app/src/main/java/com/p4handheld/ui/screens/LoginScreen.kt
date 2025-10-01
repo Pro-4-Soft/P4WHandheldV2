@@ -138,7 +138,7 @@ fun LoginScreenContent(
                 AsyncImage(
                     model = logoUrl,
                     contentDescription = "App Logo",
-                    modifier = Modifier.size(120.dp)
+                    modifier = Modifier.size(140.dp)
                 )
             }
         }

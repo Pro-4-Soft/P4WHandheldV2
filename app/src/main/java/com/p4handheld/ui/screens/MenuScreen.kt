@@ -490,8 +490,7 @@ private val sampleMenuItems = listOf(
 )
 
 private val sampleUiState = MenuUiState(
-    menuItems = sampleMenuItems,
-    tenant = "Sample Tenant",
+    menuItems = sampleMenuItems
 )
 
 @Preview(name = "Menu Screen Content", showBackground = true)
@@ -518,7 +517,7 @@ fun MenuScreenContentPreview() {
 fun MenuScreenContentWithBreadcrumbsPreview() {
     HandheldP4WTheme {
         MenuScreenContent(
-            uiState = sampleUiState.copy(tenant = "Production Tenant"),
+            uiState = sampleUiState.copy(),
             currentMenuItems = sampleMenuItems.first().children,
             selectedMenuItem = null,
             breadcrumbStack = listOf("Main Menu", "Users"),

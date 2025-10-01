@@ -29,6 +29,7 @@ data class ActionUiState(
 class ActionViewModel(application: Application) : AndroidViewModel(application) {
     private val apiService = ApiClient.apiService
     private val authRepository = AuthRepository(application.applicationContext)
+    private val currentPageKey = ""
     private val _uiState = MutableStateFlow(ActionUiState())
     val uiState: StateFlow<ActionUiState> = _uiState.asStateFlow()
 
@@ -54,15 +55,6 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
 
                 if (result.isSuccessful && result.body != null) {
                     val response = result.body
-
-                    // Handle GoToNewPage prompt type
-                    if (response.prompt.promptType == PromptType.GO_TO_NEW_PAGE) {
-                        // For now, just reinitialize with the new page
-//                        val selectedItemId = response.context?.get("SelectedItemId")?.toString()
-//                        processAction(response.prompt.defaultValue, selectedItemId)
-//                        return@launch
-                    }
-
                     // If we just sent a photo, attach it to the first Success/Info message from server
                     val newMessages = if (promptValue?.startsWith("data:image") == true && response.messages.isNotEmpty()) {
                         val idx = response.messages.indexOfFirst {
@@ -77,8 +69,7 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
                     } else {
                         response.messages
                     }
-
-                    val updatedMessageStack = currentState.messageStack + newMessages;
+                    val updatedMessageStack = currentState.messageStack.take(response.cleanLastMessages) + newMessages;
 
                     // Add divider if IsStart is true
                     val finalMessageStack = if (response.commitAllMessages && updatedMessageStack.lastOrNull()?.title != "divider"
@@ -111,7 +102,6 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
                     _uiState.value = currentState.copy(
                         isLoading = false,
                         messageStack = errorMessages,
-                        // Always clear input even on error
                         promptValue = "",
                         capturedImage = null,
                         showSignature = false
@@ -146,6 +136,7 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
 
         // If server requested navigation to a new page, process the message on that page directly
         if (currentState.currentPrompt?.promptType == PromptType.GO_TO_NEW_PAGE) {
+            _uiState.value = currentState.copy(messageStack = emptyList())
             processAction(
                 pageKey = message.handlerName ?: "",
                 promptValue = message.promptValue ?: "",

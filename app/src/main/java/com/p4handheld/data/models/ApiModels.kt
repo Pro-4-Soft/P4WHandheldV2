@@ -93,7 +93,9 @@ data class PromptResponse(
     @SerializedName("CommitAllMessages")
     val commitAllMessages: Boolean = false,
     @SerializedName("CleanLastMessages")
-    val cleanLastMessages: Number = 0
+    val cleanLastMessages: Int = 0,
+    @SerializedName("Title")
+    val title: String? = null
 )
 
 data class ToolbarAction(

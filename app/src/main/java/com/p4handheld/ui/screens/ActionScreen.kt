@@ -97,10 +97,10 @@ import com.p4handheld.data.models.PromptItem
 import com.p4handheld.data.models.PromptResponse
 import com.p4handheld.data.models.PromptType
 import com.p4handheld.data.models.ToolbarAction
+import com.p4handheld.ui.components.TopBarWithIcons
 import com.p4handheld.ui.compose.theme.HandheldP4WTheme
 import com.p4handheld.ui.screens.viewmodels.ActionUiState
 import com.p4handheld.ui.screens.viewmodels.ActionViewModel
-import com.p4handheld.ui.components.TopBarWithIcons
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.time.Instant
@@ -305,7 +305,7 @@ fun ActionScreenWrapper(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = menuItemLabel,
+                    text =  uiState.currentResponse?.title ?: menuItemLabel,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f),
@@ -1378,48 +1378,6 @@ fun MultipleMessagesPreview2() {
                 )
             },
             uiState
-        )
-    }
-}
-
-// Multiple Message Types Preview
-@Preview(name = "Multiple Messages", showBackground = true)
-@Composable
-fun MultipleMessagesPreview22() {
-    val currentResponse = PromptResponse(
-        prompt = sampleDatePrompt,
-        messages = sampleMessages
-    );
-    val uiState = ActionUiState(currentResponse = currentResponse);
-    HandheldP4WTheme {
-        ActionScreenWrapper(
-            menuItemLabel = "Adjust In",
-            menuItemState = "main.AdjustIn",
-            prompt = {
-                PromptInputArea(
-                    prompt = sampleDatePrompt,
-                    promptValue = "",
-                    onPromptValueChange = {},
-                    onSendPrompt = {},
-                    onShowSignature = {}
-                )
-            },
-            uiState
-        )
-    }
-}
-
-@Preview(name = "Multiple Messages", showBackground = true)
-@Composable
-fun ToolBarButtonPreview() {
-    HandheldP4WTheme {
-        ToolBarActions(
-            toolbarActions = listOf(
-                ToolbarAction(label = "Option 1", action = "opt1"),
-                ToolbarAction(label = "Option 2", action = "opt1"),
-                ToolbarAction(label = "Option 3", action = "opt1"),
-            ),
-            onToolBarActionClick = {}
         )
     }
 }

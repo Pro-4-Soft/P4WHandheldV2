@@ -189,15 +189,11 @@ fun ActionScreen(
         PromptType.PHOTO -> {
             {
                 PhotoPromptScreen(
-                    capturedImage = uiState.capturedImage,
                     onImageCaptured = { imageBase64 ->
                         viewModel.setCapturedImage(imageBase64)
                     },
                     onSendImage = { imageBase64 ->
                         viewModel.processAction(pageKey, imageBase64)
-                    },
-                    onRetakePhoto = {
-                        viewModel.setCapturedImage(null)
                     }
                 )
             }
@@ -209,8 +205,7 @@ fun ActionScreen(
                     SignaturePromptScreen(
                         onSignatureSaved = { signatureBase64 ->
                             viewModel.processAction(pageKey, signatureBase64)
-                        },
-                        onCancel = { }
+                        }
                     )
                 }
             } else {
@@ -929,10 +924,8 @@ fun PromptInputArea(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PhotoPromptScreen(
-    capturedImage: String?,
     onImageCaptured: (String) -> Unit,
     onSendImage: (String) -> Unit,
-    onRetakePhoto: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -945,14 +938,12 @@ fun PhotoPromptScreen(
         return "data:image/jpeg;base64,$base64"
     }
 
-    var previewBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var captureAttempted by remember { mutableStateOf(false) }
     var errorMsg by remember { mutableStateOf<String?>(null) }
 
     val previewLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
     ) { bitmap: Bitmap? ->
-        previewBitmap = bitmap
         bitmap?.let {
             val base64 = it.toBase64Jpeg()
             // Update local state and immediately send
@@ -1030,8 +1021,7 @@ fun PhotoPromptScreen(
 
 @Composable
 fun SignaturePromptScreen(
-    onSignatureSaved: (String) -> Unit,
-    onCancel: () -> Unit
+    onSignatureSaved: (String) -> Unit
 ) {
 
     // Store strokes as list of points to reproduce when exporting
@@ -1119,17 +1109,7 @@ fun SignaturePromptScreen(
                 ),
                 shape = RoundedCornerShape(5.dp)
             ) {
-                Text("Clear")
-            }
-
-            Button(
-                onClick = onCancel,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFF44336)
-                ),
-                shape = RoundedCornerShape(5.dp)
-            ) {
-                Text("Cancel")
+                Text("Clean")
             }
 
             Button(

@@ -40,7 +40,6 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
             _uiState.value = currentState.copy(isLoading = true)
 
             try {
-
                 val processRequest = ProcessRequest(
                     promptValue = promptValue,
                     actionFor = actionFor ?: currentState.currentPrompt.actionName,

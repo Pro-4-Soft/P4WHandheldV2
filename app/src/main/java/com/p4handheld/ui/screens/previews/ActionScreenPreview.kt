@@ -108,10 +108,8 @@ private val sampleScanPrompt = Prompt(
 fun PhotoPromptScreenWithImagePreview() {
     HandheldP4WTheme {
         PhotoPromptScreen(
-            capturedImage = "data:image/jpeg;base64,sample_image_data",
             onImageCaptured = {},
             onSendImage = {},
-            onRetakePhoto = {}
         )
     }
 }
@@ -123,7 +121,6 @@ fun SignaturePromptScreenPreview() {
     HandheldP4WTheme {
         SignaturePromptScreen(
             onSignatureSaved = {},
-            onCancel = {}
         )
     }
 }

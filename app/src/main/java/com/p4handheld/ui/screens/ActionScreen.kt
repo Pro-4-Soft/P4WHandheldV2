@@ -73,11 +73,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -85,6 +84,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -1034,16 +1034,11 @@ fun SignaturePromptScreen(
     onCancel: () -> Unit
 ) {
 
-    var paths by remember { mutableStateOf(listOf<Path>()) }
-    val paint = remember {
-        Paint().apply {
-            color = Color.Black.toArgb()
-            strokeWidth = 5f
-            style = Paint.Style.STROKE
-            strokeCap = Paint.Cap.ROUND
-            strokeJoin = Paint.Join.ROUND
-        }
-    }
+    // Store strokes as list of points to reproduce when exporting
+    var strokes by remember { mutableStateOf(listOf<List<Offset>>()) }
+    var currentStroke by remember { mutableStateOf<List<Offset>>(emptyList()) }
+    val strokeWidthPx = 5f
+    val strokeColor = Color.Black
 
     Column(
         modifier = Modifier
@@ -1059,6 +1054,7 @@ fun SignaturePromptScreen(
         )
 
         // Signature canvas
+        var canvasSize by remember { mutableStateOf(IntSize(0, 0)) }
         Canvas(
             modifier = Modifier
                 .weight(1f)
@@ -1068,28 +1064,45 @@ fun SignaturePromptScreen(
                 .pointerInput(Unit) {
                     detectDragGestures(
                         onDragStart = { offset ->
-                            paths = paths + Path().apply {
-                                moveTo(offset.x, offset.y)
-                            }
+                            currentStroke = listOf(offset)
                         },
                         onDrag = { change, _ ->
-                            if (paths.isNotEmpty()) {
-                                val newPath = Path().apply {
-                                    addPath(paths.last())
-                                    lineTo(change.position.x, change.position.y)
-                                }
-                                paths = paths.dropLast(1) + newPath
+                            currentStroke = currentStroke + change.position
+                        },
+                        onDragEnd = {
+                            if (currentStroke.isNotEmpty()) {
+                                strokes = strokes + listOf(currentStroke)
+                                currentStroke = emptyList()
                             }
                         }
                     )
                 }
         ) {
-            paths.forEach { path ->
-                drawPath(
-                    path = path,
-                    color = Color.Black,
-                    style = Stroke(width = 5.dp.toPx())
-                )
+            canvasSize = androidx.compose.ui.unit.IntSize(size.width.toInt(), size.height.toInt())
+
+            // Draw completed strokes
+            strokes.forEach { stroke ->
+                if (stroke.size > 1) {
+                    for (i in 0 until stroke.size - 1) {
+                        drawLine(
+                            color = strokeColor,
+                            start = stroke[i],
+                            end = stroke[i + 1],
+                            strokeWidth = strokeWidthPx
+                        )
+                    }
+                }
+            }
+            // Draw current stroke while dragging
+            if (currentStroke.size > 1) {
+                for (i in 0 until currentStroke.size - 1) {
+                    drawLine(
+                        color = strokeColor,
+                        start = currentStroke[i],
+                        end = currentStroke[i + 1],
+                        strokeWidth = strokeWidthPx
+                    )
+                }
             }
         }
 
@@ -1100,7 +1113,7 @@ fun SignaturePromptScreen(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             Button(
-                onClick = { paths = emptyList() },
+                onClick = { strokes = emptyList(); currentStroke = emptyList() },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFFF9800)
                 ),
@@ -1120,7 +1133,42 @@ fun SignaturePromptScreen(
             }
 
             Button(
-                onClick = onCancel,
+                onClick = {
+                    // Render strokes to a bitmap and return as Base64 JPEG
+                    val width = if (canvasSize.width > 0) canvasSize.width else 800
+                    val height = if (canvasSize.height > 0) canvasSize.height else 300
+                    val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                    val c = android.graphics.Canvas(bmp)
+                    c.drawColor(android.graphics.Color.WHITE)
+                    val p = Paint().apply {
+                        color = Color.Black.toArgb()
+                        strokeWidth = strokeWidthPx
+                        style = Paint.Style.STROKE
+                        strokeCap = Paint.Cap.ROUND
+                        strokeJoin = Paint.Join.ROUND
+                        isAntiAlias = true
+                    }
+                    // Draw all strokes
+                    strokes.forEach { stroke ->
+                        for (i in 0 until (stroke.size - 1).coerceAtLeast(0)) {
+                            val s = stroke[i]
+                            val e = stroke[i + 1]
+                            c.drawLine(s.x, s.y, e.x, e.y, p)
+                        }
+                    }
+                    // Include currentStroke if user taps without moving
+                    if (currentStroke.size == 1) {
+                        val pt = currentStroke.first()
+                        c.drawPoint(pt.x, pt.y, p)
+                    }
+                    // Convert to Base64 JPEG
+                    val output = ByteArrayOutputStream()
+                    bmp.compress(Bitmap.CompressFormat.JPEG, 85, output)
+                    val bytes = output.toByteArray()
+                    val base64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
+                    val dataUri = "data:image/jpeg;base64,$base64"
+                    onSignatureSaved(dataUri)
+                },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(MaterialTheme.colorScheme.primary.value)
                 ),
@@ -1132,7 +1180,7 @@ fun SignaturePromptScreen(
     }
 }
 
-private fun decodeBase64Image(dataUri: String): Bitmap? {
+fun decodeBase64Image(dataUri: String): Bitmap? {
     return try {
         val base64Part = dataUri.substringAfter(",", missingDelimiterValue = dataUri)
         val bytes = Base64.decode(base64Part, Base64.DEFAULT)

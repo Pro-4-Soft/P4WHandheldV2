@@ -1,6 +1,8 @@
 package com.p4handheld.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -11,12 +13,19 @@ import com.p4handheld.ui.screens.ContactsScreen
 import com.p4handheld.ui.screens.LoginScreen
 import com.p4handheld.ui.screens.MenuScreen
 import com.p4handheld.ui.screens.TenantSelectScreen
+import com.p4handheld.data.repository.AuthRepository
+import com.p4handheld.firebase.FirebaseManager
+import android.content.Intent
 
 @Composable
 fun AppNavigation(
     navController: NavHostController = rememberNavController(),
     startDestination: String = Screen.TenantSelect.route
 ) {
+    val context = LocalContext.current
+    val authRepository = remember { AuthRepository(context) }
+    val isTrackingLocation = remember { authRepository.shouldTrackLocation() }
+
     NavHost(
         navController = navController,
         startDestination = startDestination
@@ -47,7 +56,11 @@ fun AppNavigation(
         composable(Screen.Menu.route) {
             MenuScreen(
                 onNavigateToAction = { menuItemLabel, menuItemState ->
-                    navController.navigate(Screen.Action.createRoute(menuItemLabel, menuItemState))
+                    if (menuItemState == "main.contacts") {
+                        navController.navigate(Screen.Contacts.route)
+                    } else {
+                        navController.navigate(Screen.Action.createRoute(menuItemLabel, menuItemState))
+                    }
                 },
                 onNavigateToMessages = {
                     // Navigate to new Contacts screen
@@ -63,18 +76,37 @@ fun AppNavigation(
 
         composable(Screen.Messages.route) {
             ContactsScreen(
-//                onNavigateBack = { navController.popBackStack() },
                 onOpenChat = { id, name ->
                     navController.navigate(Screen.Chat.createRoute(id, name))
+                },
+                hasUnreadMessages = false,
+                hasNotifications = false,
+                isTrackingLocation = isTrackingLocation,
+                onMessageClick = { navController.navigate(Screen.Contacts.route) },
+                onNotificationClick = {
+                    // Clear notifications badge before navigating
+                    val ctx = context
+                    FirebaseManager.getInstance(ctx).clearNotifications()
+                    ctx.sendBroadcast(Intent("com.p4handheld.FIREBASE_MESSAGE_RECEIVED"))
+                    navController.navigate(Screen.Contacts.route)
                 }
             )
         }
 
         composable(Screen.Contacts.route) {
             ContactsScreen(
-//                onNavigateBack = { navController.popBackStack() },
                 onOpenChat = { id, name ->
                     navController.navigate(Screen.Chat.createRoute(id, name))
+                },
+                hasUnreadMessages = false,
+                hasNotifications = false,
+                isTrackingLocation = isTrackingLocation,
+                onMessageClick = { /* already here */ },
+                onNotificationClick = {
+                    val ctx = context
+                    FirebaseManager.getInstance(ctx).clearNotifications()
+                    ctx.sendBroadcast(Intent("com.p4handheld.FIREBASE_MESSAGE_RECEIVED"))
+                    /* TODO: navigate to notifications screen when available */
                 }
             )
         }
@@ -88,7 +120,16 @@ fun AppNavigation(
             ChatScreen(
                 contactId = contactId,
                 contactName = contactName,
-                /*onNavigateBack = { navController.popBackStack() }*/
+                hasUnreadMessages = false,
+                hasNotifications = false,
+                isTrackingLocation = isTrackingLocation,
+                onMessageClick = { navController.navigate(Screen.Contacts.route) },
+                onNotificationClick = {
+                    val ctx = context
+                    FirebaseManager.getInstance(ctx).clearNotifications()
+                    ctx.sendBroadcast(Intent("com.p4handheld.FIREBASE_MESSAGE_RECEIVED"))
+                    navController.navigate(Screen.Contacts.route)
+                }
             )
         }
 
@@ -105,6 +146,16 @@ fun AppNavigation(
                 pageKey = menuItemState,
                 onNavigateBack = {
                     navController.popBackStack()
+                },
+                hasUnreadMessages = false,
+                hasNotifications = false,
+                isTrackingLocation = isTrackingLocation,
+                onMessageClick = { navController.navigate(Screen.Contacts.route) },
+                onNotificationClick = {
+                    val ctx = context
+                    FirebaseManager.getInstance(ctx).clearNotifications()
+                    ctx.sendBroadcast(Intent("com.p4handheld.FIREBASE_MESSAGE_RECEIVED"))
+                    navController.navigate(Screen.Contacts.route)
                 }
             )
         }

@@ -100,6 +100,7 @@ import com.p4handheld.data.models.ToolbarAction
 import com.p4handheld.ui.compose.theme.HandheldP4WTheme
 import com.p4handheld.ui.screens.viewmodels.ActionUiState
 import com.p4handheld.ui.screens.viewmodels.ActionViewModel
+import com.p4handheld.ui.components.TopBarWithIcons
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.time.Instant
@@ -110,7 +111,12 @@ import java.time.ZoneId
 fun ActionScreen(
     menuItemLabel: String,
     pageKey: String,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    hasUnreadMessages: Boolean = false,
+    hasNotifications: Boolean = false,
+    isTrackingLocation: Boolean = false,
+    onMessageClick: () -> Unit = {},
+    onNotificationClick: () -> Unit = {}
 ) {
     val viewModel: ActionViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
@@ -248,9 +254,13 @@ fun ActionScreen(
         menuItemLabel = menuItemLabel,
         menuItemState = pageKey,
         prompt = prompt,
-        uiState = uiState
+        uiState = uiState,
+        hasUnreadMessages = hasUnreadMessages,
+        hasNotifications = hasNotifications,
+        isTrackingLocation = isTrackingLocation,
+        onMessageClick = onMessageClick,
+        onNotificationClick = onNotificationClick
     )
-
 }
 
 @Composable
@@ -258,7 +268,12 @@ fun ActionScreenWrapper(
     menuItemLabel: String,
     menuItemState: String,
     prompt: @Composable () -> Unit,
-    uiState: ActionUiState
+    uiState: ActionUiState,
+    hasUnreadMessages: Boolean = false,
+    hasNotifications: Boolean = false,
+    isTrackingLocation: Boolean = false,
+    onMessageClick: () -> Unit = {},
+    onNotificationClick: () -> Unit = {}
 ) {
 
     Column(
@@ -268,6 +283,15 @@ fun ActionScreenWrapper(
             .statusBarsPadding()
             .navigationBarsPadding()
     ) {
+        // Global TopBar with icons and username
+        TopBarWithIcons(
+            isTrackingLocation = isTrackingLocation,
+            hasUnreadMessages = hasUnreadMessages,
+            hasNotifications = hasNotifications,
+            onMessageClick = onMessageClick,
+            onNotificationClick = onNotificationClick
+        )
+
         // Header
         Surface(
             modifier = Modifier.fillMaxWidth(),

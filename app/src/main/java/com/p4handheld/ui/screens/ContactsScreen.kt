@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -24,7 +26,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -38,23 +39,37 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.p4handheld.data.models.UserContact
+import com.p4handheld.ui.components.TopBarWithIcons
 import com.p4handheld.ui.screens.viewmodels.ContactsViewModel
 import com.p4handheld.utils.formatDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContactsScreen(
-    onOpenChat: (contactId: String, contactName: String) -> Unit
+    onOpenChat: (contactId: String, contactName: String) -> Unit,
+    hasUnreadMessages: Boolean = false,
+    hasNotifications: Boolean = false,
+    isTrackingLocation: Boolean = false,
+    onMessageClick: () -> Unit = {},
+    onNotificationClick: () -> Unit = {}
 ) {
     val viewModel: ContactsViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Contacts") }
+            TopBarWithIcons(
+                isTrackingLocation = isTrackingLocation,
+                hasUnreadMessages = hasUnreadMessages,
+                hasNotifications = hasNotifications,
+                onMessageClick = onMessageClick,
+                onNotificationClick = onNotificationClick
             )
-        }
+
+        },
+        modifier = Modifier
+            .navigationBarsPadding()
+            .statusBarsPadding()
     ) { padding ->
         Column(
             modifier = Modifier
@@ -177,9 +192,16 @@ fun PreviewContactsScree2n() {
     MaterialTheme {
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = { Text("Contacts") }
+                TopBarWithIcons(
+                    isTrackingLocation = true,
+                    hasUnreadMessages = true,
+                    hasNotifications = true,
+                    onMessageClick = { },
+                    onNotificationClick = { }
                 )
+//                TopAppBar(
+//                    title = { Text("Contacts") }
+//                )
             }
         ) { padding ->
             Column(
@@ -196,7 +218,7 @@ fun PreviewContactsScree2n() {
                         items(contacts) { contact ->
                             ContactRow(
                                 contact = contact,
-                                onClick = {  }
+                                onClick = { }
                             )
                             HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
                         }

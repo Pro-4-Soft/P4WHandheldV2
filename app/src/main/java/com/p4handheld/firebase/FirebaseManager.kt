@@ -52,8 +52,6 @@ class FirebaseManager private constructor(private val context: Context) {
      * Check if there are unread messages
      */
     fun hasUnreadMessages(): Boolean {
-        // For now, return false as a placeholder
-        // This should be implemented based on your message storage logic
         return prefs.getBoolean("has_unread_messages", false)
     }
 
@@ -69,6 +67,19 @@ class FirebaseManager private constructor(private val context: Context) {
      */
     fun setHasUnreadMessages(hasUnread: Boolean) {
         prefs.edit { putBoolean("has_unread_messages", hasUnread) }
+    }
+
+    /** Notifications badge helpers */
+    fun hasNotifications(): Boolean {
+        return prefs.getBoolean("has_notifications", false)
+    }
+
+    fun setHasNotifications(has: Boolean) {
+        prefs.edit { putBoolean("has_notifications", has) }
+    }
+
+    fun clearNotifications() {
+        prefs.edit { putBoolean("has_notifications", false) }
     }
 
 }

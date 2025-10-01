@@ -51,27 +51,50 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.p4handheld.data.models.UserChatMessage
 import com.p4handheld.ui.screens.viewmodels.ChatViewModel
 import com.p4handheld.utils.formatDateTime
+import com.p4handheld.ui.components.TopBarWithIcons
 import kotlinx.coroutines.launch
+import android.content.Intent
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
+import com.p4handheld.firebase.FirebaseManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
     contactId: String,
-    contactName: String
+    contactName: String,
+    hasUnreadMessages: Boolean = false,
+    hasNotifications: Boolean = false,
+    isTrackingLocation: Boolean = false,
+    onMessageClick: () -> Unit = {},
+    onNotificationClick: () -> Unit = {}
 ) {
     val viewModel: ChatViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+    val ctx = LocalContext.current;
 
     LaunchedEffect(contactId) {
         viewModel.loadMessages(contactId)
+        // Clear unread badge when opening a chat
+        try {
+            FirebaseManager.getInstance(ctx).setHasUnreadMessages(false)
+            ctx.sendBroadcast(Intent("com.p4handheld.FIREBASE_MESSAGE_RECEIVED"))
+        } catch (_: Exception) {}
     }
 
     Scaffold(
+        modifier = Modifier
+            .navigationBarsPadding()
+            .statusBarsPadding(),
         topBar = {
-            TopAppBar(
-                title = { Text(text = contactName) },
+            TopBarWithIcons(
+                isTrackingLocation = isTrackingLocation,
+                hasUnreadMessages = hasUnreadMessages,
+                hasNotifications = hasNotifications,
+                onMessageClick = onMessageClick,
+                onNotificationClick = onNotificationClick
             )
         }
     ) { padding ->
@@ -127,12 +150,12 @@ fun ChatScreen(
                     }
                 }
             }
+
             var messageText by remember { mutableStateOf("") }
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 8.dp),
-                verticalAlignment = Alignment.Bottom,
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.Bottom
             ) {
                 OutlinedTextField(
                     value = messageText,

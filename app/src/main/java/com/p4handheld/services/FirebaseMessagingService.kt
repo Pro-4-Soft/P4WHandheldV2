@@ -18,6 +18,7 @@ import com.p4handheld.R
 import com.p4handheld.data.models.FirebaseMessage
 import com.p4handheld.data.models.P4WEventType
 import com.p4handheld.ui.screens.MainActivity
+import com.p4handheld.firebase.FirebaseManager
 
 @SuppressLint("MissingFirebaseInstanceTokenRefresh")
 class FirebaseMessagingService : FirebaseMessagingService() {
@@ -41,7 +42,16 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         val p4wMessage = convertToP4WMessage(remoteMessage)
 
         showOrNoiseNotification(p4wMessage);
-        8
+        // Update badges in prefs so TopBarViewModel can reflect state
+        try {
+            val manager = FirebaseManager.getInstance(applicationContext)
+            manager.setHasNotifications(true)
+            if (p4wMessage.eventType == P4WEventType.USER_CHAT_MESSAGE) {
+                manager.setHasUnreadMessages(true)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to update badge flags", e)
+        }
         broadcastMessage(p4wMessage)
     }
 

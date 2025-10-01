@@ -48,11 +48,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -61,7 +58,6 @@ import com.p4handheld.data.models.MenuItem
 import com.p4handheld.ui.components.TopBarWithIcons
 import com.p4handheld.ui.compose.FontAwesome
 import com.p4handheld.ui.compose.getFontAwesomeIcon
-import com.p4handheld.ui.compose.theme.HandheldP4WTheme
 import com.p4handheld.ui.screens.viewmodels.MenuUiState
 import com.p4handheld.ui.screens.viewmodels.MenuViewModel
 
@@ -120,7 +116,6 @@ fun MenuScreen(
                 breadcrumbStack = breadcrumbStack + listOf(item.label)
                 currentMenuItems = item.children
             } else {
-                // Navigate to action page
                 selectedMenuItem = item
                 onNavigateToAction(item.label, item.state ?: "")
             }
@@ -162,7 +157,7 @@ fun MenuScreenContent(
             onNotificationClick = onNavigateToTasks
         )
 
-        // Header with back button and breadcrumb
+        //region Header with back button and breadcrumb
         Surface(
             modifier = Modifier.fillMaxWidth(),
             color = Color.White,
@@ -173,7 +168,7 @@ fun MenuScreenContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
-                // Title or breadcrumb
+                //region Title or breadcrumb
                 Column(
                     modifier = Modifier.weight(1f)
                 )
@@ -217,8 +212,9 @@ fun MenuScreenContent(
                         )
                     }
                 }
+                //endregion
 
-                // Refresh button
+                //region Refresh button
                 IconButton(
                     onClick = { refreshMenu() },
                     enabled = !uiState.isLoading
@@ -233,10 +229,12 @@ fun MenuScreenContent(
                         )
                     }
                 }
+                //endregion
             }
         }
+        //endregion
 
-        // Error message
+        //region Error message
         uiState.errorMessage?.let { errorMessage ->
             Card(
                 modifier = Modifier
@@ -253,7 +251,9 @@ fun MenuScreenContent(
                 )
             }
         }
-        // Menu content
+        //endregion
+
+        //region Menu content
         if (selectedMenuItem == null) {
             if (currentMenuItems.isNotEmpty()) {
 
@@ -302,8 +302,9 @@ fun MenuScreenContent(
                 }
             }
         }
+        //endregion
 
-        // Action buttons at bottom
+        //region Action buttons at bottom (Messages + Logout)
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -351,6 +352,7 @@ fun MenuScreenContent(
             }
 
         }
+        //endregion
     }
 }
 
@@ -373,15 +375,9 @@ fun MenuTileCard(
         )
     ) {
 
-        var columnWidth by remember { mutableStateOf(0.dp) }
-        val density = LocalDensity.current
 
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .onGloballyPositioned { coordinates ->
-                    columnWidth = with(density) { coordinates.size.width.toDp() }
-                },
+            modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically),
         ) {

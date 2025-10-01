@@ -131,8 +131,7 @@ fun LoginScreenContent(
             ),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 AsyncImage(
@@ -170,8 +169,7 @@ fun LoginScreenContent(
                         onUsernameChange(it)
                     },
                     label = { Text("Username") },
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     enabled = !uiState.isLoading
                 )

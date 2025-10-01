@@ -153,7 +153,7 @@ fun ActionScreen(
         }
     }
 
-    // Handle scan data from DataWedge for SCAN, TEXT and NUMBER prompt types
+    // Handle scan data from DataWedge for SCAN, TEXT, NUMBER, and DATE prompt types
     LaunchedEffect(scanViewState?.dwOutputData) {
         scanViewState?.dwOutputData?.let { outputData ->
             val data = outputData.data
@@ -162,13 +162,16 @@ fun ActionScreen(
                     PromptType.SCAN -> {
                         println("ActionScreen: Scan data received (SCAN): $data")
                         viewModel.updatePromptValue(data)
-                        // Automatically send the scanned data for SCAN prompts
                         viewModel.processAction(pageKey, data)
                     }
                     PromptType.TEXT -> {
                         println("ActionScreen: Scan data received (TEXT): $data")
-                        // Populate the text input, let user edit or press Send
                         viewModel.updatePromptValue(data)
+                    }
+                    PromptType.DATE -> {
+                        val trimmed = data.trim()
+                        println("ActionScreen: Scan data received (DATE): $trimmed")
+                        viewModel.updatePromptValue(trimmed)
                     }
                     PromptType.NUMBER -> {
                         val digitsOnly = data.filter { it.isDigit() }

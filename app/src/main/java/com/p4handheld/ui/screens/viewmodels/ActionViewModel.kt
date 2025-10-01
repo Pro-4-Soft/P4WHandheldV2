@@ -38,7 +38,7 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
             _uiState.value = currentState.copy(isLoading = true)
 
             try {
-               
+
                 val stateParams: Any? = authRepository.getStoredMenuData()
                     ?.menu
                     ?.firstOrNull { it.state == pageKey }
@@ -146,11 +146,9 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
 
         // If server requested navigation to a new page, process the message on that page directly
         if (currentState.currentPrompt?.promptType == PromptType.GO_TO_NEW_PAGE) {
-            val targetPage = currentState.currentResponse?.prompt?.defaultValue ?: pageKey
             processAction(
-                pageKey = targetPage,
+                pageKey = message.handlerName ?: "",
                 promptValue = message.promptValue ?: "",
-                actionFor = message.actionName ?: message.handlerName,
                 taskId = message.taskId
             )
             return

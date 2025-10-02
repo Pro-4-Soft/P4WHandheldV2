@@ -1,4 +1,4 @@
-package com.p4handheld.services
+package com.p4handheld.firebase
 
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
@@ -19,7 +19,6 @@ import com.p4handheld.R
 import com.p4handheld.data.models.P4WEventType
 import com.p4handheld.data.models.P4WFirebaseNotification
 import com.p4handheld.data.models.UserChatMessage
-import com.p4handheld.firebase.FirebaseManager
 import com.p4handheld.ui.screens.MainActivity
 
 @SuppressLint("MissingFirebaseInstanceTokenRefresh")
@@ -39,24 +38,24 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         Log.d(TAG, "From: ${remoteMessage.from}")
         Log.d(TAG, "Message data payload: ${remoteMessage.data}")
 
-        val p4wMessage = convertToP4WMessage(remoteMessage)
+        val p4wNotification = convertToP4WMessage(remoteMessage)
 
-        if (isItMineUserMessageNotification(p4wMessage)) {
+        if (isItMineUserMessageNotification(p4wNotification)) {
             return
         }
 
-        showOrNoiseNotification(p4wMessage)
+        showOrNoiseNotification(p4wNotification)
         // Update badges in prefs so TopBarViewModel can reflect state
         try {
             val manager = FirebaseManager.getInstance(applicationContext)
             manager.setHasNotifications(true)
-            if (p4wMessage.eventType == P4WEventType.USER_CHAT_MESSAGE) {
+            if (p4wNotification.eventType == P4WEventType.USER_CHAT_MESSAGE) {
                 manager.setHasUnreadMessages(true)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to update badge flags", e)
         }
-        broadcastMessage(p4wMessage)
+        broadcastMessage(p4wNotification)
     }
 
     //region Private functions
@@ -105,30 +104,10 @@ class FirebaseMessagingService : FirebaseMessagingService() {
     }
 
     private fun showOrNoiseNotification(message: P4WFirebaseNotification) {
-        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-
         if (message.eventType == P4WEventType.USER_CHAT_MESSAGE) {
-            val intent = Intent(this, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                putExtra("messageId", message.id)
-            }
-
-            val pendingIntent = PendingIntent.getActivity(
-                this, 0, intent,
-                PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
-            )
-
-            val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_notification)
-                .setContentTitle(message.title)
-                .setContentText(message.body)
-                .setAutoCancel(true)
-                .setContentIntent(pendingIntent)
-
-            notificationManager.notify(message.id.hashCode(), notificationBuilder.build())
-            val mediaPlayer = MediaPlayer.create(this, R.raw.new_message)
-            mediaPlayer.start()
-        } else {
+            processUserMessageNotification(message);
+        }
+        if (message.eventType == P4WEventType.TASKS_CHANGED) {
             try {
                 val sound = if (message.eventType == P4WEventType.TASKS_CHANGED)
                     R.raw.new_task
@@ -142,13 +121,36 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
+    private fun processUserMessageNotification(message: P4WFirebaseNotification) {
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra("messageId", message.id)
+        }
+
+        val pendingIntent = PendingIntent.getActivity(
+            this, 0, intent,
+            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(message.title)
+            .setContentText(message.body)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+
+        notificationManager.notify(message.id.hashCode(), notificationBuilder.build())
+        val mediaPlayer = MediaPlayer.create(this, R.raw.new_message)
+        mediaPlayer.start()
+    }
+
     private fun broadcastMessage(message: P4WFirebaseNotification) {
         val intent = Intent("com.p4handheld.FIREBASE_MESSAGE_RECEIVED").apply {
             putExtra("messageId", message.id)
             putExtra("eventType", message.eventType.name)
             putExtra("title", message.title)
             putExtra("body", message.body)
-            // Include payload as JSON if present so UI can parse and append
             message.userChatMessage?.let {
                 val json = Gson().toJson(it)
                 putExtra("payload", json)

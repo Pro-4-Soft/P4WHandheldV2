@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.p4handheld.data.repository.AuthRepository
@@ -49,7 +50,7 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
     private fun registerReceiver() {
         if (!registered) {
             val appCtx = getApplication<Application>().applicationContext
-            appCtx.registerReceiver(receiver, IntentFilter("com.p4handheld.FIREBASE_MESSAGE_RECEIVED"))
+            ContextCompat.registerReceiver(appCtx, receiver, IntentFilter("com.p4handheld.FIREBASE_MESSAGE_RECEIVED"), ContextCompat.RECEIVER_NOT_EXPORTED)
             registered = true
         }
     }

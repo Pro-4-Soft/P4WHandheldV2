@@ -54,7 +54,7 @@
 
         <!-- Firebase Messaging Service -->
         <service
-            android:name="com.p4handheld.services.FirebaseMessagingService"
+            android:name="com.p4handheld.firebase.FirebaseMessagingService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />

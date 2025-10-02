@@ -218,7 +218,7 @@ object DWCommunicationWrapper {
         val data = it.getStringExtra(OUTPUT_DATA_STRING) ?: ""
         val label = it.getStringExtra(OUTPUT_DATA_LABEL_TYPE) ?: ""
         ScanStateHolder.scanViewStatus.value = ScanViewState(
-            dwOutputData = DWOutputData(data, label)
+            dwOutputData = DWOutputData(data, label, System.currentTimeMillis())
         )
         return Log.w(TAG, "$data $label")
     }

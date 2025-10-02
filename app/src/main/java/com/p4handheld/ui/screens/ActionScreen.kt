@@ -469,7 +469,7 @@ fun MessageCard(
     }
 
     // Image-only message (inserted separately by appendLastMessageWithPhoto)
-    if (message.imageResource != null && message.title.isBlank() && message.subtitle == null && message.subtitle2 == null) {
+    if (message.imageResource != null && message.title.isBlank()) {
         val bmp = remember(message.imageResource) { decodeBase64Image(message.imageResource) }
         if (bmp != null) {
             Card(
@@ -477,17 +477,23 @@ fun MessageCard(
                     .fillMaxWidth(),
                 shape = RoundedCornerShape(6.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = BorderStroke(1.dp, Color(0xFFE0E0E0))
+                border = BorderStroke(1.dp, Color(0xFFE0E0E0)),
             ) {
-                Image(
-                    bitmap = bmp.asImageBitmap(),
-                    contentDescription = null,
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(if (message.showLargePicture) 260.dp else 120.dp)
-                        .clip(RoundedCornerShape(6.dp)),
-                    contentScale = ContentScale.Crop
-                )
+                        .height(260.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        bitmap = bmp.asImageBitmap(),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(6.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                }
             }
             return
         }
@@ -532,7 +538,7 @@ fun MessageCard(
                         bitmap = bmp.asImageBitmap(),
                         contentDescription = null,
                         modifier = Modifier
-                            .size(56.dp)
+                            .size(260.dp)
                             .clip(RoundedCornerShape(6.dp))
                     )
                     Spacer(modifier = Modifier.width(12.dp))

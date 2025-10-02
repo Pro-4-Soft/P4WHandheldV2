@@ -58,7 +58,7 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
                         response.messages
                     }
 
-                    val updatedMessageStack = currentState.messageStack.take(response.cleanLastMessages) + newMessages
+                    val updatedMessageStack = currentState.messageStack.dropLast(response.cleanLastMessages) + newMessages
 
                     val finalMessageStack = tryCommitMessagesWithDivider(updatedMessageStack, response.commitAllMessages)
 
@@ -70,7 +70,7 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
                         toolbarActions = response.toolbarActions
                     )
                 } else {
-                    updateUiStateWithErrorMessage("Process failed")
+                    updateUiStateWithErrorMessage(result.errorMessage ?: "Process failed")
                 }
             } catch (e: Exception) {
                 updateUiStateWithErrorMessage("Error: ${e.message}")

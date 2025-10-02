@@ -22,6 +22,9 @@ interface ApiService {
 
     suspend fun getMessages(contactId: String? = null): ApiResponse<List<UserChatMessage>>
 
+    // Upload a screenshot of the current screen to the server
+    suspend fun updateScreen(screenshotJpeg: ByteArray): ApiResponse<Unit>
+
     suspend fun sendMessage(toUserId: String, message: String): ApiResponse<MessageResponse>
 }
 

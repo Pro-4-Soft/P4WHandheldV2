@@ -1,6 +1,10 @@
 package com.p4handheld.ui.screens
 
 import android.Manifest
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -20,11 +24,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
+import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.p4handheld.R
+import com.p4handheld.data.api.ApiClient
+import com.p4handheld.data.models.P4WEventType
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import com.p4handheld.firebase.FirebaseManager
 import com.p4handheld.scanner.DWCommunicationWrapper
 import com.p4handheld.ui.compose.theme.HandheldP4WTheme
@@ -44,6 +54,26 @@ class MainActivity : ComponentActivity() {
     // Flags to track profile creation and initial configuration progression.
     private var isProfileCreated = false
     private var initialConfigInProgression = false
+
+    private var screenRequestReceiverRegistered = false
+    private val screenRequestReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent == null) return
+            val eventType = intent.getStringExtra("eventType") ?: return
+            if (eventType != P4WEventType.SCREEN_REQUESTED.name) return
+            try {
+                captureCurrentScreenJpeg()?.let { bytes ->
+                    // Upload in a coroutine
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        val res = ApiClient.apiService.updateScreen(bytes)
+                        Log.d("MainActivity", "UpdateScreen result: ${'$'}{res.isSuccessful} code=${'$'}{res.code}")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Failed to capture/upload screenshot", e)
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,6 +118,17 @@ class MainActivity : ComponentActivity() {
 
         val firebaseManager = FirebaseManager.Companion.getInstance(application)
         firebaseManager.initialize()
+
+        // Register screen request receiver
+        if (!screenRequestReceiverRegistered) {
+            ContextCompat.registerReceiver(
+                this,
+                screenRequestReceiver,
+                IntentFilter("com.p4handheld.FIREBASE_MESSAGE_RECEIVED"),
+                ContextCompat.RECEIVER_NOT_EXPORTED
+            )
+            screenRequestReceiverRegistered = true
+        }
     }
 
     // Sets up LiveData observers to update the UI based on ViewModel changes.
@@ -142,6 +183,13 @@ class MainActivity : ComponentActivity() {
         // Unregister broadcast receivers and notifications.
         DWCommunicationWrapper.unregisterReceivers()
         viewModel.unregisterNotifications()
+        if (screenRequestReceiverRegistered) {
+            try {
+                unregisterReceiver(screenRequestReceiver)
+            } catch (_: Exception) {
+            }
+            screenRequestReceiverRegistered = false
+        }
     }
 
     override fun onResume() {
@@ -166,6 +214,24 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+//region Screenshot helpers
+private fun androidx.activity.ComponentActivity.captureCurrentScreenJpeg(quality: Int = 85): ByteArray? {
+    val view = window?.decorView?.rootView ?: return null
+    if (view.width == 0 || view.height == 0) return null
+    return try {
+        val bitmap = android.graphics.Bitmap.createBitmap(view.width, view.height, android.graphics.Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(bitmap)
+        view.draw(canvas)
+        val output = java.io.ByteArrayOutputStream()
+        bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, quality, output)
+        output.toByteArray()
+    } catch (e: Exception) {
+        android.util.Log.e("MainActivity", "captureCurrentScreenJpeg failed", e)
+        null
+    }
+}
+//endregion
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -20,6 +20,8 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
@@ -99,6 +101,42 @@ object ApiClient {
                                 token = responseBody
                             )
                             ApiResponse(true, loginResponse, responseCode)
+                        } else {
+                            val errorBody = response.body?.string()
+                            ApiResponse(false, null, responseCode, errorBody)
+                        }
+                    } catch (e: Exception) {
+                        ApiResponse(false, null, 0, e.message)
+                    }
+                }
+            }
+        }
+
+        override suspend fun updateScreen(screenshotJpeg: ByteArray): ApiResponse<Unit> {
+            userRequestMutex.withLock {
+                return withContext(Dispatchers.IO) {
+                    try {
+                        val mediaType = "image/jpeg".toMediaType()
+                        val fileBody: RequestBody = screenshotJpeg.toRequestBody(mediaType)
+                        val multipart = MultipartBody.Builder()
+                            .setType(MultipartBody.FORM)
+                            .addFormDataPart(
+                                name = "file",
+                                filename = "screenshot.jpg",
+                                body = fileBody
+                            )
+                            .build()
+
+                        val request = Request.Builder()
+                            .url("${getBaseUrl()}hh/userSession/UpdateScreen")
+                            .post(multipart)
+                            .build()
+
+                        val response = client.newCall(request).execute()
+                        val responseCode = response.code
+                        val isSuccessful = response.isSuccessful
+                        if (isSuccessful) {
+                            ApiResponse(true, Unit, responseCode)
                         } else {
                             val errorBody = response.body?.string()
                             ApiResponse(false, null, responseCode, errorBody)

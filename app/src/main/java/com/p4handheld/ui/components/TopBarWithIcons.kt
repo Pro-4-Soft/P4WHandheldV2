@@ -225,7 +225,8 @@ fun TopBarWithIconsPreview() {
                 Spacer(modifier = Modifier.weight(1f))
 
                 val context = LocalContext.current
-                val username = "hh"
+                val sharedPreferences = context.getSharedPreferences("auth_prefs", android.content.Context.MODE_PRIVATE)
+                val username = sharedPreferences.getString("username", "") ?: ""
                 Text(
                     text = username,
                     style = MaterialTheme.typography.bodyMedium,

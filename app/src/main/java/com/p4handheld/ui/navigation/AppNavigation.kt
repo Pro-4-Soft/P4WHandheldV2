@@ -1,5 +1,6 @@
 package com.p4handheld.ui.navigation
 
+import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -7,15 +8,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.p4handheld.data.repository.AuthRepository
+import com.p4handheld.firebase.FirebaseManager
 import com.p4handheld.ui.screens.ActionScreen
 import com.p4handheld.ui.screens.ChatScreen
 import com.p4handheld.ui.screens.ContactsScreen
 import com.p4handheld.ui.screens.LoginScreen
 import com.p4handheld.ui.screens.MenuScreen
 import com.p4handheld.ui.screens.TenantSelectScreen
-import com.p4handheld.data.repository.AuthRepository
-import com.p4handheld.firebase.FirebaseManager
-import android.content.Intent
 
 @Composable
 fun AppNavigation(
@@ -143,7 +143,7 @@ fun AppNavigation(
 
             ActionScreen(
                 menuItemLabel = menuItemLabel,
-                pageKey = menuItemState,
+                initialPageKey = menuItemState,
                 onNavigateBack = {
                     navController.popBackStack()
                 },

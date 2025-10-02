@@ -125,6 +125,8 @@ data class Message(
     @SerializedName("ImageResource")
     val imageResource: String? = null,
 
+    val showLargePicture: Boolean = false,
+
     @SerializedName("Severity")
     val severity: String = "",
 

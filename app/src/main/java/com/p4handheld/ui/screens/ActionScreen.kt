@@ -79,6 +79,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -107,7 +108,7 @@ import java.time.ZoneId
 @Composable
 fun ActionScreen(
     menuItemLabel: String,
-    pageKey: String,
+    initialPageKey: String,
     onNavigateBack: () -> Unit,
     hasUnreadMessages: Boolean = false,
     hasNotifications: Boolean = false,
@@ -119,8 +120,6 @@ fun ActionScreen(
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
-    val context = LocalContext.current
-
     // Observe scan data from DataWedge
     val scanViewState by ScanStateHolder.scanViewStatus.observeAsState()
 
@@ -129,10 +128,11 @@ fun ActionScreen(
     }
 
     // Initialize action on first composition with debug logging
-    LaunchedEffect(pageKey) {
-        if (pageKey.isNotEmpty()) {
-            println("ActionScreen: Initializing action with state: $pageKey")
-            viewModel.processAction(pageKey)
+    LaunchedEffect(initialPageKey) {
+        if (initialPageKey.isNotEmpty()) {
+            println("ActionScreen: Initializing action with state: $initialPageKey")
+            viewModel.updatePageKey(initialPageKey)
+            viewModel.processAction(initialPageKey)
         } else {
             println("ActionScreen: Warning - menuItemState is empty, cannot initialize action")
         }
@@ -157,7 +157,7 @@ fun ActionScreen(
                     PromptType.SCAN -> {
                         println("ActionScreen: Scan data received (SCAN): $data")
                         viewModel.updatePromptValue(data)
-                        viewModel.processAction(pageKey, data)
+                        viewModel.processAction(data)
                     }
 
                     PromptType.TEXT -> {
@@ -193,7 +193,7 @@ fun ActionScreen(
                         viewModel.setCapturedImage(imageBase64)
                     },
                     onSendImage = { imageBase64 ->
-                        viewModel.processAction(pageKey, imageBase64)
+                        viewModel.processAction(imageBase64)
                     }
                 )
             }
@@ -204,7 +204,7 @@ fun ActionScreen(
                 {
                     SignaturePromptScreen(
                         onSignatureSaved = { signatureBase64 ->
-                            viewModel.processAction(pageKey, signatureBase64)
+                            viewModel.processAction(signatureBase64)
                         }
                     )
                 }
@@ -213,7 +213,6 @@ fun ActionScreen(
                     DefaultActionScreen(
                         uiState = uiState,
                         listState = listState,
-                        menuItemState = pageKey,
                         viewModel = viewModel
                     )
                 }
@@ -225,7 +224,6 @@ fun ActionScreen(
                 DefaultActionScreen(
                     uiState = uiState,
                     listState = listState,
-                    menuItemState = pageKey,
                     viewModel = viewModel
                 )
             }
@@ -307,7 +305,6 @@ fun ActionScreenWrapper(
 fun DefaultActionScreen(
     uiState: ActionUiState,
     listState: LazyListState,
-    menuItemState: String,
     viewModel: ActionViewModel
 ) {
     Column(
@@ -319,7 +316,7 @@ fun DefaultActionScreen(
             ToolBarActions(
                 toolbarActions = uiState.toolbarActions,
                 onToolBarActionClick = { actionFor ->
-                    viewModel.processAction(menuItemState, null, actionFor)
+                    viewModel.processAction(null, actionFor)
                 }
             )
         }
@@ -350,7 +347,7 @@ fun DefaultActionScreen(
                                 message = message,
                                 onClick = {
                                     println("ActionScreen: Message clicked: ${message.title}")
-                                    viewModel.onMessageClick(menuItemState, message, index)
+                                    viewModel.onMessageClick(message, index)
                                 }
                             )
                         }
@@ -391,7 +388,7 @@ fun DefaultActionScreen(
                 },
                 onSendPrompt = { value ->
                     println("ActionScreen: Sending prompt value: $value")
-                    viewModel.processAction(menuItemState, value)
+                    viewModel.processAction(value)
                 },
                 onShowSignature = {
                     println("ActionScreen: Showing signature prompt")
@@ -469,6 +466,31 @@ fun MessageCard(
             color = Color.Gray
         )
         return
+    }
+
+    // Image-only message (inserted separately by appendLastMessageWithPhoto)
+    if (message.imageResource != null && message.title.isBlank() && message.subtitle == null && message.subtitle2 == null) {
+        val bmp = remember(message.imageResource) { decodeBase64Image(message.imageResource) }
+        if (bmp != null) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(6.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = BorderStroke(1.dp, Color(0xFFE0E0E0))
+            ) {
+                Image(
+                    bitmap = bmp.asImageBitmap(),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(if (message.showLargePicture) 260.dp else 120.dp)
+                        .clip(RoundedCornerShape(6.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            return
+        }
     }
 
     Card(

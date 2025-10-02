@@ -7,7 +7,6 @@ import com.p4handheld.data.api.ApiClient
 import com.p4handheld.data.models.Message
 import com.p4handheld.data.models.ProcessRequest
 import com.p4handheld.data.models.Prompt
-import com.p4handheld.data.models.PromptResponse
 import com.p4handheld.data.models.PromptType
 import com.p4handheld.data.models.ToolbarAction
 import com.p4handheld.data.repository.AuthRepository
@@ -19,6 +18,7 @@ import kotlinx.coroutines.launch
 data class ActionUiState(
     val isLoading: Boolean = false,
     val pageTitle: String? = null,
+    val pageKey: String? = null,
     val currentPrompt: Prompt = Prompt(),
     val toolbarActions: List<ToolbarAction> = emptyList(),
     val messageStack: List<Message> = emptyList(),
@@ -34,25 +34,26 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
 
     val uiState: StateFlow<ActionUiState> = _uiState.asStateFlow()
 
-    fun processAction(pageKey: String, promptValue: String? = null, actionFor: String? = null, taskId: String? = null) {
+    fun processAction(promptValue: String? = null, actionFor: String? = null, taskId: String? = null) {
         viewModelScope.launch {
+            setLoading(true)
             val currentState = _uiState.value
+            val currentPageKey = _uiState.value.pageKey ?: ""
             _uiState.value = currentState.copy(isLoading = true)
 
             try {
                 val processRequest = ProcessRequest(
                     promptValue = promptValue,
                     actionFor = actionFor ?: currentState.currentPrompt.actionName,
-                    stateParams = authRepository.getStateParamsForPage(pageKey)
+                    stateParams = authRepository.getStateParamsForPage(currentPageKey)
                 )
 
-                val result = apiService.processAction(pageKey, processRequest, taskId)
-
+                val result = apiService.processAction(currentPageKey, processRequest, taskId)
                 if (result.isSuccessful && result.body != null) {
                     val response = result.body
-                    val newMessages = if (promptValue?.startsWith("data:image") == true && response.messages.isNotEmpty()) {
-                        // If we just sent a photo, attach it to the first Success/Info message from server
-                        appendLastMessageWithPhoto(response.messages, promptValue)
+                    // If we just sent an image (Photo/Sign), append a separate image message.
+                    val newMessages = if (promptValue?.startsWith("data:image") == true) {
+                        addTakenPictureToMessageStack(response.messages, promptValue)
                     } else {
                         response.messages
                     }
@@ -69,28 +70,37 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
                         toolbarActions = response.toolbarActions
                     )
                 } else {
-                    updateUiStateWithErrorMessage(currentState, "Process failed")
+                    updateUiStateWithErrorMessage("Process failed")
                 }
             } catch (e: Exception) {
-                updateUiStateWithErrorMessage(currentState, "Error: ${e.message}")
+                updateUiStateWithErrorMessage("Error: ${e.message}")
+            } finally {
+                setLoading(false)
             }
         }
+    }
+
+    fun updatePageKey(newPageKey: String) {
+        _uiState.value = _uiState.value.copy(pageKey = newPageKey)
     }
 
     fun updatePromptValue(value: String) {
         _uiState.value = _uiState.value.copy(promptValue = value)
     }
 
-    fun onMessageClick(pageKey: String, message: Message, index: Int) {
+    fun onMessageClick(message: Message, index: Int) {
         val currentState = _uiState.value
 
-        if (message.isCommitted) return
+        if (message.isCommitted)
+            return
 
         // If server requested navigation to a new page, process the message on that page directly
-        if (currentState.currentPrompt?.promptType == PromptType.GO_TO_NEW_PAGE) {
-            _uiState.value = currentState.copy(messageStack = emptyList())
+        if (currentState.currentPrompt.promptType == PromptType.GO_TO_NEW_PAGE) {
+            _uiState.value = currentState.copy(
+                messageStack = emptyList(),
+                pageKey = message.handlerName
+            )
             processAction(
-                pageKey = message.handlerName ?: "",
                 promptValue = message.promptValue ?: "",
                 taskId = message.taskId
             )
@@ -98,12 +108,12 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
         }
 
         // Restore to clicked message state
-        val clickedState = message.state as? PromptResponse
+        val clickedState = message.state
         val truncatedMessages = currentState.messageStack.take(index)
 
         if (message.isActionable) {
             _uiState.value = currentState.copy(messageStack = truncatedMessages)
-            processAction(pageKey, currentState.promptValue.ifBlank { message.promptValue ?: "" }, message.actionName ?: message.handlerName, taskId = message.taskId)
+            processAction(currentState.promptValue.ifBlank { message.promptValue ?: "" }, message.actionName ?: message.handlerName, taskId = message.taskId)
             return
         }
 
@@ -120,25 +130,25 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     //region Private methods
-    private fun appendLastMessageWithPhoto(messages: List<Message>, promptValue: String): List<Message> {
-        val idx = messages.indexOfFirst {
-            it.severity.equals("Success", ignoreCase = true) || it.severity.equals("Info", ignoreCase = true)
-        }
-        return if (idx >= 0) {
-            val updated = messages[idx].copy(imageResource = promptValue)
-            messages.toMutableList().apply { this[idx] = updated }
-        } else {
-            messages
-        }
+    private fun addTakenPictureToMessageStack(
+        messages: List<Message>,
+        imageResource: String
+    ): List<Message> {
+        val imageMsg = Message(
+            imageResource = imageResource,
+            showLargePicture = true,
+            severity = "Success"
+        )
+        return messages + imageMsg
     }
 
-    private fun updateUiStateWithErrorMessage(currentState: ActionUiState, errorMessage: String) {
-        val errorMessages = currentState.messageStack + Message(
+    private fun updateUiStateWithErrorMessage(errorMessage: String) {
+        val errorMessages = uiState.value.messageStack + Message(
             title = "Error: $errorMessage",
             severity = "Error"
         )
 
-        _uiState.value = currentState.copy(messageStack = errorMessages)
+        _uiState.value = uiState.value.copy(messageStack = errorMessages)
     }
 
     private fun tryCommitMessagesWithDivider(updatedMessageStack: List<Message>, commitAllMessages: Boolean): List<Message> {
@@ -152,6 +162,10 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
         } else {
             updatedMessageStack
         }
+    }
+
+    private fun setLoading(state: Boolean) {
+        _uiState.value = uiState.value.copy(isLoading = state)
     }
     //endregion
 }

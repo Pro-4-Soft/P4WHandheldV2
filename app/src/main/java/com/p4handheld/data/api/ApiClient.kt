@@ -3,7 +3,6 @@ package com.p4handheld.data.api
 import android.annotation.SuppressLint
 import android.content.Context
 import com.google.gson.Gson
-import com.p4handheld.data.models.FirebaseTokenRequest
 import com.p4handheld.data.models.LoginRequest
 import com.p4handheld.data.models.LoginResponse
 import com.p4handheld.data.models.MenuItem
@@ -152,10 +151,10 @@ object ApiClient {
 
                         val userContextResponse = Gson().fromJson(responseBody, UserContextResponse::class.java)
                         val handheldItem = userContextResponse.menu.firstOrNull { it.id == "Handheld" }
-                        val handheldChildren: List<MenuItem> = handheldItem?.children.orEmpty()
+                        val handheldChildrenMenu: List<MenuItem> = handheldItem?.children.orEmpty()
 
                         val handHeldMenuItems = UserContextResponse(
-                            menu = handheldChildren,
+                            menu = handheldChildrenMenu,
                             trackGeoLocation = userContextResponse.trackGeoLocation,
                             userScanType = userContextResponse.userScanType,
                             tenantScanType = userContextResponse.tenantScanType
@@ -212,33 +211,6 @@ object ApiClient {
             }
         }
 
-        override suspend fun completeAction(pageKey: String): ApiResponse<PromptResponse> {
-            return withContext(Dispatchers.IO) {
-                try {
-                    val request = Request.Builder()
-                        .url("${getBaseUrl()}hh/$pageKey/complete")
-                        .get()
-                        .build()
-
-                    val response = client.newCall(request).execute()
-                    val responseCode = response.code
-                    val isSuccessful = response.isSuccessful
-
-                    if (isSuccessful) {
-                        val responseBody = response.body?.string().orEmpty()
-                        val promptResponse =
-                            Gson().fromJson(responseBody, PromptResponse::class.java)
-                        ApiResponse(true, promptResponse, responseCode)
-                    } else {
-                        val errorBody = response.body?.string()
-                        ApiResponse(false, null, responseCode, errorBody)
-                    }
-                } catch (e: Exception) {
-                    ApiResponse(false, null, 0, e.message)
-                }
-            }
-        }
-
         override suspend fun updateUserLocation(lat: Double, lon: Double): ApiResponse<Unit> {
             return withContext(Dispatchers.IO) {
                 try {
@@ -263,10 +235,6 @@ object ApiClient {
                     ApiResponse(false, null, 0, e.message)
                 }
             }
-        }
-
-        override suspend fun updateFirebaseToken(request: FirebaseTokenRequest): ApiResponse<MessageResponse> {
-            TODO("Not yet implemented")
         }
 
         override suspend fun getContacts(): ApiResponse<List<UserContact>> {

@@ -30,7 +30,10 @@ data class UserContextResponse(
     val userScanType: String,
 
     @SerializedName("TenantScanType")
-    val tenantScanType: String
+    val tenantScanType: String,
+
+    @SerializedName("UserId")
+    val userId: String
 )
 
 data class MenuItem(

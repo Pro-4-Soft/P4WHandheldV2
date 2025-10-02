@@ -175,31 +175,6 @@ fun TopBarWithIconsPreview() {
                     }
                 }
 
-                // Notifications icon with indicator
-                Box {
-                    IconButton(
-                        onClick = { },
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = "Notifications",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(14.dp)
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .background(Color.Red, CircleShape)
-                            .align(Alignment.TopEnd),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        // Small red dot to indicate notifications
-                    }
-                }
-
                 // Messages icon with unread indicator
                 Box {
                     IconButton(

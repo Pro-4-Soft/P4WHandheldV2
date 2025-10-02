@@ -6,7 +6,6 @@ import android.util.Log
 import androidx.core.content.edit
 import com.google.firebase.messaging.FirebaseMessaging
 
-
 private const val TAG = "FirebaseManager"
 const val FIREBASE_PREFS_NAME = "firebase_prefs"
 const val FIREBASE_KEY_FCM_TOKEN = "fcm_token"

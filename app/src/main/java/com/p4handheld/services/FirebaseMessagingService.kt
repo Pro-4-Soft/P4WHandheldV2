@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.MediaPlayer
@@ -14,11 +13,14 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
 import com.p4handheld.R
-import com.p4handheld.data.models.FirebaseMessage
 import com.p4handheld.data.models.P4WEventType
-import com.p4handheld.ui.screens.MainActivity
+import com.p4handheld.data.models.P4WFirebaseNotification
+import com.p4handheld.data.models.UserChatMessage
 import com.p4handheld.firebase.FirebaseManager
+import com.p4handheld.ui.screens.MainActivity
 
 @SuppressLint("MissingFirebaseInstanceTokenRefresh")
 class FirebaseMessagingService : FirebaseMessagingService() {
@@ -26,8 +28,6 @@ class FirebaseMessagingService : FirebaseMessagingService() {
     companion object {
         private const val TAG = "FCMService"
         private const val CHANNEL_ID = "p4w_notifications"
-        private const val CHANNEL_NAME = "P4W Notifications"
-        private const val CHANNEL_DESCRIPTION = "Notifications for P4W Handheld App"
     }
 
     override fun onCreate() {
@@ -41,7 +41,11 @@ class FirebaseMessagingService : FirebaseMessagingService() {
 
         val p4wMessage = convertToP4WMessage(remoteMessage)
 
-        showOrNoiseNotification(p4wMessage);
+        if (isItMineUserMessageNotification(p4wMessage)) {
+            return
+        }
+
+        showOrNoiseNotification(p4wMessage)
         // Update badges in prefs so TopBarViewModel can reflect state
         try {
             val manager = FirebaseManager.getInstance(applicationContext)
@@ -55,18 +59,40 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         broadcastMessage(p4wMessage)
     }
 
-    private fun convertToP4WMessage(remoteMessage: RemoteMessage): FirebaseMessage {
+    //region Private functions
+
+    private fun isItMineUserMessageNotification(p4wMessage: P4WFirebaseNotification): Boolean {
+        val userId = applicationContext
+            .getSharedPreferences("auth_prefs", MODE_PRIVATE)
+            .getString("userId", "") ?: ""
+        return p4wMessage.eventType == P4WEventType.USER_CHAT_MESSAGE && p4wMessage.userChatMessage?.fromUserId == userId
+    }
+
+    private fun convertToP4WMessage(remoteMessage: RemoteMessage): P4WFirebaseNotification {
         val data = remoteMessage.data
         val notification = remoteMessage.notification
-        return FirebaseMessage(
+        return P4WFirebaseNotification(
             id = data["messageId"] ?: remoteMessage.messageId ?: generateMessageId(),
             title = notification?.title ?: data["title"] ?: "",
             body = notification?.body ?: data["body"] ?: "",
-            data = data,
+            userChatMessage = parseUserChatMessage(data["payload"]),
             eventType = parseEventType(data["eventType"]),
             userId = data["userId"],
             timestamp = remoteMessage.sentTime.takeIf { it > 0 } ?: System.currentTimeMillis(),
         )
+    }
+
+    private fun parseUserChatMessage(payloadStr: String?): UserChatMessage? {
+        if (payloadStr == null || payloadStr.isEmpty()) {
+            return null
+        }
+        return try {
+            val gson = Gson()
+            gson.fromJson(payloadStr, UserChatMessage::class.java)
+        } catch (ex: JsonSyntaxException) {
+            ex.printStackTrace()
+            null
+        }
     }
 
     private fun parseEventType(type: String?): P4WEventType {
@@ -78,9 +104,8 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
-    private fun showOrNoiseNotification(message: FirebaseMessage) {
-        val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    private fun showOrNoiseNotification(message: P4WFirebaseNotification) {
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
         if (message.eventType == P4WEventType.USER_CHAT_MESSAGE) {
             val intent = Intent(this, MainActivity::class.java).apply {
@@ -108,7 +133,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
                 val sound = if (message.eventType == P4WEventType.TASKS_CHANGED)
                     R.raw.new_task
                 else
-                    R.raw.task_removed;
+                    R.raw.task_removed
                 val mediaPlayer = MediaPlayer.create(this, sound)
                 mediaPlayer.start()
             } catch (e: Exception) {
@@ -117,7 +142,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
-    private fun broadcastMessage(message: FirebaseMessage) {
+    private fun broadcastMessage(message: P4WFirebaseNotification) {
         val intent = Intent("com.p4handheld.FIREBASE_MESSAGE_RECEIVED").apply {
             putExtra("messageId", message.id)
             putExtra("eventType", message.eventType.name)
@@ -145,7 +170,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
                 enableVibration(true)
             }
 
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel) // 🔹 important
         }
     }
@@ -153,4 +178,5 @@ class FirebaseMessagingService : FirebaseMessagingService() {
     private fun generateMessageId(): String {
         return "msg_${System.currentTimeMillis()}_${(1000..9999).random()}"
     }
+    //endregion
 }

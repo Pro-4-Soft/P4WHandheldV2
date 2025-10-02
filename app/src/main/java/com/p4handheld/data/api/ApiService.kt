@@ -1,6 +1,5 @@
 package com.p4handheld.data.api
 
-import com.p4handheld.data.models.FirebaseTokenRequest
 import com.p4handheld.data.models.LoginRequest
 import com.p4handheld.data.models.LoginResponse
 import com.p4handheld.data.models.MessageResponse
@@ -17,11 +16,7 @@ interface ApiService {
 
     suspend fun processAction(pageKey: String, processRequest: ProcessRequest, taskId: String? = null): ApiResponse<PromptResponse>
 
-    suspend fun completeAction(pageKey: String): ApiResponse<PromptResponse>
-
     suspend fun updateUserLocation(lat: Double, lon: Double): ApiResponse<Unit>
-
-    suspend fun updateFirebaseToken(request: FirebaseTokenRequest): ApiResponse<MessageResponse>
 
     suspend fun getContacts(): ApiResponse<List<UserContact>>
 

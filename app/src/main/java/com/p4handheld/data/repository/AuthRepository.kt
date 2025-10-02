@@ -16,10 +16,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 class AuthRepository(context: Context) {
-    private val authSharedPreferences: SharedPreferences =
-        context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-    private val firebaseSharedPreferences: SharedPreferences =
-        context.getSharedPreferences(FIREBASE_PREFS_NAME, Context.MODE_PRIVATE)
+    private val authSharedPreferences: SharedPreferences = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+    private val firebaseSharedPreferences: SharedPreferences = context.getSharedPreferences(FIREBASE_PREFS_NAME, Context.MODE_PRIVATE)
 
     private val apiService: ApiService
 
@@ -58,9 +56,9 @@ class AuthRepository(context: Context) {
                 val response = apiService.getCurrentMenu()
 
                 if (response.isSuccessful && response.body != null) {
-                    val menuResponse = response.body
-                    storeMenuData(menuResponse)
-                    Result.success(menuResponse)
+                    val userContextResponse = response.body
+                    storeUserContextData(userContextResponse)
+                    Result.success(userContextResponse)
                 } else {
                     Result.failure(ApiError("Failed to get menu: ${response.code}", response.code))
                 }
@@ -70,9 +68,9 @@ class AuthRepository(context: Context) {
         }
     }
 
-    private fun storeMenuData(menuResponse: UserContextResponse) {
+    private fun storeUserContextData(userContextResponse: UserContextResponse) {
         val menuArray = JSONArray()
-        menuResponse.menu.forEach { menuItem ->
+        userContextResponse.menu.forEach { menuItem ->
             val menuJson = JSONObject().apply {
                 put("Id", menuItem.id)
                 put("Label", menuItem.label)
@@ -87,9 +85,10 @@ class AuthRepository(context: Context) {
 
         authSharedPreferences.edit()
             .putString("menu_json", menuArray.toString())
-            .putBoolean("track_geo_location", menuResponse.trackGeoLocation)
-            .putString("user_scan_type", menuResponse.userScanType)
-            .putString("tenant_scan_type", menuResponse.tenantScanType)
+            .putBoolean("track_geo_location", userContextResponse.trackGeoLocation)
+            .putString("user_scan_type", userContextResponse.userScanType)
+            .putString("tenant_scan_type", userContextResponse.tenantScanType)
+            .putString("userId", userContextResponse.userId)
             .apply()
     }
 
@@ -119,7 +118,8 @@ class AuthRepository(context: Context) {
                     menu = menuItems,
                     trackGeoLocation = authSharedPreferences.getBoolean("track_geo_location", false),
                     userScanType = authSharedPreferences.getString("user_scan_type", "") ?: "",
-                    tenantScanType = authSharedPreferences.getString("tenant_scan_type", "") ?: ""
+                    tenantScanType = authSharedPreferences.getString("tenant_scan_type", "") ?: "",
+                    userId = authSharedPreferences.getString("userId", "") ?: "",
                 )
             } catch (e: Exception) {
                 null

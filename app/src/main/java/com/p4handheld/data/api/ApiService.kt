@@ -20,7 +20,7 @@ interface ApiService {
 
     suspend fun getContacts(): ApiResponse<List<UserContact>>
 
-    suspend fun getMessages(contactId: String? = null): ApiResponse<List<UserChatMessage>>
+    suspend fun getMessages(contactId: String? = null, skip: Int = 0, take: Int = 50): ApiResponse<List<UserChatMessage>>
 
     suspend fun updateScreen(screenshotJpeg: ByteArray): ApiResponse<Unit>
 

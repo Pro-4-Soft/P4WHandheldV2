@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -44,6 +45,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -86,6 +88,16 @@ fun ChatScreen(
         viewModel.unauthorizedEvent.collect {
             onNavigateToLogin()
         }
+    }
+
+    // Infinite scroll: load older messages when near top
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.firstVisibleItemIndex }
+            .collect { index ->
+                if (index <= 2) {
+                    viewModel.loadMore()
+                }
+            }
     }
 
     LaunchedEffect(contactId) {
@@ -172,11 +184,23 @@ fun ChatScreen(
                             state = listState,
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(8.dp)
+                                .padding(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            items(uiState.messages) { msg ->
-                                val isMine = currentUsername != null && msg.fromUsername == currentUsername
-                                MessageBubble(message = msg, isMine = isMine)
+                            if (uiState.isLoadingMore) {
+                                item(key = "loadingTop") {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        CircularProgressIndicator(modifier = Modifier.size(18.dp))
+                                    }
+                                }
+                            }
+                            itemsIndexed(uiState.messages) { index, message ->
+                                val isMine = currentUsername != null && message.fromUsername == currentUsername
+                                MessageBubble(message = message, isMine = isMine)
                                 Spacer(modifier = Modifier.size(8.dp))
                             }
                         }
@@ -184,9 +208,9 @@ fun ChatScreen(
                 }
             }
 
-            // Auto-scroll to bottom when messages list changes
-            LaunchedEffect(uiState.messages.size) {
-                if (uiState.messages.isNotEmpty()) {
+            // Auto-scroll to bottom when new messages arrive (but not when loading more older)
+            LaunchedEffect(uiState.messages.size, uiState.isLoadingMore) {
+                if (uiState.messages.isNotEmpty() && !uiState.isLoadingMore) {
                     coroutineScope.launch {
                         listState.animateScrollToItem(uiState.messages.size - 1)
                     }

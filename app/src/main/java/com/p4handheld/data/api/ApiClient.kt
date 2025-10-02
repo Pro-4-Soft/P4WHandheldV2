@@ -318,16 +318,23 @@ object ApiClient {
             }
         }
 
-        override suspend fun getMessages(contactId: String?): ApiResponse<List<UserChatMessage>> {
+        override suspend fun getMessages(contactId: String?, skip: Int, take: Int): ApiResponse<List<UserChatMessage>> {
             userRequestMutex.withLock {
                 return withContext(Dispatchers.IO) {
                     try {
                         val url = buildString {
                             append("${getBaseUrl()}api/UserMessageApi/GetMessages")
+                            var hasQuery = false
                             if (!contactId.isNullOrEmpty()) {
                                 append("?fromUserId=")
                                 append(contactId)
+                                hasQuery = true
                             }
+                            append(if (hasQuery) "&" else "?")
+                            append("Skip=")
+                            append(skip)
+                            append("&Take=")
+                            append(take)
                         }
 
                         val request = Request.Builder()

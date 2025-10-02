@@ -17,27 +17,63 @@ data class ChatUiState(
     val isLoading: Boolean = false,
     val messages: List<UserChatMessage> = emptyList(),
     val errorMessage: String? = null,
-    val isSending: Boolean = false
+    val isSending: Boolean = false,
+    val isLoadingMore: Boolean = false,
+    val endReached: Boolean = false
 )
 
 class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(ChatUiState())
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
     val unauthorizedEvent = MutableSharedFlow<Unit>()
+    private val pageSize = 50
+    private var currentContactId: String? = null
 
     fun loadMessages(contactId: String) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
-            val result = ApiClient.apiService.getMessages(contactId)
+            currentContactId = contactId
+            _uiState.value = ChatUiState(isLoading = true) // reset state
+            val result = ApiClient.apiService.getMessages(contactId, skip = 0, take = pageSize)
             if (result.isSuccessful) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    messages = result.body ?: emptyList()
+                    messages = result.body ?: emptyList(),
+                    endReached = (result.body?.size ?: 0) < pageSize
                 )
             } else {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     errorMessage = result.errorMessage ?: "Failed to load messages (code ${result.code})"
+                )
+            }
+        }
+    }
+
+    fun loadMore() {
+        val contactId = currentContactId ?: return
+        val state = _uiState.value
+        if (state.isLoadingMore || state.endReached) return
+        viewModelScope.launch {
+            _uiState.value = state.copy(isLoadingMore = true)
+            val skip = state.messages.size
+            val result = ApiClient.apiService.getMessages(contactId, skip = skip, take = pageSize)
+            if (result.isSuccessful) {
+                val older = result.body ?: emptyList()
+                val newEndReached = older.size < pageSize
+                // Prepend older messages to the current list
+                val combined = older + _uiState.value.messages
+                _uiState.value = _uiState.value.copy(
+                    isLoadingMore = false,
+                    endReached = newEndReached,
+                    messages = combined
+                )
+            } else {
+                if (result.code == 401) {
+                    unauthorizedEvent.emit(Unit)
+                }
+                _uiState.value = _uiState.value.copy(
+                    isLoadingMore = false,
+                    errorMessage = result.errorMessage ?: "Failed to load more (code ${result.code})"
                 )
             }
         }

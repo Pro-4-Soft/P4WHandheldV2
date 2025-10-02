@@ -119,22 +119,19 @@ object DWCommunicationWrapper {
             val msg = when (identifier) {
                 VALUE_COMMAND_IDENTIFIER_SWITCH_SCANNER_EX -> {
                     if (result == SUCCESS) {
-                        ScanStateHolder.scanViewStatus.value =
-                            ScanViewState(dwScannerSwitch = DWScannerSwitch(true))
+                        ScanStateHolder.scanViewStatus.value = ScanViewState(dwScannerSwitch = DWScannerSwitch(true))
                         ScanStateHolder.isLoading.value = false
                         "Scanner switched..!"
                     } else {
                         ScanStateHolder.isLoading.value = false
                         when (resultCode) {
                             "SCANNER_ALREADY_ENABLED" -> {
-                                ScanStateHolder.scanViewStatus.value =
-                                    ScanViewState(dwScannerSwitch = DWScannerSwitch(true))
+                                ScanStateHolder.scanViewStatus.value = ScanViewState(dwScannerSwitch = DWScannerSwitch(true))
                                 "Scanner already enabled..!"
                             }
 
                             else -> {
-                                ScanStateHolder.scanViewStatus.value =
-                                    ScanViewState(dwScannerSwitch = DWScannerSwitch(false))
+                                ScanStateHolder.scanViewStatus.value = ScanViewState(dwScannerSwitch = DWScannerSwitch(false))
                                 "Scanner switch failed..!"
                             }
                         }

@@ -10,6 +10,7 @@ import com.p4handheld.data.models.Prompt
 import com.p4handheld.data.models.PromptType
 import com.p4handheld.data.models.ToolbarAction
 import com.p4handheld.data.repository.AuthRepository
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,6 +34,7 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
     private val _uiState = MutableStateFlow(ActionUiState())
 
     val uiState: StateFlow<ActionUiState> = _uiState.asStateFlow()
+    val unauthorizedEvent = MutableSharedFlow<Unit>()
 
     fun processAction(promptValue: String? = null, actionFor: String? = null, taskId: String? = null) {
         viewModelScope.launch {
@@ -70,6 +72,9 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
                         toolbarActions = response.toolbarActions
                     )
                 } else {
+                    if (result.code == 401) {
+                        unauthorizedEvent.emit(Unit)
+                    }
                     updateUiStateWithErrorMessage(result.errorMessage ?: "Process failed")
                 }
             } catch (e: Exception) {

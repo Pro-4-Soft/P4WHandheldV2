@@ -114,17 +114,24 @@ fun ActionScreen(
     hasNotifications: Boolean = false,
     isTrackingLocation: Boolean = false,
     onMessageClick: () -> Unit = {},
-    onNotificationClick: () -> Unit = {}
+    onNotificationClick: () -> Unit = {},
+    onNavigateToLogin: () -> Unit
 ) {
     val viewModel: ActionViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
-    // Observe scan data from DataWedge
     val scanViewState by ScanStateHolder.scanViewStatus.observeAsState()
 
     BackHandler {
         onNavigateBack()
+    }
+
+    //if 401 - navigate to login screen
+    LaunchedEffect(viewModel.unauthorizedEvent) {
+        viewModel.unauthorizedEvent.collect {
+            onNavigateToLogin()
+        }
     }
 
     // Initialize action on first composition with debug logging

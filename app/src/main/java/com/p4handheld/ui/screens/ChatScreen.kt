@@ -1,7 +1,8 @@
 package com.p4handheld.ui.screens
 
-import android.content.Context
 import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
 import android.content.IntentFilter
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -12,8 +13,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -32,16 +35,15 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,17 +53,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.p4handheld.data.models.UserChatMessage
-import com.p4handheld.ui.screens.viewmodels.ChatViewModel
-import com.p4handheld.utils.formatDateTime
-import com.p4handheld.ui.components.TopBarWithIcons
-import kotlinx.coroutines.launch
-import android.content.Intent
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.statusBarsPadding
-import com.p4handheld.firebase.FirebaseManager
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
+import com.p4handheld.data.models.UserChatMessage
+import com.p4handheld.firebase.FirebaseManager
+import com.p4handheld.ui.components.TopBarWithIcons
+import com.p4handheld.ui.screens.viewmodels.ChatViewModel
+import com.p4handheld.utils.formatDateTime
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,7 +71,8 @@ fun ChatScreen(
     hasNotifications: Boolean = false,
     isTrackingLocation: Boolean = false,
     onMessageClick: () -> Unit = {},
-    onNotificationClick: () -> Unit = {}
+    onNotificationClick: () -> Unit = {},
+    onNavigateToLogin: () -> Unit = {}
 ) {
     val viewModel: ChatViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
@@ -80,13 +80,21 @@ fun ChatScreen(
     val coroutineScope = rememberCoroutineScope()
     val ctx = LocalContext.current;
 
+    //if 401 - navigate to login screen
+    LaunchedEffect(viewModel.unauthorizedEvent) {
+        viewModel.unauthorizedEvent.collect {
+            onNavigateToLogin()
+        }
+    }
+
     LaunchedEffect(contactId) {
         viewModel.loadMessages(contactId)
         // Clear unread badge when opening a chat
         try {
             FirebaseManager.getInstance(ctx).setHasUnreadMessages(false)
             ctx.sendBroadcast(Intent("com.p4handheld.FIREBASE_MESSAGE_RECEIVED"))
-        } catch (_: Exception) {}
+        } catch (_: Exception) {
+        }
     }
 
     // Listen for incoming FCM broadcasts and append messages to this chat if they match
@@ -110,7 +118,10 @@ fun ChatScreen(
         }
         ctx.registerReceiver(receiver, filter)
         onDispose {
-            try { ctx.unregisterReceiver(receiver) } catch (_: Exception) {}
+            try {
+                ctx.unregisterReceiver(receiver)
+            } catch (_: Exception) {
+            }
         }
     }
 

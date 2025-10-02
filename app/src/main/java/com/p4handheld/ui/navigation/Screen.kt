@@ -1,8 +1,8 @@
 package com.p4handheld.ui.navigation
 
+import android.net.Uri
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
-import android.net.Uri
 
 sealed class Screen(val route: String) {
     object TenantSelect : Screen("tenant_select")
@@ -12,7 +12,6 @@ sealed class Screen(val route: String) {
     object Contacts : Screen("contacts")
     object Chat : Screen("chat/{contactId}/{contactName}") {
         fun createRoute(contactId: String, contactName: String): String {
-            // Encode contactName for safe navigation
             val encodedName = Uri.encode(contactName)
             return "chat/$contactId/$encodedName"
         }
@@ -22,6 +21,7 @@ sealed class Screen(val route: String) {
             navArgument("contactName") { type = NavType.StringType }
         )
     }
+
     object Action : Screen("action/{menuItemLabel}/{menuItemState}") {
         fun createRoute(menuItemLabel: String, menuItemState: String): String {
             return "action/$menuItemLabel/$menuItemState"

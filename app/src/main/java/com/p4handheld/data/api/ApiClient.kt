@@ -17,11 +17,11 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
@@ -69,7 +69,6 @@ object ApiClient {
     val apiService: ApiService = object : ApiService {
 
         override suspend fun login(
-            source: String,
             loginRequest: LoginRequest
         ): ApiResponse<LoginResponse> {
             return withContext(Dispatchers.IO) {
@@ -84,7 +83,7 @@ object ApiClient {
                         val requestBody = jsonBody.toRequestBody("application/json".toMediaType())
 
                         val request = Request.Builder()
-                            .url("${getBaseUrl()}api/Auth/Login?source=$source")
+                            .url("${getBaseUrl()}api/Auth/Login?source=LoginHandheld")
                             .post(requestBody)
                             .build()
 

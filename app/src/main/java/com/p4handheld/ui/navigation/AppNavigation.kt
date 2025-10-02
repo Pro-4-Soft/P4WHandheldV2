@@ -129,6 +129,11 @@ fun AppNavigation(
                     FirebaseManager.getInstance(ctx).clearNotifications()
                     ctx.sendBroadcast(Intent("com.p4handheld.FIREBASE_MESSAGE_RECEIVED"))
                     navController.navigate(Screen.Contacts.route)
+                },
+                onNavigateToLogin = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Menu.route) { inclusive = true }
+                    }
                 }
             )
         }
@@ -156,6 +161,11 @@ fun AppNavigation(
                     FirebaseManager.getInstance(ctx).clearNotifications()
                     ctx.sendBroadcast(Intent("com.p4handheld.FIREBASE_MESSAGE_RECEIVED"))
                     navController.navigate(Screen.Contacts.route)
+                },
+                onNavigateToLogin = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Menu.route) { inclusive = true }
+                    }
                 }
             )
         }

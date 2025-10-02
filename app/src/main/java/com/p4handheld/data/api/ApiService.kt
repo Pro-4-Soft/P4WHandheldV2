@@ -10,7 +10,7 @@ import com.p4handheld.data.models.UserContact
 import com.p4handheld.data.models.UserContextResponse
 
 interface ApiService {
-    suspend fun login(source: String = "LoginHandheld", loginRequest: LoginRequest): ApiResponse<LoginResponse>
+    suspend fun login(loginRequest: LoginRequest): ApiResponse<LoginResponse>
 
     suspend fun getCurrentMenu(): ApiResponse<UserContextResponse>
 
@@ -22,7 +22,6 @@ interface ApiService {
 
     suspend fun getMessages(contactId: String? = null): ApiResponse<List<UserChatMessage>>
 
-    // Upload a screenshot of the current screen to the server
     suspend fun updateScreen(screenshotJpeg: ByteArray): ApiResponse<Unit>
 
     suspend fun sendMessage(toUserId: String, message: String): ApiResponse<MessageResponse>

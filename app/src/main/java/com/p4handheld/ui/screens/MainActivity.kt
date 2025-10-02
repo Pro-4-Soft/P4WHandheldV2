@@ -25,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
@@ -32,9 +33,6 @@ import androidx.work.WorkManager
 import com.p4handheld.R
 import com.p4handheld.data.api.ApiClient
 import com.p4handheld.data.models.P4WEventType
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import com.p4handheld.firebase.FirebaseManager
 import com.p4handheld.scanner.DWCommunicationWrapper
 import com.p4handheld.ui.compose.theme.HandheldP4WTheme
@@ -43,6 +41,8 @@ import com.p4handheld.ui.navigation.Screen
 import com.p4handheld.ui.screens.viewmodels.MainViewModel
 import com.p4handheld.utils.PermissionChecker
 import com.p4handheld.workers.LocationWorker
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 // Main activity that handles UI initialization, observes ViewModel state, and interacts with DataWedge.
@@ -63,7 +63,6 @@ class MainActivity : ComponentActivity() {
             if (eventType != P4WEventType.SCREEN_REQUESTED.name) return
             try {
                 captureCurrentScreenJpeg()?.let { bytes ->
-                    // Upload in a coroutine
                     lifecycleScope.launch(Dispatchers.IO) {
                         val res = ApiClient.apiService.updateScreen(bytes)
                         Log.d("MainActivity", "UpdateScreen result: ${'$'}{res.isSuccessful} code=${'$'}{res.code}")

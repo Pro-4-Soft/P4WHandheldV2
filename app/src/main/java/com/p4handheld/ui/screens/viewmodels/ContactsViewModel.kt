@@ -42,4 +42,18 @@ class ContactsViewModel(application: Application) : AndroidViewModel(application
             }
         }
     }
+
+    // Increment unread messages counter for a single contact id
+    fun incrementUnread(contactId: String) {
+        val current = _uiState.value.contacts.toMutableList()
+        val idx = current.indexOfFirst { it.id == contactId }
+        if (idx >= 0) {
+            val c = current[idx]
+            current[idx] = c.copy(newMessages = c.newMessages + 1)
+            _uiState.value = _uiState.value.copy(contacts = current)
+        } else {
+            // Contact list might be outdated; try a refresh
+            refresh()
+        }
+    }
 }

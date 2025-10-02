@@ -157,7 +157,8 @@ object ApiClient {
                             menu = handheldChildrenMenu,
                             trackGeoLocation = userContextResponse.trackGeoLocation,
                             userScanType = userContextResponse.userScanType,
-                            tenantScanType = userContextResponse.tenantScanType
+                            tenantScanType = userContextResponse.tenantScanType,
+                            userId = userContextResponse.userId
                         )
                         ApiResponse(true, handHeldMenuItems, responseCode)
                     } else {

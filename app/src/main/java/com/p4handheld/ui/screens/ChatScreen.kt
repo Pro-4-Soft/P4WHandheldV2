@@ -1,6 +1,8 @@
 package com.p4handheld.ui.screens
 
 import android.content.Context
+import android.content.BroadcastReceiver
+import android.content.IntentFilter
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,6 +60,8 @@ import android.content.Intent
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import com.p4handheld.firebase.FirebaseManager
+import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,6 +87,31 @@ fun ChatScreen(
             FirebaseManager.getInstance(ctx).setHasUnreadMessages(false)
             ctx.sendBroadcast(Intent("com.p4handheld.FIREBASE_MESSAGE_RECEIVED"))
         } catch (_: Exception) {}
+    }
+
+    // Listen for incoming FCM broadcasts and append messages to this chat if they match
+    DisposableEffect(contactId) {
+        val filter = IntentFilter("com.p4handheld.FIREBASE_MESSAGE_RECEIVED")
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (intent == null) return
+                val eventType = intent.getStringExtra("eventType") ?: return
+                if (eventType != "USER_CHAT_MESSAGE") return
+                val payload = intent.getStringExtra("payload") ?: return
+                try {
+                    val msg = Gson().fromJson(payload, UserChatMessage::class.java)
+                    // Append only if the message involves this contact
+                    if (msg.fromUserId == contactId || msg.toUserId == contactId) {
+                        viewModel.appendIncomingMessage(msg)
+                    }
+                } catch (_: JsonSyntaxException) {
+                }
+            }
+        }
+        ctx.registerReceiver(receiver, filter)
+        onDispose {
+            try { ctx.unregisterReceiver(receiver) } catch (_: Exception) {}
+        }
     }
 
     Scaffold(

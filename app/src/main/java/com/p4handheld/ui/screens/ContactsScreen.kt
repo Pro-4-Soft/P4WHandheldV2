@@ -1,5 +1,9 @@
 package com.p4handheld.ui.screens
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,6 +33,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -37,11 +42,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.p4handheld.data.models.UserContact
 import com.p4handheld.ui.components.TopBarWithIcons
 import com.p4handheld.ui.screens.viewmodels.ContactsViewModel
 import com.p4handheld.utils.formatDateTime
+import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,6 +63,30 @@ fun ContactsScreen(
 ) {
     val viewModel: ContactsViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
+
+    // Listen for incoming chat message broadcasts to update unread badges in the list
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    DisposableEffect(Unit) {
+        val filter = IntentFilter("com.p4handheld.FIREBASE_MESSAGE_RECEIVED")
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (intent == null) return
+                val eventType = intent.getStringExtra("eventType") ?: return
+                if (eventType != "USER_CHAT_MESSAGE") return
+                val payload = intent.getStringExtra("payload") ?: return
+                try {
+                    val json = Gson()
+                    val msg = json.fromJson(payload, com.p4handheld.data.models.UserChatMessage::class.java)
+                    // Increment unread count for sender contact
+                    viewModel.incrementUnread(msg.fromUserId)
+                } catch (_: JsonSyntaxException) { }
+            }
+        }
+        ContextCompat.registerReceiver(ctx, receiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
+        onDispose {
+            try { ctx.unregisterReceiver(receiver) } catch (_: Exception) {}
+        }
+    }
 
     Scaffold(
         topBar = {

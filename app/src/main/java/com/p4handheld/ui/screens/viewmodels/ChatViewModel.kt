@@ -74,4 +74,10 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+
+    // Append a message received via FCM broadcast
+    fun appendIncomingMessage(message: UserChatMessage) {
+        val current = _uiState.value.messages
+        _uiState.value = _uiState.value.copy(messages = current + message)
+    }
 }

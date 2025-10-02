@@ -148,6 +148,11 @@ class FirebaseMessagingService : FirebaseMessagingService() {
             putExtra("eventType", message.eventType.name)
             putExtra("title", message.title)
             putExtra("body", message.body)
+            // Include payload as JSON if present so UI can parse and append
+            message.userChatMessage?.let {
+                val json = Gson().toJson(it)
+                putExtra("payload", json)
+            }
         }
         sendBroadcast(intent)
     }

@@ -29,9 +29,9 @@ data class MenuUiState(
 class MenuViewModel(application: Application) : AndroidViewModel(application) {
     private val authRepository = AuthRepository(application)
     private val firebaseManager = FirebaseManager.getInstance(application)
-    val unauthorizedEvent = MutableSharedFlow<Unit>()
     private val _uiState = MutableStateFlow(MenuUiState())
     val uiState: StateFlow<MenuUiState> = _uiState.asStateFlow()
+    val unauthorizedEvent = MutableSharedFlow<Unit>()
 
     init {
         loadMenuData()
@@ -97,23 +97,6 @@ class MenuViewModel(application: Application) : AndroidViewModel(application) {
         loadMenuData()
     }
 
-    fun navigateToMenuItem(menuItem: MenuItem) {
-        val currentState = _uiState.value
-        if (menuItem.children.isNotEmpty()) {
-            // Navigate deeper into menu hierarchy
-            _uiState.value = currentState.copy(
-                currentMenuItems = menuItem.children,
-                menuStack = currentState.menuStack + listOf(currentState.currentMenuItems),
-                breadcrumbStack = currentState.breadcrumbStack + listOf(menuItem.label),
-            )
-        } else {
-            // Set selected menu item for action navigation
-            _uiState.value = currentState.copy(
-                selectedMenuItem = menuItem,
-            )
-        }
-    }
-
     fun navigateBack() {
         val currentState = _uiState.value
         if (currentState.menuStack.isNotEmpty()) {
@@ -123,13 +106,6 @@ class MenuViewModel(application: Application) : AndroidViewModel(application) {
                 breadcrumbStack = currentState.breadcrumbStack.dropLast(1),
             )
         }
-    }
-
-    fun resetToMainMenu() {
-        val currentState = _uiState.value
-        _uiState.value = currentState.copy(
-            currentMenuItems = currentState.menuItems,
-        )
     }
 
     private fun updateLocationTrackingStatus() {
@@ -142,10 +118,5 @@ class MenuViewModel(application: Application) : AndroidViewModel(application) {
             val hasUnread = firebaseManager.hasUnreadMessages()
             _uiState.value = _uiState.value.copy(hasUnreadMessages = hasUnread)
         }
-    }
-
-    fun refreshStatus() {
-        updateLocationTrackingStatus()
-        updateMessageNotificationStatus()
     }
 }

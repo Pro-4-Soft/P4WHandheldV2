@@ -164,7 +164,8 @@ fun AllPromptTypesPreview() {
                     promptValue = "123456789",
                     onPromptValueChange = {},
                     onSendPrompt = {},
-                    onShowSignature = {}
+                    onShowSignature = {},
+                    isLoading = false
                 )
             }
 
@@ -175,7 +176,8 @@ fun AllPromptTypesPreview() {
                     promptValue = "Sample text",
                     onPromptValueChange = {},
                     onSendPrompt = {},
-                    onShowSignature = {}
+                    onShowSignature = {},
+                    isLoading = false
                 )
             }
 
@@ -186,7 +188,8 @@ fun AllPromptTypesPreview() {
                     promptValue = "",
                     onPromptValueChange = {},
                     onSendPrompt = {},
-                    onShowSignature = {}
+                    onShowSignature = {},
+                    isLoading = false
                 )
             }
 
@@ -197,7 +200,8 @@ fun AllPromptTypesPreview() {
                     promptValue = "",
                     onPromptValueChange = {},
                     onSendPrompt = {},
-                    onShowSignature = {}
+                    onShowSignature = {},
+                    isLoading = false
                 )
             }
 
@@ -208,7 +212,8 @@ fun AllPromptTypesPreview() {
                     promptValue = "",
                     onPromptValueChange = {},
                     onSendPrompt = {},
-                    onShowSignature = {}
+                    onShowSignature = {},
+                    isLoading = false
                 )
             }
         }
@@ -238,7 +243,8 @@ fun MultipleMessagesPreview2() {
                     promptValue = "",
                     onPromptValueChange = {},
                     onSendPrompt = {},
-                    onShowSignature = {}
+                    onShowSignature = {},
+                    isLoading = false
                 )
             },
             uiState

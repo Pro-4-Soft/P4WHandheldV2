@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.p4handheld.data.api.ApiClient
 import com.p4handheld.data.models.UserChatMessage
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,9 +21,9 @@ data class ChatUiState(
 )
 
 class ChatViewModel(application: Application) : AndroidViewModel(application) {
-
     private val _uiState = MutableStateFlow(ChatUiState())
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
+    val unauthorizedEvent = MutableSharedFlow<Unit>()
 
     fun loadMessages(contactId: String) {
         viewModelScope.launch {
@@ -67,6 +68,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 _uiState.value = _uiState.value.copy(isSending = false, messages = updated)
                 after?.invoke()
             } else {
+                if (result.code == 401) {
+                    unauthorizedEvent.emit(Unit)
+                }
                 _uiState.value = _uiState.value.copy(
                     isSending = false,
                     errorMessage = result.errorMessage ?: "Failed to send (code ${result.code})"

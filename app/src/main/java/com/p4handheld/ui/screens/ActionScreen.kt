@@ -322,6 +322,7 @@ fun DefaultActionScreen(
         if (uiState.toolbarActions.isNotEmpty()) {
             ToolBarActions(
                 toolbarActions = uiState.toolbarActions,
+                isEnabled = !uiState.isLoading,
                 onToolBarActionClick = { actionFor ->
                     viewModel.processAction(null, actionFor)
                 }
@@ -389,6 +390,7 @@ fun DefaultActionScreen(
             PromptInputArea(
                 prompt = uiState.currentPrompt,
                 promptValue = uiState.promptValue,
+                isLoading = uiState.isLoading,
                 onPromptValueChange = {
                     println("ActionScreen: Prompt value changed: $it")
                     viewModel.updatePromptValue(it)
@@ -431,6 +433,7 @@ fun DefaultActionScreen(
 @Composable
 fun ToolBarActions(
     toolbarActions: List<ToolbarAction>,
+    isEnabled: Boolean,
     onToolBarActionClick: (String) -> Unit
 ) {
     Card(
@@ -450,6 +453,7 @@ fun ToolBarActions(
                         println("ActionScreen: Toolbar action clicked: $action")
                         onToolBarActionClick(action.action)
                     },
+                    enabled = isEnabled,
                     shape = RoundedCornerShape(5.dp),
                 ) {
                     Text(
@@ -595,6 +599,7 @@ fun MessageCard(
 fun PromptInputArea(
     prompt: Prompt,
     promptValue: String,
+    isLoading: Boolean,
     onPromptValueChange: (String) -> Unit,
     onSendPrompt: (String) -> Unit,
     onShowSignature: () -> Unit
@@ -633,12 +638,12 @@ fun PromptInputArea(
                                     onSendPrompt(formatted)
                                 }
                                 showPicker = false
-                            }) {
+                            }, enabled = !isLoading) {
                                 Text("OK")
                             }
                         },
                         dismissButton = {
-                            Button(onClick = { showPicker = false }) { Text("Cancel") }
+                            Button(onClick = { showPicker = false }, enabled = !isLoading) { Text("Cancel") }
                         }
                     ) {
                         DatePicker(state = dateState)
@@ -678,7 +683,7 @@ fun PromptInputArea(
                                 if (formatted != null) onSendPrompt(formatted)
                             }
                         },
-                        enabled = promptValue.isNotEmpty() || dateState.selectedDateMillis != null,
+                        enabled = (promptValue.isNotEmpty() || dateState.selectedDateMillis != null) && !isLoading,
                         modifier = Modifier.height(56.dp),
                         shape = RoundedCornerShape(5.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -732,7 +737,7 @@ fun PromptInputArea(
                                 onSendPrompt(promptValue)
                             }
                         },
-                        enabled = promptValue.isNotEmpty(),
+                        enabled = promptValue.isNotEmpty() && !isLoading,
                         modifier = Modifier.height(56.dp),
                         shape = RoundedCornerShape(5.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -781,6 +786,7 @@ fun PromptInputArea(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF4CAF50)
                         ),
+                        enabled = !isLoading,
                         shape = RoundedCornerShape(5.dp)
                     ) {
                         Text(
@@ -794,6 +800,7 @@ fun PromptInputArea(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFF44336)
                         ),
+                        enabled = !isLoading,
                         shape = RoundedCornerShape(5.dp)
                     ) {
                         Text(
@@ -810,6 +817,7 @@ fun PromptInputArea(
                     onClick = onShowSignature,
                     modifier = Modifier
                         .fillMaxWidth(),
+                    enabled = !isLoading,
                     shape = RoundedCornerShape(5.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
@@ -840,6 +848,7 @@ fun PromptInputArea(
                                             showPicker = false
                                         },
                                         modifier = Modifier.fillMaxWidth(),
+                                        enabled = !isLoading,
                                         shape = RoundedCornerShape(5.dp)
                                     ) {
                                         Text(item.label)
@@ -878,6 +887,7 @@ fun PromptInputArea(
                     Button(
                         onClick = { showPicker = true },
                         modifier = Modifier.height(56.dp),
+                        enabled = !isLoading,
                         shape = RoundedCornerShape(5.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary

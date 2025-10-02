@@ -74,6 +74,7 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
                 } else {
                     if (result.code == 401) {
                         unauthorizedEvent.emit(Unit)
+                        return@launch
                     }
                     updateUiStateWithErrorMessage(result.errorMessage ?: "Process failed")
                 }

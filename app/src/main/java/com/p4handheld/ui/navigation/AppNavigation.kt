@@ -106,7 +106,11 @@ fun AppNavigation(
                     val ctx = context
                     FirebaseManager.getInstance(ctx).clearNotifications()
                     ctx.sendBroadcast(Intent("com.p4handheld.FIREBASE_MESSAGE_RECEIVED"))
-                    /* TODO: navigate to notifications screen when available */
+                },
+                openMainMenu = {
+                    navController.navigate(Screen.Menu.route) {
+                        popUpTo(Screen.Contacts.route) { inclusive = true }
+                    }
                 }
             )
         }

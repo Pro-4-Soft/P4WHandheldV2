@@ -269,17 +269,14 @@ fun MenuScreenContent(
                         ) {
                             MenuTileCard(
                                 menuItem = menuItem,
-                                onItemClick = { item ->
-                                    onMenuItemClick(item)
-
-                                }
+                                onItemClick = { item -> onMenuItemClick(item) }
                             )
                         }
                         Spacer(modifier = Modifier.size(20.dp))
                     }
                 }
             } else if (!uiState.isLoading) {
-                // Fallback content
+                //region No menu items available Fallback content
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -300,6 +297,7 @@ fun MenuScreenContent(
                         color = Color.Gray
                     )
                 }
+                //endregion
             }
         }
         //endregion
@@ -312,45 +310,46 @@ fun MenuScreenContent(
             contentAlignment = Alignment.BottomEnd
         ) {
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Messages button
-                FloatingActionButton(
-                    onClick = {
-                        if (!uiState.isLoading) {
-                            onNavigateToMessages()
-                        }
-                    },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.alpha(if (uiState.isLoading) 0.5f else 1f)
+            if (uiState.selectedMenuItem == null || (selectedMenuItem?.children?.size ?: 0) > 0) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Message,
-                        contentDescription = "Messages",
-                        tint = Color.White
-                    )
-                }
+                    // Messages button
+                    FloatingActionButton(
+                        onClick = {
+                            if (!uiState.isLoading) {
+                                onNavigateToMessages()
+                            }
+                        },
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.alpha(if (uiState.isLoading) 0.5f else 1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Message,
+                            contentDescription = "Messages",
+                            tint = Color.White
+                        )
+                    }
 
-                // Logout button
-                FloatingActionButton(
-                    onClick = {
-                        if (!uiState.isLoading) {
-                            logout()
-                            onNavigateToLogin()
-                        }
-                    },
-                    containerColor = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.alpha(if (uiState.isLoading) 0.5f else 1f)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                        contentDescription = "Logout",
-                        tint = Color.White
-                    )
+                    // Logout button
+                    FloatingActionButton(
+                        onClick = {
+                            if (!uiState.isLoading) {
+                                logout()
+                                onNavigateToLogin()
+                            }
+                        },
+                        containerColor = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.alpha(if (uiState.isLoading) 0.5f else 1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                            contentDescription = "Logout",
+                            tint = Color.White
+                        )
+                    }
                 }
             }
-
         }
         //endregion
     }

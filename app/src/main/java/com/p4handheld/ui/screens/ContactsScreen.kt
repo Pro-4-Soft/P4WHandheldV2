@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -31,7 +32,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
@@ -44,12 +44,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
 import com.p4handheld.data.models.UserContact
 import com.p4handheld.ui.components.TopBarWithIcons
 import com.p4handheld.ui.screens.viewmodels.ContactsViewModel
 import com.p4handheld.utils.formatDateTime
-import com.google.gson.Gson
-import com.google.gson.JsonSyntaxException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,10 +59,15 @@ fun ContactsScreen(
     hasNotifications: Boolean = false,
     isTrackingLocation: Boolean = false,
     onMessageClick: () -> Unit = {},
-    onNotificationClick: () -> Unit = {}
+    onNotificationClick: () -> Unit = {},
+    openMainMenu: () -> Unit = {}
 ) {
     val viewModel: ContactsViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
+
+    BackHandler() {
+        openMainMenu();
+    }
 
     // Listen for incoming chat message broadcasts to update unread badges in the list
     val ctx = androidx.compose.ui.platform.LocalContext.current
@@ -79,12 +84,16 @@ fun ContactsScreen(
                     val msg = json.fromJson(payload, com.p4handheld.data.models.UserChatMessage::class.java)
                     // Increment unread count for sender contact
                     viewModel.incrementUnread(msg.fromUserId)
-                } catch (_: JsonSyntaxException) { }
+                } catch (_: JsonSyntaxException) {
+                }
             }
         }
         ContextCompat.registerReceiver(ctx, receiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
         onDispose {
-            try { ctx.unregisterReceiver(receiver) } catch (_: Exception) {}
+            try {
+                ctx.unregisterReceiver(receiver)
+            } catch (_: Exception) {
+            }
         }
     }
 

@@ -133,7 +133,10 @@ fun ContactsScreen(
                             items(uiState.contacts) { contact ->
                                 ContactRow(
                                     contact = contact,
-                                    onClick = { onOpenChat(contact.id, contact.username) }
+                                    onClick = {
+                                        viewModel.clearUnread(contact.id)
+                                        onOpenChat(contact.id, contact.username)
+                                    }
                                 )
                                 HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
                             }

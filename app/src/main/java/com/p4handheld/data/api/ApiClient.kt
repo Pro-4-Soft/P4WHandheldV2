@@ -13,6 +13,8 @@ import com.p4handheld.data.models.UserChatMessage
 import com.p4handheld.data.models.UserContact
 import com.p4handheld.data.models.UserContextResponse
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -25,6 +27,11 @@ import java.util.concurrent.TimeUnit
 object ApiClient {
     private var authToken: String? = null
     private var context: Context? = null
+
+    // This will guard all API calls
+    // The alternative is to use global dispatcher per HttpClient Dispatcher
+    // but since we have update location and screenshot its not okay to block user with background calls
+    private val userRequestMutex = Mutex()
 
     fun initialize(appContext: Context) {
         context = appContext
@@ -64,109 +71,115 @@ object ApiClient {
             loginRequest: LoginRequest
         ): ApiResponse<LoginResponse> {
             return withContext(Dispatchers.IO) {
-                try {
-                    val jsonBody = JSONObject().apply {
-                        put("Username", loginRequest.username)
-                        put("Password", loginRequest.password)
-                        put("HandheldNotificationToken", loginRequest.handheldNotificationToken)
-                    }.toString()
+                userRequestMutex.withLock {
+                    try {
+                        val jsonBody = JSONObject().apply {
+                            put("Username", loginRequest.username)
+                            put("Password", loginRequest.password)
+                            put("HandheldNotificationToken", loginRequest.handheldNotificationToken)
+                        }.toString()
 
-                    val requestBody = jsonBody.toRequestBody("application/json".toMediaType())
+                        val requestBody = jsonBody.toRequestBody("application/json".toMediaType())
 
-                    val request = Request.Builder()
-                        .url("${getBaseUrl()}api/Auth/Login?source=$source")
-                        .post(requestBody)
-                        .build()
+                        val request = Request.Builder()
+                            .url("${getBaseUrl()}api/Auth/Login?source=$source")
+                            .post(requestBody)
+                            .build()
 
-                    val response = client.newCall(request).execute()
-                    val responseCode = response.code
-                    val isSuccessful = response.isSuccessful
+                        val response = client.newCall(request).execute()
+                        val responseCode = response.code
+                        val isSuccessful = response.isSuccessful
 
-                    if (isSuccessful) {
-                        val responseBody = response.body?.string() ?: ""
-                        authToken = responseBody
-                        val loginResponse = LoginResponse(
-                            success = true,
-                            message = "Good",
-                            token = responseBody
-                        )
-                        ApiResponse(true, loginResponse, responseCode)
-                    } else {
-                        val errorBody = response.body?.string()
-                        ApiResponse(false, null, responseCode, errorBody)
+                        if (isSuccessful) {
+                            val responseBody = response.body?.string() ?: ""
+                            authToken = responseBody
+                            val loginResponse = LoginResponse(
+                                success = true,
+                                message = "Good",
+                                token = responseBody
+                            )
+                            ApiResponse(true, loginResponse, responseCode)
+                        } else {
+                            val errorBody = response.body?.string()
+                            ApiResponse(false, null, responseCode, errorBody)
+                        }
+                    } catch (e: Exception) {
+                        ApiResponse(false, null, 0, e.message)
                     }
-                } catch (e: Exception) {
-                    ApiResponse(false, null, 0, e.message)
                 }
             }
         }
 
         override suspend fun sendMessage(toUserId: String, message: String): ApiResponse<MessageResponse> {
             return withContext(Dispatchers.IO) {
-                try {
-                    val jsonBody = JSONObject().apply {
-                        put("toUserId", toUserId)
-                        put("Message", message)
-                    }.toString()
+                userRequestMutex.withLock {
+                    try {
+                        val jsonBody = JSONObject().apply {
+                            put("toUserId", toUserId)
+                            put("Message", message)
+                        }.toString()
 
-                    val requestBody = jsonBody.toRequestBody("application/json".toMediaType())
+                        val requestBody = jsonBody.toRequestBody("application/json".toMediaType())
 
-                    val request = Request.Builder()
-                        .url("${getBaseUrl()}api/UserMessageApi/SendMessage")
-                        .post(requestBody)
-                        .build()
+                        val request = Request.Builder()
+                            .url("${getBaseUrl()}api/UserMessageApi/SendMessage")
+                            .post(requestBody)
+                            .build()
 
-                    val response = client.newCall(request).execute()
-                    val responseCode = response.code
-                    val isSuccessful = response.isSuccessful
+                        val response = client.newCall(request).execute()
+                        val responseCode = response.code
+                        val isSuccessful = response.isSuccessful
 
-                    if (isSuccessful) {
-                        val responseBody = response.body?.string().orEmpty()
-                        val msg = Gson().fromJson(responseBody, MessageResponse::class.java)
-                        ApiResponse(true, msg, responseCode)
-                    } else {
-                        val errorBody = response.body?.string()
-                        ApiResponse(false, null, responseCode, errorBody)
+                        if (isSuccessful) {
+                            val responseBody = response.body?.string().orEmpty()
+                            val msg = Gson().fromJson(responseBody, MessageResponse::class.java)
+                            ApiResponse(true, msg, responseCode)
+                        } else {
+                            val errorBody = response.body?.string()
+                            ApiResponse(false, null, responseCode, errorBody)
+                        }
+                    } catch (e: Exception) {
+                        ApiResponse(false, null, 0, e.message)
                     }
-                } catch (e: Exception) {
-                    ApiResponse(false, null, 0, e.message)
                 }
             }
         }
 
         override suspend fun getCurrentMenu(): ApiResponse<UserContextResponse> {
             return withContext(Dispatchers.IO) {
-                try {
-                    val request = Request.Builder()
-                        .url("${getBaseUrl()}api/Auth/GetCurrent")
-                        .get()
-                        .build()
+                userRequestMutex.withLock {
+                    try {
+                        val request = Request.Builder()
+                            .url("${getBaseUrl()}api/Auth/GetCurrent")
+                            .get()
+                            .build()
 
-                    val response = client.newCall(request).execute()
-                    val responseCode = response.code
-                    val isSuccessful = response.isSuccessful
+                        val response = client.newCall(request).execute()
+                        val responseCode = response.code
+                        val isSuccessful = response.isSuccessful
 
-                    if (isSuccessful) {
-                        val responseBody = response.body?.string().orEmpty()
+                        if (isSuccessful) {
+                            val responseBody = response.body?.string().orEmpty()
 
-                        val userContextResponse = Gson().fromJson(responseBody, UserContextResponse::class.java)
-                        val handheldItem = userContextResponse.menu.firstOrNull { it.id == "Handheld" }
-                        val handheldChildrenMenu: List<MenuItem> = handheldItem?.children.orEmpty()
+                            val userContextResponse = Gson().fromJson(responseBody, UserContextResponse::class.java)
+                            val handheldItem = userContextResponse.menu.firstOrNull { it.id == "Handheld" }
+                            val handheldChildrenMenu: List<MenuItem> = handheldItem?.children.orEmpty()
 
-                        val handHeldMenuItems = UserContextResponse(
-                            menu = handheldChildrenMenu,
-                            trackGeoLocation = userContextResponse.trackGeoLocation,
-                            userScanType = userContextResponse.userScanType,
-                            tenantScanType = userContextResponse.tenantScanType,
-                            userId = userContextResponse.userId
-                        )
-                        ApiResponse(true, handHeldMenuItems, responseCode)
-                    } else {
-                        val errorBody = response.body?.string()
-                        ApiResponse(false, null, responseCode, errorBody)
+                            val handHeldMenuItems = UserContextResponse(
+                                menu = handheldChildrenMenu,
+                                trackGeoLocation = userContextResponse.trackGeoLocation,
+                                userScanType = userContextResponse.userScanType,
+                                tenantScanType = userContextResponse.tenantScanType,
+                                userId = userContextResponse.userId
+                            )
+                            ApiResponse(true, handHeldMenuItems, responseCode)
+                        } else {
+                            val errorBody = response.body?.string()
+                            ApiResponse(false, null, responseCode, errorBody)
+                        }
+                    } catch (e: Exception) {
+                        ApiResponse(false, null, 0, e.message)
                     }
-                } catch (e: Exception) {
-                    ApiResponse(false, null, 0, e.message)
                 }
             }
         }
@@ -176,38 +189,40 @@ object ApiClient {
             processRequest: ProcessRequest,
             taskId: String?
         ): ApiResponse<PromptResponse> {
-            return withContext(Dispatchers.IO) {
-                try {
-                    val jsonBody = Gson().toJson(processRequest)
-                    val requestBody = jsonBody.toRequestBody("application/json".toMediaType())
+            userRequestMutex.withLock {
+                return withContext(Dispatchers.IO) {
+                    try {
+                        val jsonBody = Gson().toJson(processRequest)
+                        val requestBody = jsonBody.toRequestBody("application/json".toMediaType())
 
-                    val url = buildString {
-                        append("${getBaseUrl()}hh/$pageKey/process")
-                        if (!taskId.isNullOrEmpty()) {
-                            append("?taskId=")
-                            append(taskId)
+                        val url = buildString {
+                            append("${getBaseUrl()}hh/$pageKey/process")
+                            if (!taskId.isNullOrEmpty()) {
+                                append("?taskId=")
+                                append(taskId)
+                            }
                         }
+
+                        val request = Request.Builder()
+                            .url(url)
+                            .post(requestBody)
+                            .build()
+
+                        val response = client.newCall(request).execute()
+                        val responseCode = response.code
+                        val isSuccessful = response.isSuccessful
+
+                        if (isSuccessful) {
+                            val responseBody = response.body?.string().orEmpty()
+                            val promptResponse = Gson().fromJson(responseBody, PromptResponse::class.java)
+                            ApiResponse(true, promptResponse, responseCode)
+                        } else {
+                            val errorBody = response.body?.string()
+                            ApiResponse(false, null, responseCode, errorBody)
+                        }
+                    } catch (e: Exception) {
+                        ApiResponse(false, null, 0, e.message)
                     }
-
-                    val request = Request.Builder()
-                        .url(url)
-                        .post(requestBody)
-                        .build()
-
-                    val response = client.newCall(request).execute()
-                    val responseCode = response.code
-                    val isSuccessful = response.isSuccessful
-
-                    if (isSuccessful) {
-                        val responseBody = response.body?.string().orEmpty()
-                        val promptResponse = Gson().fromJson(responseBody, PromptResponse::class.java)
-                        ApiResponse(true, promptResponse, responseCode)
-                    } else {
-                        val errorBody = response.body?.string()
-                        ApiResponse(false, null, responseCode, errorBody)
-                    }
-                } catch (e: Exception) {
-                    ApiResponse(false, null, 0, e.message)
                 }
             }
         }
@@ -239,61 +254,65 @@ object ApiClient {
         }
 
         override suspend fun getContacts(): ApiResponse<List<UserContact>> {
-            return withContext(Dispatchers.IO) {
-                try {
-                    val request = Request.Builder()
-                        .url("${getBaseUrl()}api/UserMessageApi/GetContacts")
-                        .get()
-                        .build()
+            userRequestMutex.withLock {
+                return withContext(Dispatchers.IO) {
+                    try {
+                        val request = Request.Builder()
+                            .url("${getBaseUrl()}api/UserMessageApi/GetContacts")
+                            .get()
+                            .build()
 
-                    val response = client.newCall(request).execute()
-                    val responseCode = response.code
-                    val isSuccessful = response.isSuccessful
+                        val response = client.newCall(request).execute()
+                        val responseCode = response.code
+                        val isSuccessful = response.isSuccessful
 
-                    if (isSuccessful) {
-                        val responseBody = response.body?.string().orEmpty()
-                        val contacts = Gson().fromJson(responseBody, Array<UserContact>::class.java).toList()
-                        ApiResponse(true, contacts, responseCode)
-                    } else {
-                        val errorBody = response.body?.string()
-                        ApiResponse(false, null, responseCode, errorBody)
+                        if (isSuccessful) {
+                            val responseBody = response.body?.string().orEmpty()
+                            val contacts = Gson().fromJson(responseBody, Array<UserContact>::class.java).toList()
+                            ApiResponse(true, contacts, responseCode)
+                        } else {
+                            val errorBody = response.body?.string()
+                            ApiResponse(false, null, responseCode, errorBody)
+                        }
+                    } catch (e: Exception) {
+                        ApiResponse(false, null, 0, e.message)
                     }
-                } catch (e: Exception) {
-                    ApiResponse(false, null, 0, e.message)
                 }
             }
         }
 
         override suspend fun getMessages(contactId: String?): ApiResponse<List<UserChatMessage>> {
-            return withContext(Dispatchers.IO) {
-                try {
-                    val url = buildString {
-                        append("${getBaseUrl()}api/UserMessageApi/GetMessages")
-                        if (!contactId.isNullOrEmpty()) {
-                            append("?fromUserId=")
-                            append(contactId)
+            userRequestMutex.withLock {
+                return withContext(Dispatchers.IO) {
+                    try {
+                        val url = buildString {
+                            append("${getBaseUrl()}api/UserMessageApi/GetMessages")
+                            if (!contactId.isNullOrEmpty()) {
+                                append("?fromUserId=")
+                                append(contactId)
+                            }
                         }
+
+                        val request = Request.Builder()
+                            .url(url)
+                            .get()
+                            .build()
+
+                        val response = client.newCall(request).execute()
+                        val responseCode = response.code
+                        val isSuccessful = response.isSuccessful
+
+                        if (isSuccessful) {
+                            val responseBody = response.body?.string().orEmpty()
+                            val messages = Gson().fromJson(responseBody, Array<UserChatMessage>::class.java).toList()
+                            ApiResponse(true, messages, responseCode)
+                        } else {
+                            val errorBody = response.body?.string()
+                            ApiResponse(false, null, responseCode, errorBody)
+                        }
+                    } catch (e: Exception) {
+                        ApiResponse(false, null, 0, e.message)
                     }
-
-                    val request = Request.Builder()
-                        .url(url)
-                        .get()
-                        .build()
-
-                    val response = client.newCall(request).execute()
-                    val responseCode = response.code
-                    val isSuccessful = response.isSuccessful
-
-                    if (isSuccessful) {
-                        val responseBody = response.body?.string().orEmpty()
-                        val messages = Gson().fromJson(responseBody, Array<UserChatMessage>::class.java).toList()
-                        ApiResponse(true, messages, responseCode)
-                    } else {
-                        val errorBody = response.body?.string()
-                        ApiResponse(false, null, responseCode, errorBody)
-                    }
-                } catch (e: Exception) {
-                    ApiResponse(false, null, 0, e.message)
                 }
             }
         }

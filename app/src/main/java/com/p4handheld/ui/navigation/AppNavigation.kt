@@ -1,6 +1,5 @@
 package com.p4handheld.ui.navigation
 
-import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -9,7 +8,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.p4handheld.data.repository.AuthRepository
-import com.p4handheld.firebase.FirebaseManager
 import com.p4handheld.ui.screens.ActionScreen
 import com.p4handheld.ui.screens.ChatScreen
 import com.p4handheld.ui.screens.ContactsScreen
@@ -80,16 +78,8 @@ fun AppNavigation(
                     navController.navigate(Screen.Chat.createRoute(id, name))
                 },
                 hasUnreadMessages = false,
-                hasNotifications = false,
                 isTrackingLocation = isTrackingLocation,
                 onMessageClick = { navController.navigate(Screen.Contacts.route) },
-                onNotificationClick = {
-                    // Clear notifications badge before navigating
-                    val ctx = context
-                    FirebaseManager.getInstance(ctx).clearNotifications()
-                    ctx.sendBroadcast(Intent("com.p4handheld.FIREBASE_MESSAGE_RECEIVED"))
-                    navController.navigate(Screen.Contacts.route)
-                },
                 openMainMenu = {
                     navController.navigate(Screen.Menu.route) {
                         popUpTo(Screen.Contacts.route) { inclusive = true }
@@ -107,14 +97,8 @@ fun AppNavigation(
                     navController.navigate(Screen.Chat.createRoute(id, name))
                 },
                 hasUnreadMessages = false,
-                hasNotifications = false,
                 isTrackingLocation = isTrackingLocation,
                 onMessageClick = { /* already here */ },
-                onNotificationClick = {
-                    val ctx = context
-                    FirebaseManager.getInstance(ctx).clearNotifications()
-                    ctx.sendBroadcast(Intent("com.p4handheld.FIREBASE_MESSAGE_RECEIVED"))
-                },
                 openMainMenu = {
                     navController.navigate(Screen.Menu.route) {
                         popUpTo(Screen.Contacts.route) { inclusive = true }
@@ -136,15 +120,8 @@ fun AppNavigation(
                 contactId = contactId,
                 contactName = contactName,
                 hasUnreadMessages = false,
-                hasNotifications = false,
                 isTrackingLocation = isTrackingLocation,
                 onMessageClick = { navController.navigate(Screen.Contacts.route) },
-                onNotificationClick = {
-                    val ctx = context
-                    FirebaseManager.getInstance(ctx).clearNotifications()
-                    ctx.sendBroadcast(Intent("com.p4handheld.FIREBASE_MESSAGE_RECEIVED"))
-                    navController.navigate(Screen.Contacts.route)
-                },
                 onNavigateToLogin = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Menu.route) { inclusive = true }
@@ -170,15 +147,8 @@ fun AppNavigation(
                     navController.popBackStack()
                 },
                 hasUnreadMessages = false,
-                hasNotifications = false,
                 isTrackingLocation = isTrackingLocation,
                 onMessageClick = { navController.navigate(Screen.Contacts.route) },
-                onNotificationClick = {
-                    val ctx = context
-                    FirebaseManager.getInstance(ctx).clearNotifications()
-                    ctx.sendBroadcast(Intent("com.p4handheld.FIREBASE_MESSAGE_RECEIVED"))
-                    navController.navigate(Screen.Contacts.route)
-                },
                 onNavigateToLogin = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Menu.route) { inclusive = true }

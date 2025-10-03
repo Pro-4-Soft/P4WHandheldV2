@@ -111,10 +111,8 @@ fun ActionScreen(
     initialPageKey: String,
     onNavigateBack: () -> Unit,
     hasUnreadMessages: Boolean = false,
-    hasNotifications: Boolean = false,
     isTrackingLocation: Boolean = false,
     onMessageClick: () -> Unit = {},
-    onNotificationClick: () -> Unit = {},
     onNavigateToLogin: () -> Unit,
     onTasksClick: () -> Unit = {}
 ) {
@@ -243,10 +241,8 @@ fun ActionScreen(
         promptInputComponent = prompt,
         uiState = uiState,
         hasUnreadMessages = hasUnreadMessages,
-        hasNotifications = hasNotifications,
         isTrackingLocation = isTrackingLocation,
         onMessageClick = onMessageClick,
-        onNotificationClick = onNotificationClick,
         onTasksClick = onTasksClick
     )
 }
@@ -257,10 +253,8 @@ fun ActionScreenWrapper(
     promptInputComponent: @Composable () -> Unit,
     uiState: ActionUiState,
     hasUnreadMessages: Boolean = false,
-    hasNotifications: Boolean = false,
     isTrackingLocation: Boolean = false,
     onMessageClick: () -> Unit = {},
-    onNotificationClick: () -> Unit = {},
     onTasksClick: () -> Unit = {}
 ) {
 
@@ -275,9 +269,7 @@ fun ActionScreenWrapper(
         TopBarWithIcons(
             isTrackingLocation = isTrackingLocation,
             hasUnreadMessages = hasUnreadMessages,
-            hasNotifications = hasNotifications,
             onMessageClick = onMessageClick,
-            onNotificationClick = onNotificationClick,
             onTasksClick = onTasksClick
         )
 

@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -36,6 +35,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -50,7 +50,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -62,7 +64,7 @@ import com.p4handheld.data.models.UserChatMessage
 import com.p4handheld.firebase.FirebaseManager
 import com.p4handheld.ui.components.TopBarWithIcons
 import com.p4handheld.ui.screens.viewmodels.ChatViewModel
-import com.p4handheld.utils.formatDateTime
+import com.p4handheld.utils.formatChatTimestamp
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,10 +73,8 @@ fun ChatScreen(
     contactId: String,
     contactName: String,
     hasUnreadMessages: Boolean = false,
-    hasNotifications: Boolean = false,
     isTrackingLocation: Boolean = false,
     onMessageClick: () -> Unit = {},
-    onNotificationClick: () -> Unit = {},
     onNavigateToLogin: () -> Unit = {},
     onTasksClick: () -> Unit = {}
 ) {
@@ -147,9 +147,7 @@ fun ChatScreen(
             TopBarWithIcons(
                 isTrackingLocation = isTrackingLocation,
                 hasUnreadMessages = hasUnreadMessages,
-                hasNotifications = hasNotifications,
                 onMessageClick = onMessageClick,
-                onNotificationClick = onNotificationClick,
                 onTasksClick = onTasksClick
             )
         }
@@ -166,6 +164,21 @@ fun ChatScreen(
                     .weight(1f),
                 colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.primary),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = contactName + "2",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
                 if (uiState.isLoading) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
@@ -240,6 +253,13 @@ fun ChatScreen(
                                 }
                             }
                         }
+                    ),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        containerColor = Color.White,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        cursorColor = MaterialTheme.colorScheme.primary,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLabelColor = Color.Gray
                     )
                 )
 
@@ -293,7 +313,7 @@ private fun MessageBubble(message: UserChatMessage, isMine: Boolean) {
                 }
                 Spacer(modifier = Modifier.size(2.dp))
                 Text(
-                    text = formatDateTime(message.timestamp),
+                    text = formatChatTimestamp(message.timestamp),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.Gray
                 )
@@ -316,7 +336,7 @@ fun MessageBubblePreview() {
                 message = UserChatMessage(
                     fromUsername = "Alice",
                     message = "Hello! How are you?",
-                    timestamp = "10:32 AM",
+                    timestamp = "2025-09-21T18:29:20.120349-06:00",
                     messageId = "1",
                     fromUserId = "2",
                     toUserId = "3",

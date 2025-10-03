@@ -1,10 +1,12 @@
-package com.p4handheld.ui.screens
+package com.p4handheld.ui
 
 import android.Manifest
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -33,6 +35,7 @@ import androidx.work.WorkManager
 import com.p4handheld.R
 import com.p4handheld.data.api.ApiClient
 import com.p4handheld.data.models.P4WEventType
+import com.p4handheld.data.repository.AuthRepository
 import com.p4handheld.firebase.FirebaseManager
 import com.p4handheld.scanner.DWCommunicationWrapper
 import com.p4handheld.ui.compose.theme.HandheldP4WTheme
@@ -43,6 +46,7 @@ import com.p4handheld.utils.PermissionChecker
 import com.p4handheld.workers.LocationWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.io.ByteArrayOutputStream
 import java.util.concurrent.TimeUnit
 
 // Main activity that handles UI initialization, observes ViewModel state, and interacts with DataWedge.
@@ -203,7 +207,7 @@ class MainActivity : ComponentActivity() {
         val authPreferences = getSharedPreferences("auth_prefs", MODE_PRIVATE)
 
         // Check if user has valid token (already logged in)
-        val authRepository = com.p4handheld.data.repository.AuthRepository(this)
+        val authRepository = AuthRepository(this)
         val hasValidToken = authRepository.hasValidToken()
 
         return when {
@@ -215,18 +219,18 @@ class MainActivity : ComponentActivity() {
 }
 
 //region Screenshot helpers
-private fun androidx.activity.ComponentActivity.captureCurrentScreenJpeg(quality: Int = 85): ByteArray? {
+private fun ComponentActivity.captureCurrentScreenJpeg(quality: Int = 85): ByteArray? {
     val view = window?.decorView?.rootView ?: return null
     if (view.width == 0 || view.height == 0) return null
     return try {
-        val bitmap = android.graphics.Bitmap.createBitmap(view.width, view.height, android.graphics.Bitmap.Config.ARGB_8888)
-        val canvas = android.graphics.Canvas(bitmap)
+        val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
         view.draw(canvas)
-        val output = java.io.ByteArrayOutputStream()
-        bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, quality, output)
+        val output = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, output)
         output.toByteArray()
     } catch (e: Exception) {
-        android.util.Log.e("MainActivity", "captureCurrentScreenJpeg failed", e)
+        Log.e("MainActivity", "captureCurrentScreenJpeg failed", e)
         null
     }
 }

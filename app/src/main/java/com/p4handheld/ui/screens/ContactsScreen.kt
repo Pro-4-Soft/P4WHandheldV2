@@ -40,8 +40,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.gson.Gson
@@ -56,10 +58,8 @@ import com.p4handheld.utils.formatDateTime
 fun ContactsScreen(
     onOpenChat: (contactId: String, contactName: String) -> Unit,
     hasUnreadMessages: Boolean = false,
-    hasNotifications: Boolean = false,
     isTrackingLocation: Boolean = false,
     onMessageClick: () -> Unit = {},
-    onNotificationClick: () -> Unit = {},
     openMainMenu: () -> Unit = {},
     onTasksClick: () -> Unit = {}
 ) {
@@ -103,12 +103,9 @@ fun ContactsScreen(
             TopBarWithIcons(
                 isTrackingLocation = isTrackingLocation,
                 hasUnreadMessages = hasUnreadMessages,
-                hasNotifications = hasNotifications,
                 onMessageClick = onMessageClick,
-                onNotificationClick = onNotificationClick,
                 onTasksClick = onTasksClick
             )
-
         },
         modifier = Modifier
             .navigationBarsPadding()
@@ -241,9 +238,7 @@ fun PreviewContactsScree2n() {
                 TopBarWithIcons(
                     isTrackingLocation = true,
                     hasUnreadMessages = true,
-                    hasNotifications = true,
-                    onMessageClick = { },
-                    onNotificationClick = { }
+                    onMessageClick = { }
                 )
 //                TopAppBar(
 //                    title = { Text("Contacts") }

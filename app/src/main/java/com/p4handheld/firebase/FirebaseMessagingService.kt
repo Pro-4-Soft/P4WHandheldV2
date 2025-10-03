@@ -19,7 +19,7 @@ import com.p4handheld.R
 import com.p4handheld.data.models.P4WEventType
 import com.p4handheld.data.models.P4WFirebaseNotification
 import com.p4handheld.data.models.UserChatMessage
-import com.p4handheld.ui.screens.MainActivity
+import com.p4handheld.ui.MainActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch

@@ -16,3 +16,16 @@ fun formatDateTime(isoString: String): String {
         ""
     }
 }
+
+fun formatChatTimestamp(isoString: String): String {
+    // Expected format like 2025-09-21T18:29:20.120349-06:00
+    return try {
+        val odt = OffsetDateTime.parse(isoString)
+        val formatter = DateTimeFormatter.ofPattern("h:mm a")
+        odt.format(formatter)
+    } catch (e: DateTimeParseException) {
+        ""
+    } catch (e: Exception) {
+        ""
+    }
+}

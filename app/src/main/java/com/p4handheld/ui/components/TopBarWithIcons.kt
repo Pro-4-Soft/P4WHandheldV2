@@ -38,9 +38,7 @@ import com.p4handheld.ui.compose.theme.HandheldP4WTheme
 fun TopBarWithIcons(
     isTrackingLocation: Boolean = false,
     hasUnreadMessages: Boolean = false,
-    hasNotifications: Boolean = false,
     onMessageClick: () -> Unit = {},
-    onNotificationClick: () -> Unit = {},
     onTasksClick: () -> Unit = {}
 ) {
     val vm: TopBarViewModel = viewModel()
@@ -106,35 +104,6 @@ fun TopBarWithIcons(
                     }
                 }
             }
-            //endregion
-
-            //region Notifications icon with indicator
-            /*Box {
-                IconButton(
-                    onClick = onNotificationClick,
-                    modifier = Modifier.size(24.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Notifications,
-                        contentDescription = "Notifications",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(14.dp)
-                    )
-                }
-
-                // Notification indicator
-                if (hasNotifications || topState.hasNotifications) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .background(Color.Red, CircleShape)
-                            .align(Alignment.TopEnd),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        // Small red dot to indicate notifications
-                    }
-                }
-            }*/
             //endregion
 
             // Messages icon with unread indicator
@@ -282,19 +251,5 @@ fun TopBarWithIconsPreview() {
                 )
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun TopBarWithIconsNoIndicatorsPreview() {
-    HandheldP4WTheme {
-        TopBarWithIcons(
-            isTrackingLocation = false,
-            hasUnreadMessages = false,
-            hasNotifications = false,
-            onMessageClick = {},
-            onNotificationClick = {}
-        )
     }
 }

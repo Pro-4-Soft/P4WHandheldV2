@@ -152,9 +152,7 @@ fun MenuScreenContent(
         TopBarWithIcons(
             isTrackingLocation = uiState.isTrackingLocation,
             hasUnreadMessages = uiState.hasUnreadMessages,
-            hasNotifications = true,
-            onMessageClick = onNavigateToMessages,
-            onNotificationClick = onNavigateToTasks
+            onMessageClick = onNavigateToMessages
         )
 
         //region Header with back button and breadcrumb

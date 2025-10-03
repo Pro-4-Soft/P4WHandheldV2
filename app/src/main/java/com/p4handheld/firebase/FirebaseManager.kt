@@ -5,6 +5,9 @@ import android.content.SharedPreferences
 import android.util.Log
 import androidx.core.content.edit
 import com.google.firebase.messaging.FirebaseMessaging
+import com.p4handheld.data.api.ApiClient
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 private const val TAG = "FirebaseManager"
 const val FIREBASE_PREFS_NAME = "firebase_prefs"
@@ -15,6 +18,8 @@ class FirebaseManager private constructor(private val context: Context) {
     companion object {
         @Volatile
         private var INSTANCE: FirebaseManager? = null
+        @Volatile
+        private var hasInitializedTaskCountOnce: Boolean = false
 
         fun getInstance(context: Context): FirebaseManager {
             return INSTANCE ?: synchronized(this) {
@@ -80,5 +85,47 @@ class FirebaseManager private constructor(private val context: Context) {
     fun clearNotifications() {
         prefs.edit { putBoolean("has_notifications", false) }
     }
+
+    //region Tasks badge helpers
+    fun getTasksCount(): Int {
+        return prefs.getInt("tasks_count", 0)
+    }
+
+    fun setTasksCount(count: Int) {
+        prefs.edit { putInt("tasks_count", count) }
+    }
+
+    /** Ensure we fetched tasks count once per application process */
+    suspend fun ensureTasksCountInitialized() {
+        if (hasInitializedTaskCountOnce) return
+        synchronized(FirebaseManager::class.java) {
+            if (hasInitializedTaskCountOnce) return
+            hasInitializedTaskCountOnce = true
+        }
+        // Perform initial refresh
+        try {
+            refreshTasksCountFromServer()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to initialize tasks count", e)
+        }
+    }
+
+    /** Fetch actual tasks count from server and store it */
+    suspend fun refreshTasksCountFromServer(): Int {
+        return withContext(Dispatchers.IO) {
+            val userId = context
+                .getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+                .getString("userId", null)
+            if (userId.isNullOrEmpty()) return@withContext getTasksCount()
+            val res = ApiClient.apiService.getAssignedTaskCount(userId)
+            if (res.isSuccessful && res.body != null) {
+                setTasksCount(res.body)
+                res.body
+            } else {
+                getTasksCount()
+            }
+        }
+    }
+    //endregion
 
 }

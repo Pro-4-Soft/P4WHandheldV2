@@ -20,6 +20,9 @@ import com.p4handheld.data.models.P4WEventType
 import com.p4handheld.data.models.P4WFirebaseNotification
 import com.p4handheld.data.models.UserChatMessage
 import com.p4handheld.ui.screens.MainActivity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 @SuppressLint("MissingFirebaseInstanceTokenRefresh")
 class FirebaseMessagingService : FirebaseMessagingService() {
@@ -115,6 +118,18 @@ class FirebaseMessagingService : FirebaseMessagingService() {
                     R.raw.task_removed
                 val mediaPlayer = MediaPlayer.create(this, sound)
                 mediaPlayer.start()
+                // Also refresh tasks count and store in prefs so badge is accurate next time UI reads it
+                try {
+                    val manager = FirebaseManager.getInstance(applicationContext)
+                    // Fire and forget; this is in background context
+                    GlobalScope.launch(Dispatchers.IO) {
+                        try {
+                            manager.refreshTasksCountFromServer()
+                        } catch (_: Exception) {
+                        }
+                    }
+                } catch (_: Exception) {
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }

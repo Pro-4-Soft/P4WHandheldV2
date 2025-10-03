@@ -1,6 +1,7 @@
 package com.p4handheld.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -14,7 +15,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Message
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,7 +40,8 @@ fun TopBarWithIcons(
     hasUnreadMessages: Boolean = false,
     hasNotifications: Boolean = false,
     onMessageClick: () -> Unit = {},
-    onNotificationClick: () -> Unit = {}
+    onNotificationClick: () -> Unit = {},
+    onTasksClick: () -> Unit = {}
 ) {
     val vm: TopBarViewModel = viewModel()
     val topState = vm.uiState.collectAsState().value
@@ -79,6 +80,7 @@ fun TopBarWithIcons(
                 Box(
                     modifier = Modifier
                         .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(4.dp))
+                        .clickable { onTasksClick() }
                         .padding(horizontal = 6.dp, vertical = 1.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -106,8 +108,8 @@ fun TopBarWithIcons(
             }
             //endregion
 
-            // Notifications icon with indicator
-            Box {
+            //region Notifications icon with indicator
+            /*Box {
                 IconButton(
                     onClick = onNotificationClick,
                     modifier = Modifier.size(24.dp)
@@ -132,7 +134,8 @@ fun TopBarWithIcons(
                         // Small red dot to indicate notifications
                     }
                 }
-            }
+            }*/
+            //endregion
 
             // Messages icon with unread indicator
             Box {

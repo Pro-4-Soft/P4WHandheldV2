@@ -9,7 +9,7 @@ data class P4WFirebaseNotification(
     val userChatMessage: UserChatMessage?,
     val eventType: P4WEventType = P4WEventType.UNKNOWN,
     val userId: String? = null,
-    val timestamp: Long = System.currentTimeMillis(),
+    val timestamp: Long = System.currentTimeMillis()
 )
 
 enum class P4WEventType {

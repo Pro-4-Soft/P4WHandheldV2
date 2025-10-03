@@ -60,7 +60,8 @@ fun ContactsScreen(
     isTrackingLocation: Boolean = false,
     onMessageClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
-    openMainMenu: () -> Unit = {}
+    openMainMenu: () -> Unit = {},
+    onTasksClick: () -> Unit = {}
 ) {
     val viewModel: ContactsViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
@@ -104,7 +105,8 @@ fun ContactsScreen(
                 hasUnreadMessages = hasUnreadMessages,
                 hasNotifications = hasNotifications,
                 onMessageClick = onMessageClick,
-                onNotificationClick = onNotificationClick
+                onNotificationClick = onNotificationClick,
+                onTasksClick = onTasksClick
             )
 
         },

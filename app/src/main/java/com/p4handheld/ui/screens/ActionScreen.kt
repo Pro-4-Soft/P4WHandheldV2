@@ -115,7 +115,8 @@ fun ActionScreen(
     isTrackingLocation: Boolean = false,
     onMessageClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
-    onNavigateToLogin: () -> Unit
+    onNavigateToLogin: () -> Unit,
+    onTasksClick: () -> Unit = {}
 ) {
     val viewModel: ActionViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
@@ -245,7 +246,8 @@ fun ActionScreen(
         hasNotifications = hasNotifications,
         isTrackingLocation = isTrackingLocation,
         onMessageClick = onMessageClick,
-        onNotificationClick = onNotificationClick
+        onNotificationClick = onNotificationClick,
+        onTasksClick = onTasksClick
     )
 }
 
@@ -258,7 +260,8 @@ fun ActionScreenWrapper(
     hasNotifications: Boolean = false,
     isTrackingLocation: Boolean = false,
     onMessageClick: () -> Unit = {},
-    onNotificationClick: () -> Unit = {}
+    onNotificationClick: () -> Unit = {},
+    onTasksClick: () -> Unit = {}
 ) {
 
     Column(
@@ -274,7 +277,8 @@ fun ActionScreenWrapper(
             hasUnreadMessages = hasUnreadMessages,
             hasNotifications = hasNotifications,
             onMessageClick = onMessageClick,
-            onNotificationClick = onNotificationClick
+            onNotificationClick = onNotificationClick,
+            onTasksClick = onTasksClick
         )
 
         //region Header with page title

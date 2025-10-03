@@ -122,7 +122,7 @@ fun ActionScreen(
     val coroutineScope = rememberCoroutineScope()
     val scanViewState by ScanStateHolder.scanViewStatus.observeAsState()
 
-    BackHandler {
+    BackHandler(enabled = !uiState.isLoading) {
         onNavigateBack()
     }
 

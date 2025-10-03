@@ -66,6 +66,10 @@ import com.p4handheld.ui.components.TopBarWithIcons
 import com.p4handheld.ui.screens.viewmodels.ChatViewModel
 import com.p4handheld.utils.formatChatTimestamp
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -167,11 +171,12 @@ fun ChatScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.primary),
+                        .background(MaterialTheme.colorScheme.primary)
+                        .padding(1.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = contactName + "2",
+                        text = contactName,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
@@ -195,6 +200,9 @@ fun ChatScreen(
                                 .getString("username", null)
                         }
 
+                        // Pre-compute chat items with date headers in composable scope
+                        val chatItems = remember(uiState.messages) { buildChatItemsWithDates(uiState.messages) }
+
                         LazyColumn(
                             state = listState,
                             modifier = Modifier
@@ -213,10 +221,28 @@ fun ChatScreen(
                                     }
                                 }
                             }
-                            itemsIndexed(uiState.messages) { index, message ->
-                                val isMine = currentUsername != null && message.fromUsername == currentUsername
-                                MessageBubble(message = message, isMine = isMine)
-                                Spacer(modifier = Modifier.size(8.dp))
+                            itemsIndexed(chatItems) { index, item ->
+                                when (item) {
+                                    is ChatItem.DateHeader -> {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            Text(
+                                                text = item.label,
+                                                style = MaterialTheme.typography.labelMedium,
+                                                color = Color.Gray
+                                            )
+                                        }
+                                    }
+
+                                    is ChatItem.MessageItem -> {
+                                        val message = item.message
+                                        val isMine = currentUsername != null && message.fromUsername == currentUsername
+                                        MessageBubble(message = message, isMine = isMine)
+                                        Spacer(modifier = Modifier.size(8.dp))
+                                    }
+                                }
                             }
                         }
                     }
@@ -321,6 +347,34 @@ private fun MessageBubble(message: UserChatMessage, isMine: Boolean) {
         }
     }
 }
+
+//region Chat list helpers
+private sealed class ChatItem {
+    data class DateHeader(val label: String) : ChatItem()
+    data class MessageItem(val message: UserChatMessage) : ChatItem()
+}
+
+private fun buildChatItemsWithDates(messages: List<UserChatMessage>): List<ChatItem> {
+    if (messages.isEmpty()) return emptyList()
+    val items = mutableListOf<ChatItem>()
+    val formatter = DateTimeFormatter.ofPattern("d MMM", Locale.getDefault())
+    var lastDate: LocalDate? = null
+    for (msg in messages) {
+        val date = try {
+            OffsetDateTime.parse(msg.timestamp).toLocalDate()
+        } catch (_: Exception) {
+            // If parsing fails, don't insert a header based on this message
+            null
+        }
+        if (date != null && date != lastDate) {
+            items += ChatItem.DateHeader(date.format(formatter))
+            lastDate = date
+        }
+        items += ChatItem.MessageItem(msg)
+    }
+    return items
+}
+//endregion
 
 @Preview(showBackground = true)
 @Composable

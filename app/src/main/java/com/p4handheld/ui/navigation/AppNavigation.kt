@@ -160,8 +160,7 @@ fun AppNavigation(
             route = Screen.Action.route,
             arguments = Screen.Action.arguments
         ) { backStackEntry ->
-            val menuItemLabel =
-                backStackEntry.arguments?.getString("menuItemLabel") ?: "Unknown Action"
+            val menuItemLabel = backStackEntry.arguments?.getString("menuItemLabel") ?: "Unknown Action"
             val menuItemState = backStackEntry.arguments?.getString("menuItemState") ?: ""
 
             ActionScreen(

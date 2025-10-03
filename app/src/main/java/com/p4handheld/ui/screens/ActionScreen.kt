@@ -140,7 +140,7 @@ fun ActionScreen(
         if (initialPageKey.isNotEmpty()) {
             println("ActionScreen: Initializing action with state: $initialPageKey")
             viewModel.updatePageKey(initialPageKey)
-            viewModel.processAction(initialPageKey)
+            viewModel.processAction()
         } else {
             println("ActionScreen: Warning - menuItemState is empty, cannot initialize action")
         }

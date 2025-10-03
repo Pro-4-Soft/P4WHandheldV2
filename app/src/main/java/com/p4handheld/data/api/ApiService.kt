@@ -25,6 +25,8 @@ interface ApiService {
     suspend fun updateScreen(screenshotJpeg: ByteArray): ApiResponse<Unit>
 
     suspend fun sendMessage(toUserId: String, message: String): ApiResponse<MessageResponse>
+
+    suspend fun getAssignedTaskCount(userId: String): ApiResponse<Int>
 }
 
 data class ApiResponse<T>(

@@ -22,7 +22,9 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONArray
 import org.json.JSONObject
+import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 
 @SuppressLint("StaticFieldLeak")
@@ -100,6 +102,47 @@ object ApiClient {
                                 token = responseBody
                             )
                             ApiResponse(true, loginResponse, responseCode)
+                        } else {
+                            val errorBody = response.body?.string()
+                            ApiResponse(false, null, responseCode, errorBody)
+                        }
+                    } catch (e: Exception) {
+                        ApiResponse(false, null, 0, e.message)
+                    }
+                }
+            }
+        }
+
+        override suspend fun getAssignedTaskCount(userId: String): ApiResponse<Int> {
+            userRequestMutex.withLock {
+                return withContext(Dispatchers.IO) {
+                    try {
+                        val filter = "UserId eq $userId"
+                        val url = "${getBaseUrl()}odata/UserTask?${'$'}filter=${URLEncoder.encode(filter, "UTF-8")}&${'$'}select=${URLEncoder.encode("UserTaskNumber", "UTF-8")}"
+                        val request = Request.Builder()
+                            .url(url)
+                            .get()
+                            .build()
+
+                        val response = client.newCall(request).execute()
+                        val responseCode = response.code
+                        val isSuccessful = response.isSuccessful
+                        if (isSuccessful) {
+                            val responseBody = response.body?.string().orEmpty()
+                            val count = try {
+                                // OData usually wraps in {"value": [...]}
+                                val obj = JSONObject(responseBody)
+                                val arr = obj.optJSONArray("value") ?: JSONArray()
+                                arr.length()
+                            } catch (_: Exception) {
+                                // Fallback if server returns a raw array
+                                try {
+                                    JSONArray(responseBody).length()
+                                } catch (_: Exception) {
+                                    0
+                                }
+                            }
+                            ApiResponse(true, count, responseCode)
                         } else {
                             val errorBody = response.body?.string()
                             ApiResponse(false, null, responseCode, errorBody)

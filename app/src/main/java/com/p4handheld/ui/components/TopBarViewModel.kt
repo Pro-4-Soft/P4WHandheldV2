@@ -8,6 +8,7 @@ import android.content.IntentFilter
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.p4handheld.data.api.ApiClient
 import com.p4handheld.data.repository.AuthRepository
 import com.p4handheld.firebase.FirebaseManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +20,8 @@ data class TopBarUiState(
     val hasUnreadMessages: Boolean = false,
     val hasNotifications: Boolean = false,
     val isTrackingLocation: Boolean = false,
-    val username: String = ""
+    val username: String = "",
+    val taskCount: Int = 0
 )
 
 class TopBarViewModel(application: Application) : AndroidViewModel(application) {
@@ -36,6 +38,7 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
             if (intent?.action == "com.p4handheld.FIREBASE_MESSAGE_RECEIVED") {
                 // On any FCM event, refresh flags; USER_CHAT_MESSAGE implies unread messages
                 refreshFromManagers()
+                refreshTaskCount()
             }
         }
     }
@@ -43,6 +46,7 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
     init {
         viewModelScope.launch {
             refreshFromManagers()
+            refreshTaskCount()
             registerReceiver()
         }
     }
@@ -69,6 +73,23 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
             hasUnreadMessages = hasUnread,
             hasNotifications = hasNotifs
         )
+    }
+
+    private fun refreshTaskCount() {
+        viewModelScope.launch {
+            try {
+                val ctx = getApplication<Application>().applicationContext
+                val userId = ctx
+                    .getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+                    .getString("userId", null)
+                if (!userId.isNullOrEmpty()) {
+                    val res = ApiClient.apiService.getAssignedTaskCount(userId)
+                    if (res.isSuccessful && res.body != null) {
+                        _uiState.value = _uiState.value.copy(taskCount = res.body)
+                    }
+                }
+            } catch (_: Exception) { }
+        }
     }
 
     fun setUnreadMessagesCount(count: Int) {

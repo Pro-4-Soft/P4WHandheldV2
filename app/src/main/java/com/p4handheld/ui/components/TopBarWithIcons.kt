@@ -39,7 +39,8 @@ fun TopBarWithIcons(
     isTrackingLocation: Boolean = false,
     hasUnreadMessages: Boolean = false,
     onMessageClick: () -> Unit = {},
-    onTasksClick: () -> Unit = {}
+    onTasksClick: () -> Unit = {},
+    enabled: Boolean = true
 ) {
     val vm: TopBarViewModel = viewModel()
     val topState = vm.uiState.collectAsState().value
@@ -75,10 +76,11 @@ fun TopBarWithIcons(
 
             //region active tasks Rectangular badge (show only if > 0)
             if (topState.taskCount > 0) {
+                val tasksClickable = if (enabled) Modifier.clickable { onTasksClick() } else Modifier
                 Box(
                     modifier = Modifier
                         .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(4.dp))
-                        .clickable { onTasksClick() }
+                        .then(tasksClickable)
                         .padding(horizontal = 6.dp, vertical = 1.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -110,7 +112,8 @@ fun TopBarWithIcons(
             Box {
                 IconButton(
                     onClick = onMessageClick,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(24.dp),
+                    enabled = enabled
                 ) {
                     Icon(
                         imageVector = Icons.Default.Message,

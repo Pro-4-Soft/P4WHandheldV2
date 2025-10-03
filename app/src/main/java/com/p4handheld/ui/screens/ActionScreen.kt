@@ -270,7 +270,8 @@ fun ActionScreenWrapper(
             isTrackingLocation = isTrackingLocation,
             hasUnreadMessages = hasUnreadMessages,
             onMessageClick = onMessageClick,
-            onTasksClick = onTasksClick
+            onTasksClick = onTasksClick,
+            enabled = !uiState.isLoading
         )
 
         //region Header with page title

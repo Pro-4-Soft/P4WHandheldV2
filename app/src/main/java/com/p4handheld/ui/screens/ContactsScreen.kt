@@ -116,6 +116,27 @@ fun ContactsScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White)
+            ) {
+                Text(
+                    text = "Contacts",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    color = MaterialTheme.colorScheme.primary
+                )
+                HorizontalDivider(
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                    thickness = 1.dp,
+                    color = Color.LightGray
+                )
+            }
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = Color.White),

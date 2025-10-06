@@ -71,8 +71,7 @@ fun MenuScreenContentPreview() {
             onNavigateToLogin = {},
             logout = {},
             onMenuItemClick = {},
-            onNavigateToMessages = {},
-            onNavigateToTasks = {}
+            onNavigateToMessages = {}
         )
     }
 }
@@ -90,8 +89,7 @@ fun MenuScreenContentWithBreadcrumbsPreview() {
             onNavigateToLogin = {},
             logout = {},
             onMenuItemClick = {},
-            onNavigateToMessages = {},
-            onNavigateToTasks = {}
+            onNavigateToMessages = {}
         )
     }
 }
@@ -112,8 +110,7 @@ fun MenuScreenContentErrorPreview() {
             onNavigateToLogin = {},
             logout = {},
             onMenuItemClick = {},
-            onNavigateToMessages = {},
-            onNavigateToTasks = {}
+            onNavigateToMessages = {}
         )
     }
 }

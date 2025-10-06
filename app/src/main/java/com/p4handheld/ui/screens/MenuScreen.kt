@@ -119,9 +119,6 @@ fun MenuScreen(
                 selectedMenuItem = item
                 onNavigateToAction(item.label, item.state ?: "")
             }
-        },
-        onNavigateToTasks = {
-
         }
     )
 }
@@ -135,7 +132,6 @@ fun MenuScreenContent(
     refreshMenu: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToMessages: () -> Unit,
-    onNavigateToTasks: () -> Unit,
     logout: () -> Unit,
     onMenuItemClick: (MenuItem) -> Unit = {}
 ) {
@@ -177,7 +173,9 @@ fun MenuScreenContent(
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .offset((20).dp)
                         )
                     } else if (breadcrumbStack.isNotEmpty()) {
                         Row(
@@ -188,7 +186,9 @@ fun MenuScreenContent(
                                 Text(
                                     text = item,
                                     fontSize = 20.sp,
-                                    fontWeight = FontWeight.Medium
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier
+                                        .offset((20).dp)
                                 )
                                 if (index < breadcrumbStack.size - 1) {
                                     Icon(
@@ -206,7 +206,9 @@ fun MenuScreenContent(
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .offset((20).dp)
                         )
                     }
                 }

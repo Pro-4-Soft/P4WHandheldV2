@@ -144,7 +144,12 @@ fun AppNavigation(
                 menuItemLabel = menuItemLabel,
                 initialPageKey = menuItemState,
                 onNavigateBack = {
-                    navController.popBackStack()
+                    if (menuItemState == "main.myTasks") {
+                        navController.navigate(Screen.Menu.route) {
+                            popUpTo(Screen.Contacts.route) { inclusive = true }
+                        }
+                    } else
+                        navController.popBackStack()
                 },
                 hasUnreadMessages = false,
                 isTrackingLocation = isTrackingLocation,

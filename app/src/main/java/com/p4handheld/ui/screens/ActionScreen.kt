@@ -122,6 +122,7 @@ fun ActionScreen(
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     val scanViewState by ScanStateHolder.scanViewStatus.observeAsState()
+    var showSignaturePad by remember { mutableStateOf(false) }
 
     BackHandler(enabled = !uiState.isLoading) {
         onNavigateBack()
@@ -207,11 +208,15 @@ fun ActionScreen(
         }
 
         PromptType.SIGN -> {
-            if (uiState.currentPrompt.promptType == PromptType.SIGN) {
+            if (showSignaturePad) {
                 {
                     SignaturePromptScreen(
                         onSignatureSaved = { signatureBase64 ->
                             viewModel.processAction(signatureBase64)
+                            showSignaturePad = false
+                        },
+                        onCancel = {
+                            showSignaturePad = false
                         }
                     )
                 }
@@ -220,7 +225,8 @@ fun ActionScreen(
                     DefaultActionScreen(
                         uiState = uiState,
                         listState = listState,
-                        viewModel = viewModel
+                        viewModel = viewModel,
+                        onShowSignature = { showSignaturePad = true }
                     )
                 }
             }
@@ -231,7 +237,8 @@ fun ActionScreen(
                 DefaultActionScreen(
                     uiState = uiState,
                     listState = listState,
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    onShowSignature = { showSignaturePad = true }
                 )
             }
         }
@@ -317,7 +324,8 @@ fun ActionScreenWrapper(
 fun DefaultActionScreen(
     uiState: ActionUiState,
     listState: LazyListState,
-    viewModel: ActionViewModel
+    viewModel: ActionViewModel,
+    onShowSignature: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -404,9 +412,7 @@ fun DefaultActionScreen(
                     println("ActionScreen: Sending prompt value: $value")
                     viewModel.processAction(value)
                 },
-                onShowSignature = {
-                    println("ActionScreen: Showing signature prompt")
-                }
+                onShowSignature = onShowSignature
             )
         } else {
             Card(
@@ -821,7 +827,8 @@ fun PromptInputArea(
                 Button(
                     onClick = onShowSignature,
                     modifier = Modifier
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp),
                     enabled = !isLoading,
                     shape = RoundedCornerShape(5.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -1071,7 +1078,8 @@ fun PhotoPromptScreen(
 
 @Composable
 fun SignaturePromptScreen(
-    onSignatureSaved: (String) -> Unit
+    onSignatureSaved: (String) -> Unit,
+    onCancel: () -> Unit
 ) {
 
     // Store strokes as list of points to reproduce when exporting
@@ -1086,6 +1094,15 @@ fun SignaturePromptScreen(
             .padding(16.dp)
             .navigationBarsPadding()
     ) {
+        // Header actions
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+        }
         Text(
             text = "Please sign below",
             fontSize = 18.sp,
@@ -1152,6 +1169,14 @@ fun SignaturePromptScreen(
                 .padding(top = 16.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
+            Button(
+                onClick = onCancel,
+                shape = RoundedCornerShape(5.dp),
+                enabled = true,
+                colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.error)) {
+                Text("Cancel")
+            }
+
             Button(
                 onClick = { strokes = emptyList(); currentStroke = emptyList() },
                 colors = ButtonDefaults.buttonColors(

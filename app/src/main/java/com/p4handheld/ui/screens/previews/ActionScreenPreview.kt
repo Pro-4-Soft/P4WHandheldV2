@@ -121,6 +121,7 @@ fun SignaturePromptScreenPreview() {
     HandheldP4WTheme {
         SignaturePromptScreen(
             onSignatureSaved = {},
+            onCancel = {}
         )
     }
 }

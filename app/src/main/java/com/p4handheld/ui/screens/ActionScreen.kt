@@ -137,7 +137,7 @@ fun ActionScreen(
     LaunchedEffect(initialPageKey) {
         if (initialPageKey.isNotEmpty()) {
             println("ActionScreen: Initializing action with state: $initialPageKey")
-            viewModel.updatePageKey(initialPageKey)
+            viewModel.updatePageKey(initialPageKey, menuItemLabel)
             viewModel.processAction()
         } else {
             println("ActionScreen: Warning - menuItemState is empty, cannot initialize action")

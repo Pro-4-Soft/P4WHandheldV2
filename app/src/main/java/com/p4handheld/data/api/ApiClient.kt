@@ -170,7 +170,7 @@ object ApiClient {
                             .build()
 
                         val request = Request.Builder()
-                            .url("${getBaseUrl()}hh/userSession/UpdateScreen")
+                            .url("${getBaseUrl()}mobile/userSession/UpdateScreen")
                             .post(multipart)
                             .build()
 
@@ -274,12 +274,12 @@ object ApiClient {
                     try {
                         val jsonBody = Gson().toJson(processRequest)
                         val requestBody = jsonBody.toRequestBody("application/json".toMediaType())
+                        val pageKeyUnderscore = pageKey.replace('.', '_');
 
                         val url = buildString {
-                            append("${getBaseUrl()}hh/$pageKey/process")
+                            append("${getBaseUrl()}mobile/$pageKeyUnderscore/process")
                             if (!taskId.isNullOrEmpty()) {
-                                append("?taskId=")
-                                append(taskId)
+                                append("?taskId=$taskId")
                             }
                         }
 
@@ -369,15 +369,12 @@ object ApiClient {
                             append("${getBaseUrl()}api/UserMessageApi/GetMessages")
                             var hasQuery = false
                             if (!contactId.isNullOrEmpty()) {
-                                append("?fromUserId=")
-                                append(contactId)
+                                append("?fromUserId=$contactId")
                                 hasQuery = true
                             }
                             append(if (hasQuery) "&" else "?")
-                            append("Skip=")
-                            append(skip)
-                            append("&Take=")
-                            append(take)
+                            append("Skip=$skip")
+                            append("&Take=$take")
                         }
 
                         val request = Request.Builder()

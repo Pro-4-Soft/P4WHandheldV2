@@ -3,7 +3,9 @@ package com.p4handheld.data.models
 data class DWOutputData(
     val data: String,
     val label: String,
-    val timestamp: Long = System.currentTimeMillis()//we need it to trigger processAction even if data is the same, it make Event unique anyway
+    //⚠️we need it to trigger processAction even if data is the same, it make Event unique anyway
+    //for instance user scanned PO number2 times
+    val timestamp: Long = System.currentTimeMillis()
 )
 
 data class DWProfileUpdate(

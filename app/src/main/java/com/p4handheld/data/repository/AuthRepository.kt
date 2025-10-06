@@ -7,6 +7,7 @@ import com.p4handheld.data.api.ApiService
 import com.p4handheld.data.models.ApiError
 import com.p4handheld.data.models.LoginRequest
 import com.p4handheld.data.models.MenuItem
+import com.p4handheld.data.models.ScanType
 import com.p4handheld.data.models.UserContextResponse
 import com.p4handheld.firebase.FIREBASE_KEY_FCM_TOKEN
 import com.p4handheld.firebase.FIREBASE_PREFS_NAME
@@ -86,17 +87,16 @@ class AuthRepository(context: Context) {
         authSharedPreferences.edit()
             .putString("menu_json", menuArray.toString())
             .putBoolean("track_geo_location", userContextResponse.trackGeoLocation)
-            .putString("user_scan_type", userContextResponse.userScanType)
-            .putString("tenant_scan_type", userContextResponse.tenantScanType)
+            .putString("user_scan_type", userContextResponse.userScanType.toString())
+            .putString("tenant_scan_type", userContextResponse.tenantScanType.toString())
             .putString("userId", userContextResponse.userId)
             .apply()
     }
 
     fun getStoredMenuData(): UserContextResponse? {
-        val tenant = authSharedPreferences.getString("tenant", null)
         val menuJson = authSharedPreferences.getString("menu_json", null)
 
-        return if (tenant != null && menuJson != null) {
+        return if (menuJson != null) {
             try {
                 val menuArray = JSONArray(menuJson)
                 val menuItems = mutableListOf<MenuItem>()
@@ -117,8 +117,8 @@ class AuthRepository(context: Context) {
                 UserContextResponse(
                     menu = menuItems,
                     trackGeoLocation = authSharedPreferences.getBoolean("track_geo_location", false),
-                    userScanType = authSharedPreferences.getString("user_scan_type", "") ?: "",
-                    tenantScanType = authSharedPreferences.getString("tenant_scan_type", "") ?: "",
+                    userScanType = ScanType.fromSerializedName(authSharedPreferences.getString("user_scan_type", "")),
+                    tenantScanType = ScanType.fromSerializedName(authSharedPreferences.getString("tenant_scan_type", "")),
                     userId = authSharedPreferences.getString("userId", "") ?: "",
                 )
             } catch (e: Exception) {

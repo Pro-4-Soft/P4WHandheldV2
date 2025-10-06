@@ -52,7 +52,6 @@ import java.util.concurrent.TimeUnit
 // Main activity that handles UI initialization, observes ViewModel state, and interacts with DataWedge.
 class MainActivity : ComponentActivity() {
 
-    // ViewModel instance scoped to the activity lifecycle.
     private val viewModel by viewModels<MainViewModel>()
 
     // Flags to track profile creation and initial configuration progression.
@@ -68,7 +67,7 @@ class MainActivity : ComponentActivity() {
             try {
                 captureCurrentScreenJpeg()?.let { bytes ->
                     lifecycleScope.launch(Dispatchers.IO) {
-                        val res = ApiClient.apiService.updateScreen(bytes)
+                        ApiClient.apiService.updateScreen(bytes)
                         Log.d("MainActivity", "UpdateScreen result: ${'$'}{res.isSuccessful} code=${'$'}{res.code}")
                     }
                 }
@@ -279,6 +278,7 @@ fun MainActivityContent(
     ) { permissions ->
         if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
             // Location permissions granted
+            Toast.makeText(navController.context, "Location permissions granted", Toast.LENGTH_LONG).show()
             Log.d("MainActivity", "Location permissions granted")
         }
     }

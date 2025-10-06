@@ -17,7 +17,6 @@ import kotlinx.coroutines.launch
 
 data class TopBarUiState(
     val hasUnreadMessages: Boolean = false,
-    val hasNotifications: Boolean = false,
     val isTrackingLocation: Boolean = false,
     val username: String = "",
     val taskCount: Int = 0
@@ -47,7 +46,8 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
                             val manager = firebaseManager
                             val newCount = manager.refreshTasksCountFromServer()
                             _uiState.value = _uiState.value.copy(taskCount = newCount)
-                        } catch (_: Exception) { }
+                        } catch (_: Exception) {
+                        }
                     }
                 }
             }
@@ -61,7 +61,8 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
                 try {
                     firebaseManager.ensureTasksCountInitialized()
                     _uiState.value = _uiState.value.copy(taskCount = firebaseManager.getTasksCount())
-                } catch (_: Exception) { }
+                } catch (_: Exception) {
+                }
                 hasFetchedTasksOnce = true
             } else {
                 // Ensure UI reflects current stored value even if already initialized in this process
@@ -86,28 +87,11 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
             .getString("username", "") ?: ""
         val tracking = authRepository.shouldTrackLocation()
         val hasUnread = firebaseManager.hasUnreadMessages()
-        val hasNotifs = firebaseManager.hasNotifications()
         _uiState.value = _uiState.value.copy(
             username = username,
             isTrackingLocation = tracking,
-            hasUnreadMessages = hasUnread,
-            hasNotifications = hasNotifs
+            hasUnreadMessages = hasUnread
         )
-    }
-
-    // Task count is managed by FirebaseManager; no direct API calls here
-
-    fun setUnreadMessagesCount(count: Int) {
-        _uiState.value = _uiState.value.copy(hasUnreadMessages = count > 0)
-    }
-
-    fun setNotificationsCount(count: Int) {
-        _uiState.value = _uiState.value.copy(hasNotifications = count > 0)
-    }
-
-    fun refreshTrackingFlag() {
-        val tracking = authRepository.shouldTrackLocation()
-        _uiState.value = _uiState.value.copy(isTrackingLocation = tracking)
     }
 
     override fun onCleared() {

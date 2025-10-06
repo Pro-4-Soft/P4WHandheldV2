@@ -49,6 +49,7 @@ class MenuViewModel(application: Application) : AndroidViewModel(application) {
 
                 if (storedMenu != null) {
                     _uiState.value = _uiState.value.copy(
+                        isLoading = false,
                         menuItems = storedMenu.menu,
                         currentMenuItems = storedMenu.menu,
                     )

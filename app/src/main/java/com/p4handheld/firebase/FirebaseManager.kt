@@ -18,6 +18,7 @@ class FirebaseManager private constructor(private val context: Context) {
     companion object {
         @Volatile
         private var INSTANCE: FirebaseManager? = null
+
         @Volatile
         private var hasInitializedTaskCountOnce: Boolean = false
 
@@ -44,9 +45,7 @@ class FirebaseManager private constructor(private val context: Context) {
                         Log.w(TAG, "Token is null or empty")
                     }
                 }
-                .addOnFailureListener { e ->
-                    Log.e(TAG, "Error getting FCM token", e)
-                }
+                .addOnFailureListener { e -> Log.e(TAG, "Error getting FCM token", e) }
         } catch (e: Exception) {
             Log.e(TAG, "Exception getting FCM token", e)
         }
@@ -73,19 +72,6 @@ class FirebaseManager private constructor(private val context: Context) {
         prefs.edit { putBoolean("has_unread_messages", hasUnread) }
     }
 
-    /** Notifications badge helpers */
-    fun hasNotifications(): Boolean {
-        return prefs.getBoolean("has_notifications", false)
-    }
-
-    fun setHasNotifications(has: Boolean) {
-        prefs.edit { putBoolean("has_notifications", has) }
-    }
-
-    fun clearNotifications() {
-        prefs.edit { putBoolean("has_notifications", false) }
-    }
-
     //region Tasks badge helpers
     fun getTasksCount(): Int {
         return prefs.getInt("tasks_count", 0)
@@ -102,7 +88,6 @@ class FirebaseManager private constructor(private val context: Context) {
             if (hasInitializedTaskCountOnce) return
             hasInitializedTaskCountOnce = true
         }
-        // Perform initial refresh
         try {
             refreshTasksCountFromServer()
         } catch (e: Exception) {

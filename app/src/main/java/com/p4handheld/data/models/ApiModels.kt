@@ -27,14 +27,35 @@ data class UserContextResponse(
     val trackGeoLocation: Boolean,
 
     @SerializedName("UserScanType")
-    val userScanType: String,
+    val userScanType: ScanType,
 
     @SerializedName("TenantScanType")
-    val tenantScanType: String,
+    val tenantScanType: ScanType,
 
     @SerializedName("UserId")
     val userId: String
 )
+
+enum class ScanType(val serializedName: String) {
+    @SerializedName("ZebraDataWedge")
+    ZEBRA_DATA_WEDGE("ZebraDataWedge"),
+
+    @SerializedName("Camera")
+    CAMERA("Camera"),
+
+    @SerializedName("LineFeed")
+    LINE_FEED("LineFeed"),
+
+    @SerializedName("UserSpecific")
+    USER_SPECIFIC("UserSpecific");
+
+    companion object {
+        fun fromSerializedName(name: String?): ScanType {
+            if (name.isNullOrBlank()) return ZEBRA_DATA_WEDGE
+            return entries.first { it.serializedName.equals(name, ignoreCase = true) }
+        }
+    }
+}
 
 data class MenuItem(
     @SerializedName("Id")

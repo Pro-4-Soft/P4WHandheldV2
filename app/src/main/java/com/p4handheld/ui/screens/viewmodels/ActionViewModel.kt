@@ -41,7 +41,11 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
             setLoading(true)
             val currentState = _uiState.value
             val currentPageKey = _uiState.value.pageKey ?: ""
-            _uiState.value = currentState.copy(isLoading = true)
+            _uiState.value = currentState.copy(
+                isLoading = true,
+                pageTitle = uiState.value.pageTitle,
+                pageKey = uiState.value.pageKey
+            )
 
             try {
                 val processRequest = ProcessRequest(
@@ -68,7 +72,7 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
                         isLoading = false,
                         currentPrompt = response.prompt,
                         messageStack = finalMessageStack,
-                        pageTitle = response.title,
+                        pageTitle = if (response.title.isNullOrBlank()) currentState.pageTitle else "",
                         toolbarActions = response.toolbarActions
                     )
                 } else {
@@ -86,8 +90,8 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun updatePageKey(newPageKey: String) {
-        _uiState.value = _uiState.value.copy(pageKey = newPageKey)
+    fun updatePageKey(newPageKey: String, pageTitle: String? = null) {
+        _uiState.value = _uiState.value.copy(pageKey = newPageKey, pageTitle = pageTitle)
     }
 
     fun updatePromptValue(value: String) {
@@ -154,7 +158,12 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
             severity = "Error"
         )
 
-        _uiState.value = uiState.value.copy(messageStack = errorMessages)
+        _uiState.value = uiState.value.copy(
+            isLoading = false,
+            pageTitle = uiState.value.pageTitle,
+            pageKey = uiState.value.pageKey,
+            messageStack = errorMessages
+        )
     }
 
     private fun tryCommitMessagesWithDivider(updatedMessageStack: List<Message>, commitAllMessages: Boolean): List<Message> {
@@ -171,7 +180,11 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     private fun setLoading(state: Boolean) {
-        _uiState.value = uiState.value.copy(isLoading = state)
+        _uiState.value = uiState.value.copy(
+            isLoading = state,
+            pageTitle = uiState.value.pageTitle,
+            pageKey = uiState.value.pageKey
+        )
     }
     //endregion
 }

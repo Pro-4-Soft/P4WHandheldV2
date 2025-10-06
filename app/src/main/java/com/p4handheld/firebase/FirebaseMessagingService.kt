@@ -51,7 +51,6 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         // Update badges in prefs so TopBarViewModel can reflect state
         try {
             val manager = FirebaseManager.getInstance(applicationContext)
-            manager.setHasNotifications(true)
             if (p4wNotification.eventType == P4WEventType.USER_CHAT_MESSAGE) {
                 manager.setHasUnreadMessages(true)
             }
@@ -112,10 +111,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         }
         if (message.eventType == P4WEventType.TASKS_CHANGED) {
             try {
-                val sound = if (message.eventType == P4WEventType.TASKS_CHANGED)
-                    R.raw.new_task
-                else
-                    R.raw.task_removed
+                val sound = R.raw.new_task
                 val mediaPlayer = MediaPlayer.create(this, sound)
                 mediaPlayer.start()
                 // Also refresh tasks count and store in prefs so badge is accurate next time UI reads it

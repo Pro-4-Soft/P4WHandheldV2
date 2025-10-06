@@ -522,12 +522,10 @@ fun MessageCard(
     }
 
     Card(
+        onClick = onClick,
+        enabled = message.isActionable,
         modifier = Modifier
-            .fillMaxWidth()
-            .clickable(
-                enabled = message.isActionable,
-                onClick = { onClick() }
-            ),
+            .fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = when (message.severity) {
                 "Info" -> if (message.isCommitted || !message.isActionable) Color(0xFFF1F1F1) else Color.White

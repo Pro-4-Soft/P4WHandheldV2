@@ -16,6 +16,7 @@ import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.p4handheld.R
+import com.p4handheld.data.ChatStateManager
 import com.p4handheld.data.models.P4WEventType
 import com.p4handheld.data.models.P4WFirebaseNotification
 import com.p4handheld.data.models.UserChatMessage
@@ -47,26 +48,39 @@ class FirebaseMessagingService : FirebaseMessagingService() {
             return
         }
 
-        showOrNoiseNotification(p4wNotification)
-        // Update badges in prefs so TopBarViewModel can reflect state
-        try {
-            val manager = FirebaseManager.getInstance(applicationContext)
-            if (p4wNotification.eventType == P4WEventType.USER_CHAT_MESSAGE) {
-                manager.setHasUnreadMessages(true)
+        // checck if user is in chat screen
+        val shouldSuppressNotification = shouldSuppressNotificationForMessage(p4wNotification)
+
+        if (!shouldSuppressNotification) {
+            showOrNoiseNotification(p4wNotification)
+            try {
+                val manager = FirebaseManager.getInstance(applicationContext)
+                if (p4wNotification.eventType == P4WEventType.USER_CHAT_MESSAGE) {
+                    manager.setHasUnreadMessages(true)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to update badge flags", e)
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to update badge flags", e)
         }
+
         broadcastMessage(p4wNotification)
     }
 
     //region Private functions
-
     private fun isItMineUserMessageNotification(p4wMessage: P4WFirebaseNotification): Boolean {
         val userId = applicationContext
             .getSharedPreferences("auth_prefs", MODE_PRIVATE)
             .getString("userId", "") ?: ""
         return p4wMessage.eventType == P4WEventType.USER_CHAT_MESSAGE && p4wMessage.userChatMessage?.fromUserId == userId
+    }
+
+    private fun shouldSuppressNotificationForMessage(p4wMessage: P4WFirebaseNotification): Boolean {
+        if (p4wMessage.eventType != P4WEventType.USER_CHAT_MESSAGE) {
+            return false
+        }
+
+        val fromUserId = p4wMessage.userChatMessage?.fromUserId
+        return fromUserId != null && ChatStateManager.isViewingChatWith(fromUserId)
     }
 
     private fun convertToP4WMessage(remoteMessage: RemoteMessage): P4WFirebaseNotification {

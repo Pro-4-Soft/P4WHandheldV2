@@ -61,6 +61,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
+import com.p4handheld.data.ChatStateManager
 import com.p4handheld.data.models.UserChatMessage
 import com.p4handheld.firebase.FirebaseManager
 import com.p4handheld.ui.components.TopBarWithIcons
@@ -88,6 +89,14 @@ fun ChatScreen(
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     val ctx = LocalContext.current;
+
+    // Register this chat screen as active for the contact
+    DisposableEffect(contactId) {
+        ChatStateManager.setActiveChatContact(contactId)
+        onDispose {
+            ChatStateManager.clearActiveChatContact()
+        }
+    }
 
     //if 401 - navigate to login screen
     LaunchedEffect(viewModel.unauthorizedEvent) {

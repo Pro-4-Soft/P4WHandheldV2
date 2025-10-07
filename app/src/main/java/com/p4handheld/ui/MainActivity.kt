@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.os.Bundle
 import android.util.Log
@@ -23,25 +22,30 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
+import androidx.core.graphics.createBitmap
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.p4handheld.R
 import com.p4handheld.data.api.ApiClient
 import com.p4handheld.data.models.P4WEventType
 import com.p4handheld.data.repository.AuthRepository
 import com.p4handheld.firebase.FirebaseManager
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.p4handheld.scanner.DWCommunicationWrapper
 import com.p4handheld.ui.compose.theme.HandheldP4WTheme
 import com.p4handheld.ui.navigation.AppNavigation
 import com.p4handheld.ui.navigation.Screen
+import com.p4handheld.ui.screens.LoadingScreen
+import com.p4handheld.ui.screens.viewmodels.LoadingViewModel
 import com.p4handheld.ui.screens.viewmodels.MainViewModel
 import com.p4handheld.utils.PermissionChecker
 import com.p4handheld.workers.LocationWorker
@@ -49,12 +53,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.util.concurrent.TimeUnit
-import androidx.core.content.edit
 
 // Main activity that handles UI initialization, observes ViewModel state, and interacts with DataWedge.
 class MainActivity : ComponentActivity() {
-
     private val viewModel by viewModels<MainViewModel>()
+    private val loadingViewModel by viewModels<LoadingViewModel>()
 
     // Flags to track profile creation and initial configuration progression.
     private var isProfileCreated = false
@@ -93,6 +96,7 @@ class MainActivity : ComponentActivity() {
             HandheldP4WTheme {
                 MainActivityContent(
                     viewModel = viewModel,
+                    loadingViewModel = loadingViewModel,
                     onProfileCreated = { isProfileCreated = true },
                     onConfigurationComplete = { initialConfigInProgression = false },
                     startDestination = getStartDestination()
@@ -122,9 +126,9 @@ class MainActivity : ComponentActivity() {
 
         val firebaseManager = FirebaseManager.Companion.getInstance(application)
         firebaseManager.initialize()
-        
+
         // Initialize Firebase Crashlytics
-        FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(true)
+        FirebaseCrashlytics.getInstance().isCrashlyticsCollectionEnabled = true
 
         // Register screen request receiver
         if (!screenRequestReceiverRegistered) {
@@ -223,11 +227,11 @@ class MainActivity : ComponentActivity() {
 }
 
 //region Screenshot helpers
-private fun ComponentActivity.captureCurrentScreenJpeg(quality: Int = 85): ByteArray? {
+private fun ComponentActivity.captureCurrentScreenJpeg(): ByteArray? {
     val view = window?.decorView?.rootView ?: return null
     if (view.width == 0 || view.height == 0) return null
     return try {
-        val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+        val bitmap = createBitmap(view.width, view.height)
         val canvas = Canvas(bitmap)
         view.draw(canvas)
         val output = ByteArrayOutputStream()
@@ -243,11 +247,13 @@ private fun ComponentActivity.captureCurrentScreenJpeg(quality: Int = 85): ByteA
 @Composable
 fun MainActivityContent(
     viewModel: MainViewModel,
+    loadingViewModel: LoadingViewModel,
     onProfileCreated: () -> Unit,
     onConfigurationComplete: () -> Unit,
     startDestination: String
 ) {
     val scanViewState by viewModel.scanViewStatus.observeAsState()
+    val loadingState by loadingViewModel.uiState.collectAsState()
     val navController = rememberNavController()
 
     // Handle side effects based on scan view state changes
@@ -267,14 +273,24 @@ fun MainActivityContent(
         onDispose { }
     }
 
-    Surface(
-        modifier = Modifier.Companion.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        AppNavigation(
-            navController = navController,
-            startDestination = startDestination
+    // Show loading screen or main content
+    if (loadingState.isLoading) {
+        LoadingScreen(
+            loadingText = loadingState.loadingText,
+            progress = loadingState.progress,
+            showProgress = loadingState.progress > 0f,
+            showCustomGif = true
         )
+    } else {
+        Surface(
+            modifier = Modifier.Companion.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            AppNavigation(
+                navController = navController,
+                startDestination = startDestination
+            )
+        }
     }
 
     val permissionLauncher = rememberLauncherForActivityResult(

@@ -90,6 +90,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.createBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.p4handheld.data.ScanStateHolder
 import com.p4handheld.data.models.Message
@@ -107,7 +108,6 @@ import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.time.Instant
 import java.time.ZoneId
-import androidx.core.graphics.createBitmap
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -119,7 +119,6 @@ fun ActionScreen(
     isTrackingLocation: Boolean = false,
     onMessageClick: () -> Unit = {},
     onNavigateToLogin: () -> Unit,
-    onTasksClick: () -> Unit = {}
 ) {
     val viewModel: ActionViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
@@ -285,7 +284,6 @@ fun ActionScreen(
         hasUnreadMessages = hasUnreadMessages,
         isTrackingLocation = isTrackingLocation,
         onMessageClick = onMessageClick,
-        onTasksClick = onTasksClick
     )
 }
 
@@ -297,7 +295,6 @@ fun ActionScreenWrapper(
     hasUnreadMessages: Boolean = false,
     isTrackingLocation: Boolean = false,
     onMessageClick: () -> Unit = {},
-    onTasksClick: () -> Unit = {}
 ) {
 
     Column(
@@ -312,7 +309,6 @@ fun ActionScreenWrapper(
             isTrackingLocation = isTrackingLocation,
             hasUnreadMessages = hasUnreadMessages,
             onMessageClick = onMessageClick,
-            onTasksClick = onTasksClick,
             enabled = !uiState.isLoading
         )
 

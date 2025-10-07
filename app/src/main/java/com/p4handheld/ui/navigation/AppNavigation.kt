@@ -84,9 +84,6 @@ fun AppNavigation(
                     navController.navigate(Screen.Menu.route) {
                         popUpTo(Screen.Contacts.route) { inclusive = true }
                     }
-                },
-                onTasksClick = {
-                    navController.navigate(Screen.Action.createRoute("My tasks", "main.myTasks"))
                 }
             )
         }
@@ -103,9 +100,6 @@ fun AppNavigation(
                     navController.navigate(Screen.Menu.route) {
                         popUpTo(Screen.Contacts.route) { inclusive = true }
                     }
-                },
-                onTasksClick = {
-                    navController.navigate(Screen.Action.createRoute("My tasks", "main.myTasks"))
                 }
             )
         }
@@ -126,9 +120,6 @@ fun AppNavigation(
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Menu.route) { inclusive = true }
                     }
-                },
-                onTasksClick = {
-                    navController.navigate(Screen.Action.createRoute("My tasks", "main.myTasks"))
                 }
             )
         }
@@ -158,9 +149,6 @@ fun AppNavigation(
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Menu.route) { inclusive = true }
                     }
-                },
-                onTasksClick = {
-                    navController.navigate(Screen.Action.createRoute("My tasks", "main.myTasks"))
                 }
             )
         }

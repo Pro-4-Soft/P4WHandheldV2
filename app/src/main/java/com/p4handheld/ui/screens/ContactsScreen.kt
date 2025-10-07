@@ -60,8 +60,7 @@ fun ContactsScreen(
     hasUnreadMessages: Boolean = false,
     isTrackingLocation: Boolean = false,
     onMessageClick: () -> Unit = {},
-    openMainMenu: () -> Unit = {},
-    onTasksClick: () -> Unit = {}
+    openMainMenu: () -> Unit = {}
 ) {
     val viewModel: ContactsViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
@@ -103,8 +102,7 @@ fun ContactsScreen(
             TopBarWithIcons(
                 isTrackingLocation = isTrackingLocation,
                 hasUnreadMessages = hasUnreadMessages,
-                onMessageClick = onMessageClick,
-                onTasksClick = onTasksClick
+                onMessageClick = onMessageClick
             )
         },
         modifier = Modifier
@@ -261,9 +259,6 @@ fun PreviewContactsScree2n() {
                     hasUnreadMessages = true,
                     onMessageClick = { }
                 )
-//                TopAppBar(
-//                    title = { Text("Contacts") }
-//                )
             }
         ) { padding ->
             Column(

@@ -15,7 +15,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Message
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,7 +39,6 @@ fun TopBarWithIcons(
     isTrackingLocation: Boolean = false,
     hasUnreadMessages: Boolean = false,
     onMessageClick: () -> Unit = {},
-    onTasksClick: () -> Unit = {},
     enabled: Boolean = true
 ) {
     val vm: TopBarViewModel = viewModel()
@@ -77,11 +75,9 @@ fun TopBarWithIcons(
 
             //region active tasks Rectangular badge (show only if > 0)
             if (topState.taskCount > 0) {
-                val tasksClickable = if (enabled) Modifier.clickable { onTasksClick() } else Modifier
                 Box(
                     modifier = Modifier
                         .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(4.dp))
-                        .then(tasksClickable)
                         .padding(horizontal = 6.dp, vertical = 1.dp),
                     contentAlignment = Alignment.Center
                 ) {

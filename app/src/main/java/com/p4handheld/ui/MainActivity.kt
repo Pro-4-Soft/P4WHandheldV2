@@ -22,7 +22,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
@@ -44,7 +43,6 @@ import com.p4handheld.scanner.DWCommunicationWrapper
 import com.p4handheld.ui.compose.theme.HandheldP4WTheme
 import com.p4handheld.ui.navigation.AppNavigation
 import com.p4handheld.ui.navigation.Screen
-import com.p4handheld.ui.screens.viewmodels.LoadingViewModel
 import com.p4handheld.ui.screens.viewmodels.MainViewModel
 import com.p4handheld.utils.PermissionChecker
 import com.p4handheld.workers.LocationWorker
@@ -56,7 +54,6 @@ import java.util.concurrent.TimeUnit
 // Main activity that handles UI initialization, observes ViewModel state, and interacts with DataWedge.
 class MainActivity : ComponentActivity() {
     private val viewModel by viewModels<MainViewModel>()
-    private val loadingViewModel by viewModels<LoadingViewModel>()
 
     // Flags to track profile creation and initial configuration progression.
     private var isProfileCreated = false
@@ -95,7 +92,6 @@ class MainActivity : ComponentActivity() {
             HandheldP4WTheme {
                 MainActivityContent(
                     viewModel = viewModel,
-                    loadingViewModel = loadingViewModel,
                     onProfileCreated = { isProfileCreated = true },
                     onConfigurationComplete = { initialConfigInProgression = false },
                     startDestination = getStartDestination()
@@ -246,13 +242,11 @@ private fun ComponentActivity.captureCurrentScreenJpeg(): ByteArray? {
 @Composable
 fun MainActivityContent(
     viewModel: MainViewModel,
-    loadingViewModel: LoadingViewModel,
     onProfileCreated: () -> Unit,
     onConfigurationComplete: () -> Unit,
     startDestination: String
 ) {
     val scanViewState by viewModel.scanViewStatus.observeAsState()
-    val loadingState by loadingViewModel.uiState.collectAsState()
     val navController = rememberNavController()
 
     // Handle side effects based on scan view state changes

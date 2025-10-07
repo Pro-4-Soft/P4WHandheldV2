@@ -81,8 +81,7 @@ fun ChatScreen(
     hasUnreadMessages: Boolean = false,
     isTrackingLocation: Boolean = false,
     onMessageClick: () -> Unit = {},
-    onNavigateToLogin: () -> Unit = {},
-    onTasksClick: () -> Unit = {}
+    onNavigateToLogin: () -> Unit = {}
 ) {
     val viewModel: ChatViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
@@ -161,8 +160,7 @@ fun ChatScreen(
             TopBarWithIcons(
                 isTrackingLocation = isTrackingLocation,
                 hasUnreadMessages = hasUnreadMessages,
-                onMessageClick = onMessageClick,
-                onTasksClick = onTasksClick
+                onMessageClick = onMessageClick
             )
         }
     ) { padding ->

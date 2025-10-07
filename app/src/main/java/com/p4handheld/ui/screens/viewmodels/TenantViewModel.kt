@@ -3,7 +3,7 @@ package com.p4handheld.ui.screens.viewmodels
 import android.app.Application
 import android.content.Context
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.edit
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +14,7 @@ import java.net.URL
 
 data class TenantConfig(
     val tenantName: String,
-    val baseUrl: String
+    val baseTenantUrl: String
 )
 
 data class TenantUiState(
@@ -27,8 +27,7 @@ class TenantViewModel(application: Application) : AndroidViewModel(application) 
     private val _uiState = MutableStateFlow(TenantUiState())
     val uiState: StateFlow<TenantUiState> = _uiState.asStateFlow()
 
-    private val sharedPreferences =
-        application.getSharedPreferences("tenant_config", Context.MODE_PRIVATE)
+    private val sharedPreferences = application.getSharedPreferences("tenant_config", Context.MODE_PRIVATE)
 
     fun saveTenantConfiguration(tenantName: String, baseUrl: String) {
         viewModelScope.launch {
@@ -59,11 +58,13 @@ class TenantViewModel(application: Application) : AndroidViewModel(application) 
                     throw IllegalArgumentException("Invalid URL format")
                 }
 
-                with(sharedPreferences.edit()) {
+                val tenantUri = replaceTenantNameForBaseUrl(normalizedUrl, tenantName)
+
+                sharedPreferences.edit {
                     putString("tenant_name", tenantName)
                     putString("base_url", normalizedUrl)
+                    putString("base_tenant_url", tenantUri)
                     putBoolean("is_configured", true)
-                    apply()
                 }
 
                 _uiState.value = _uiState.value.copy(
@@ -81,35 +82,48 @@ class TenantViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun replaceTenantNameForBaseUrl(url: String, tenantName: String): String {
+        return try {
+            val uri = java.net.URI(url)
+            val host = uri.host ?: return url
+
+            val parts = host.split('.').toMutableList()
+            if (parts.isNotEmpty()) {
+                parts[0] = tenantName
+            }
+
+            // Rebuild URL with replaced host
+            val newHost = parts.joinToString(".")
+            java.net.URI(
+                uri.scheme,
+                uri.userInfo,
+                newHost,
+                uri.port,
+                uri.path,
+                uri.query,
+                uri.fragment
+            ).toString()
+        } catch (e: Exception) {
+            url // fallback if parsing fails
+        }
+    }
+
     fun getTenantConfig(): TenantConfig? {
         val tenantName = sharedPreferences.getString("tenant_name", null)
-        val baseUrl = sharedPreferences.getString("base_url", null)
+        val baseTenantUrl = sharedPreferences.getString("base_tenant_url", null)
         val isConfigured = sharedPreferences.getBoolean("is_configured", false)
 
-        return if (isConfigured && tenantName != null && baseUrl != null) {
-            TenantConfig(tenantName, baseUrl)
+        return if (isConfigured && tenantName != null && baseTenantUrl != null) {
+            TenantConfig(tenantName, baseTenantUrl)
         } else {
             null
         }
     }
 
-    fun isTenantConfigured(): Boolean {
-        return sharedPreferences.getBoolean("is_configured", false)
-    }
-
-    fun clearTenantConfiguration() {
-        with(sharedPreferences.edit()) {
-            clear()
-            apply()
-        }
-    }
-
     @Composable
     fun getLogoUrl(): String {
-        val context = LocalContext.current
-        val sharedPreferences = context.getSharedPreferences("tenant_config", Context.MODE_PRIVATE)
-        val baseUrl = sharedPreferences.getString("base_url", "") ?: ""
-        val logoUrl = "${baseUrl}data/logo"
+        val baseUrl = sharedPreferences.getString("base_tenant_url", "") ?: ""
+        val logoUrl = "${baseUrl}/data/logo"
         return logoUrl
     }
 }

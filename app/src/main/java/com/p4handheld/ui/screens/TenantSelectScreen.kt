@@ -18,6 +18,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -26,6 +27,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -64,7 +66,7 @@ fun TenantSelectScreen(
         val existingConfig = viewModel.getTenantConfig()
         if (existingConfig != null) {
             tenantName = existingConfig.tenantName
-            baseUrl = existingConfig.baseUrl
+            baseUrl = existingConfig.baseTenantUrl
         }
     }
 
@@ -189,6 +191,16 @@ fun TenantSelectScreenContent(
                                 }
                             }
                         ),
+                        trailingIcon = {
+                            if (baseUrl.isNotBlank()) {
+                                IconButton(onClick = { onBaseUrlChange("") }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Clear,
+                                        contentDescription = "Clear"
+                                    )
+                                }
+                            }
+                        },
                         singleLine = true,
                         enabled = !uiState.isLoading
                     )

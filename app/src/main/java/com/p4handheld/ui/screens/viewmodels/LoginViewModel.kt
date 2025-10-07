@@ -82,8 +82,8 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     fun getLogoUrl(): String {
         val context = LocalContext.current
         val sharedPreferences = context.getSharedPreferences("tenant_config", Context.MODE_PRIVATE)
-        val baseUrl = sharedPreferences.getString("base_url", "") ?: ""
-        val logoUrl = "${baseUrl}data/logo"
+        val baseUrl = sharedPreferences.getString("base_tenant_url", "") ?: ""
+        val logoUrl = "${baseUrl}/data/logo"
         return logoUrl
     }
 }

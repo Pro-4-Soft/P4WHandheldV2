@@ -23,6 +23,7 @@ data class LoginResponse(
 data class UserContextResponse(
     @SerializedName("Menu")
     val menu: List<MenuItem>,
+    
     @SerializedName("TrackGeoLocation")
     val trackGeoLocation: Boolean,
 

@@ -2,6 +2,7 @@ package com.p4handheld.data.repository
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.google.gson.Gson
 import com.p4handheld.data.api.ApiClient
 import com.p4handheld.data.api.ApiService
 import com.p4handheld.data.models.ApiError
@@ -14,7 +15,6 @@ import com.p4handheld.firebase.FIREBASE_PREFS_NAME
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
-import org.json.JSONObject
 
 class AuthRepository(context: Context) {
     private val authSharedPreferences: SharedPreferences = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
@@ -70,22 +70,8 @@ class AuthRepository(context: Context) {
     }
 
     private fun storeUserContextData(userContextResponse: UserContextResponse) {
-        val menuArray = JSONArray()
-        userContextResponse.menu.forEach { menuItem ->
-            val menuJson = JSONObject().apply {
-                put("Id", menuItem.id)
-                put("Label", menuItem.label)
-                put("State", menuItem.state)
-                put("StateParams", menuItem.stateParams)
-                put("Icon", menuItem.icon)
-                put("Children", JSONArray()) // Simplified for now
-            }
-
-            menuArray.put(menuJson)
-        }
-
         authSharedPreferences.edit()
-            .putString("menu_json", menuArray.toString())
+            .putString("menu_json", Gson().toJson(userContextResponse.menu))
             .putBoolean("track_geo_location", userContextResponse.trackGeoLocation)
             .putString("user_scan_type", userContextResponse.userScanType.toString())
             .putString("tenant_scan_type", userContextResponse.tenantScanType.toString())
@@ -152,6 +138,19 @@ class AuthRepository(context: Context) {
 
     fun getStoredToken(): String? {
         return authSharedPreferences.getString("token", null)
+    }
+
+    fun getEffectiveScanType(): ScanType {
+        val userContext = getStoredMenuData()
+        return if (userContext != null) {
+            if (userContext.tenantScanType == ScanType.USER_SPECIFIC) {
+                userContext.userScanType
+            } else {
+                userContext.tenantScanType
+            }
+        } else {
+            ScanType.ZEBRA_DATA_WEDGE // Default fallback
+        }
     }
 
     fun logout() {

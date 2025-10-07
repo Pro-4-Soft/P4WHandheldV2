@@ -97,6 +97,9 @@ dependencies {
     implementation("com.google.firebase:firebase-messaging")
     implementation(platform("com.google.firebase:firebase-bom:34.2.0"))
 
+    // MLKit Barcode Scanning
+    implementation("com.google.mlkit:barcode-scanning:17.3.0")
+
 //    //Retrofit to call API
 //    implementation("com.squareup.retrofit2:retrofit:2.11.0")
 //    implementation("com.squareup.retrofit2:converter-gson:2.11.0")

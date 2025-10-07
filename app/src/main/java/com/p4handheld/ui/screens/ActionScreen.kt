@@ -95,7 +95,10 @@ import com.p4handheld.data.ScanStateHolder
 import com.p4handheld.data.models.Message
 import com.p4handheld.data.models.Prompt
 import com.p4handheld.data.models.PromptType
+import com.p4handheld.data.models.ScanType
 import com.p4handheld.data.models.ToolbarAction
+import com.p4handheld.data.repository.AuthRepository
+import com.p4handheld.ui.components.CameraScannerScreen
 import com.p4handheld.ui.components.TopBarWithIcons
 import com.p4handheld.ui.screens.previews.spaceCamel
 import com.p4handheld.ui.screens.viewmodels.ActionUiState
@@ -123,6 +126,10 @@ fun ActionScreen(
     val coroutineScope = rememberCoroutineScope()
     val scanViewState by ScanStateHolder.scanViewStatus.observeAsState()
     var showSignaturePad by remember { mutableStateOf(false) }
+    var showCameraScanner by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val authRepository = remember { AuthRepository(context) }
 
     BackHandler(enabled = !uiState.isLoading) {
         onNavigateBack()
@@ -160,7 +167,7 @@ fun ActionScreen(
     LaunchedEffect(scanViewState?.dwOutputData) {
         scanViewState?.dwOutputData?.let { outputData ->
             val data = outputData.data
-            if (data.isNotEmpty()) {
+            if (data.isNotEmpty() && authRepository.getEffectiveScanType() != ScanType.CAMERA) {
                 when (uiState.currentPrompt.promptType) {
                     PromptType.SCAN -> {
                         println("ActionScreen: Scan data received (SCAN): $data")
@@ -193,8 +200,26 @@ fun ActionScreen(
         }
     }
 
-    val prompt: @Composable () -> Unit = when (uiState.currentPrompt.promptType) {
-        PromptType.PHOTO -> {
+    val prompt: @Composable () -> Unit = when {
+        uiState.currentPrompt.promptType == PromptType.SCAN &&
+                authRepository.getEffectiveScanType() == ScanType.CAMERA &&
+                showCameraScanner -> {
+            {
+                CameraScannerScreen(
+                    onBarcodeScanned = { scannedData ->
+                        println("ActionScreen: Camera scan data received: $scannedData")
+                        viewModel.updatePromptValue(scannedData)
+                        viewModel.processAction(scannedData)
+                        showCameraScanner = false
+                    },
+                    onCancel = {
+                        showCameraScanner = false
+                    }
+                )
+            }
+        }
+
+        uiState.currentPrompt.promptType == PromptType.PHOTO -> {
             {
                 PhotoPromptScreen(
                     onImageCaptured = { imageBase64 ->
@@ -207,7 +232,7 @@ fun ActionScreen(
             }
         }
 
-        PromptType.SIGN -> {
+        uiState.currentPrompt.promptType == PromptType.SIGN -> {
             if (showSignaturePad) {
                 {
                     SignaturePromptScreen(
@@ -226,7 +251,12 @@ fun ActionScreen(
                         uiState = uiState,
                         listState = listState,
                         viewModel = viewModel,
-                        onShowSignature = { showSignaturePad = true }
+                        onShowSignature = { showSignaturePad = true },
+                        onShowCameraScanner = {
+                            if (authRepository.getEffectiveScanType() == ScanType.CAMERA) {
+                                showCameraScanner = true
+                            }
+                        }
                     )
                 }
             }
@@ -238,7 +268,12 @@ fun ActionScreen(
                     uiState = uiState,
                     listState = listState,
                     viewModel = viewModel,
-                    onShowSignature = { showSignaturePad = true }
+                    onShowSignature = { showSignaturePad = true },
+                    onShowCameraScanner = {
+                        if (authRepository.getEffectiveScanType() == ScanType.CAMERA) {
+                            showCameraScanner = true
+                        }
+                    }
                 )
             }
         }
@@ -325,7 +360,8 @@ fun DefaultActionScreen(
     uiState: ActionUiState,
     listState: LazyListState,
     viewModel: ActionViewModel,
-    onShowSignature: () -> Unit = {}
+    onShowSignature: () -> Unit = {},
+    onShowCameraScanner: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -412,7 +448,8 @@ fun DefaultActionScreen(
                     println("ActionScreen: Sending prompt value: $value")
                     viewModel.processAction(value)
                 },
-                onShowSignature = onShowSignature
+                onShowSignature = onShowSignature,
+                onShowCameraScanner = onShowCameraScanner
             )
         } else {
             Card(
@@ -611,7 +648,8 @@ fun PromptInputArea(
     isLoading: Boolean,
     onPromptValueChange: (String) -> Unit,
     onSendPrompt: (String) -> Unit,
-    onShowSignature: () -> Unit
+    onShowSignature: () -> Unit,
+    onShowCameraScanner: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -759,22 +797,47 @@ fun PromptInputArea(
             }
 
             PromptType.SCAN -> {
+                val context = LocalContext.current
+                val authRepository = remember { AuthRepository(context) }
+                val effectiveScanType = remember { authRepository.getEffectiveScanType() }
+
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Scan input field
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.Bottom
-                    ) {
-                        Text(
-                            text = prompt.promptPlaceholder,
-                            modifier = Modifier.align(Alignment.CenterVertically)
-                        )
+                    if (effectiveScanType == ScanType.CAMERA) {
+                        Button(
+                            onClick = onShowCameraScanner,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 4.dp),
+                            enabled = !isLoading,
+                            shape = RoundedCornerShape(5.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CameraAlt,
+                                contentDescription = null,
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            Text("Scan with Camera")
+                        }
+                    } else {
+                        // DataWedge scan placeholder
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.Bottom
+                        ) {
+                            Text(
+                                text = prompt.promptPlaceholder,
+                                modifier = Modifier.align(Alignment.CenterVertically)
+                            )
+                        }
                     }
                 }
             }
@@ -1171,7 +1234,8 @@ fun SignaturePromptScreen(
                 onClick = onCancel,
                 shape = RoundedCornerShape(5.dp),
                 enabled = true,
-                colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.error)) {
+                colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.error)
+            ) {
                 Text("Cancel")
             }
 

@@ -107,6 +107,7 @@ import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.time.Instant
 import java.time.ZoneId
+import androidx.core.graphics.createBitmap
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -669,7 +670,7 @@ fun PromptInputArea(
                             .atZone(ZoneId.systemDefault())
                             .toLocalDate()
                         localDate.toString() // yyyy-MM-dd
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         null
                     }
                 }
@@ -1048,7 +1049,7 @@ fun PhotoPromptScreen(
     val context = LocalContext.current
 
     // Convert Bitmap to Base64 JPEG
-    fun Bitmap.toBase64Jpeg(quality: Int = 85): String {
+    fun toBase64Jpeg(): String {
         val output = ByteArrayOutputStream()
         val bytes = output.toByteArray()
         val base64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
@@ -1062,7 +1063,7 @@ fun PhotoPromptScreen(
         contract = ActivityResultContracts.TakePicturePreview()
     ) { bitmap: Bitmap? ->
         bitmap?.let {
-            val base64 = it.toBase64Jpeg()
+            val base64 = toBase64Jpeg()
             // Update local state and immediately send
             onImageCaptured(base64)
             onSendImage(base64)
@@ -1195,7 +1196,7 @@ fun SignaturePromptScreen(
                     )
                 }
         ) {
-            canvasSize = androidx.compose.ui.unit.IntSize(size.width.toInt(), size.height.toInt())
+            canvasSize = IntSize(size.width.toInt(), size.height.toInt())
 
             // Draw completed strokes
             strokes.forEach { stroke ->
@@ -1253,7 +1254,7 @@ fun SignaturePromptScreen(
                     // Render strokes to a bitmap and return as Base64 JPEG
                     val width = if (canvasSize.width > 0) canvasSize.width else 800
                     val height = if (canvasSize.height > 0) canvasSize.height else 300
-                    val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                    val bmp = createBitmap(width, height)
                     val c = android.graphics.Canvas(bmp)
                     c.drawColor(android.graphics.Color.WHITE)
                     val p = Paint().apply {
@@ -1300,7 +1301,7 @@ fun decodeBase64Image(dataUri: String): Bitmap? {
         val base64Part = dataUri.substringAfter(",", missingDelimiterValue = dataUri)
         val bytes = Base64.decode(base64Part, Base64.DEFAULT)
         BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         null
     }
 }

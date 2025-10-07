@@ -23,7 +23,7 @@ val LightColorScheme = lightColorScheme(
     tertiaryContainer = OrangeTertiaryContainer,
     onTertiaryContainer = OnOrangeTertiaryContainer,
 
-    background = GrayBackground,
+    background = WhiteBackground,
     onBackground = OnGrayBackground,
     surface = GraySurface,
     onSurface = OnGraySurface,

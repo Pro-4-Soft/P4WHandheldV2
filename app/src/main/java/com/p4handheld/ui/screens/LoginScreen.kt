@@ -144,7 +144,7 @@ fun LoginScreenContent(
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
-                containerColor = Color.White
+                containerColor = MaterialTheme.colorScheme.surfaceBright
             ),
             border = CardDefaults.outlinedCardBorder()
         ) {
@@ -210,7 +210,7 @@ fun LoginScreenContent(
                             color = MaterialTheme.colorScheme.error,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
-                            fontSize = 12.sp,
+                            fontSize = 14.sp,
                         )
                     }
                 }

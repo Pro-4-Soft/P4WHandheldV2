@@ -20,7 +20,7 @@ val OnOrangeTertiary = Color.White
 val OnOrangeTertiaryContainer = Color(0xFF3E1B00)
 
 // Neutral (Background / Surface)
-val GrayBackground = Color(0xFFF5F5F5)
+val WhiteBackground = Color(0xFFFFFFFF)
 val GraySurface = Color(0xFFFFFFFF)
 val OnGrayBackground = Color(0xFF1A1A1A)
 val OnGraySurface = Color(0xFF1A1A1A)

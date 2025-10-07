@@ -10,6 +10,7 @@ import com.p4handheld.data.models.ApiError
 import com.p4handheld.data.models.LoginRequest
 import com.p4handheld.data.models.MenuItem
 import com.p4handheld.data.models.ScanType
+import com.p4handheld.data.models.ScanType.ZEBRA_DATA_WEDGE
 import com.p4handheld.data.models.UserContextResponse
 import com.p4handheld.firebase.FIREBASE_KEY_FCM_TOKEN
 import com.p4handheld.firebase.FIREBASE_PREFS_NAME
@@ -116,7 +117,7 @@ class AuthRepository(context: Context) {
                     userScanType = ScanType.fromSerializedName(authSharedPreferences.getString("user_scan_type", "")),
                     userId = authSharedPreferences.getString("userId", "") ?: "",
                 )
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 null
             }
         } else {
@@ -126,10 +127,6 @@ class AuthRepository(context: Context) {
 
     fun shouldTrackLocation(): Boolean {
         return authSharedPreferences.getBoolean("track_geo_location", false)
-    }
-
-    fun isLoggedIn(): Boolean {
-        return authSharedPreferences.getBoolean("is_logged_in", false)
     }
 
     fun getStateParamsForPage(pageKey: String): Any? {
@@ -145,13 +142,9 @@ class AuthRepository(context: Context) {
         return !token.isNullOrEmpty() && isLoggedIn
     }
 
-    fun getStoredToken(): String? {
-        return authSharedPreferences.getString("token", null)
-    }
-
     fun getEffectiveScanType(): ScanType {
         val userContext = getStoredMenuData()
-        return userContext?.userScanType ?: ScanType.ZEBRA_DATA_WEDGE;
+        return userContext?.userScanType ?: ZEBRA_DATA_WEDGE
     }
 
     fun logout() {

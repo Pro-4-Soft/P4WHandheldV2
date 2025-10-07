@@ -86,7 +86,8 @@ fun TenantSelectScreen(
         onApplyClick = {
             viewModel.saveTenantConfiguration(tenantName, baseUrl)
         },
-        logoUrl = viewModel.getLogoUrl()
+        logoUrl = viewModel.getLogoUrl(),
+        showAdvanced = baseUrl.isBlank()
     )
 }
 
@@ -108,7 +109,7 @@ fun TenantSelectScreenContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF1F5F9))
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp, 8.dp)
             .navigationBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -123,7 +124,7 @@ fun TenantSelectScreenContent(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFFF1F5F9)),
+                    .background(MaterialTheme.colorScheme.background),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 AsyncImage(
@@ -139,7 +140,7 @@ fun TenantSelectScreenContent(
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
-                containerColor = Color.White
+                containerColor = MaterialTheme.colorScheme.surfaceBright
             ),
             border = CardDefaults.outlinedCardBorder()
         ) {

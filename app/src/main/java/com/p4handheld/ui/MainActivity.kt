@@ -48,6 +48,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.util.concurrent.TimeUnit
+import androidx.core.content.edit
 
 // Main activity that handles UI initialization, observes ViewModel state, and interacts with DataWedge.
 class MainActivity : ComponentActivity() {
@@ -196,16 +197,16 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Set configuration if initial setup is complete.
-        if (!initialConfigInProgression) viewModel.setConfig()
+        if (!initialConfigInProgression)
+            viewModel.setConfig()
     }
 
     private fun getStartDestination(): String {
         val sharedPreferences = getSharedPreferences("tenant_config", MODE_PRIVATE)
         val isConfigured = sharedPreferences.getBoolean("is_configured", false)
         val authPreferences = getSharedPreferences("auth_prefs", MODE_PRIVATE)
+        authPreferences.edit { putString("menu_json", null) }
 
-        // Check if user has valid token (already logged in)
         val authRepository = AuthRepository(this)
         val hasValidToken = authRepository.hasValidToken()
 

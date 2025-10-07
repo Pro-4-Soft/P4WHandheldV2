@@ -256,7 +256,7 @@ fun ChatScreen(
             LaunchedEffect(uiState.messages.size, uiState.isLoadingMore) {
                 if (uiState.messages.isNotEmpty() && !uiState.isLoadingMore) {
                     coroutineScope.launch {
-                        listState.animateScrollToItem(uiState.messages.size - 1)
+                        listState.animateScrollToItem(uiState.messages.size)
                     }
                 }
             }

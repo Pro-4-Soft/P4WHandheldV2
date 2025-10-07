@@ -2,6 +2,7 @@ package com.p4handheld.data.repository
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import com.google.gson.Gson
 import com.p4handheld.data.api.ApiClient
 import com.p4handheld.data.api.ApiService
@@ -70,13 +71,13 @@ class AuthRepository(context: Context) {
     }
 
     private fun storeUserContextData(userContextResponse: UserContextResponse) {
-        authSharedPreferences.edit()
-            .putString("menu_json", Gson().toJson(userContextResponse.menu))
-            .putBoolean("track_geo_location", userContextResponse.trackGeoLocation)
-            .putString("user_scan_type", userContextResponse.userScanType.toString())
-            .putString("tenant_scan_type", userContextResponse.tenantScanType.toString())
-            .putString("userId", userContextResponse.userId)
-            .apply()
+        authSharedPreferences.edit {
+            putString("menu_json", Gson().toJson(userContextResponse.menu))
+                .putBoolean("track_geo_location", userContextResponse.trackGeoLocation)
+                .putString("user_scan_type", userContextResponse.userScanType.toString())
+                .putString("tenant_scan_type", userContextResponse.tenantScanType.toString())
+                .putString("userId", userContextResponse.userId)
+        }
     }
 
     fun getStoredMenuData(): UserContextResponse? {

@@ -80,14 +80,12 @@ class AuthRepository(context: Context) {
             putString("menu_json", Gson().toJson(userContextResponse.menu))
                 .putBoolean("track_geo_location", userContextResponse.trackGeoLocation)
                 .putString("user_scan_type", userContextResponse.userScanType.toString())
-                .putString("tenant_scan_type", userContextResponse.tenantScanType.toString())
                 .putString("userId", userContextResponse.userId)
         }
 
         CrashlyticsHelper.setUserId(userContextResponse.userId)
         CrashlyticsHelper.setCustomKey("track_geo_location", userContextResponse.trackGeoLocation)
         CrashlyticsHelper.setCustomKey("user_scan_type", userContextResponse.userScanType.toString())
-        CrashlyticsHelper.setCustomKey("tenant_scan_type", userContextResponse.tenantScanType.toString())
         CrashlyticsHelper.log("User context data updated")
     }
 
@@ -116,7 +114,6 @@ class AuthRepository(context: Context) {
                     menu = menuItems,
                     trackGeoLocation = authSharedPreferences.getBoolean("track_geo_location", false),
                     userScanType = ScanType.fromSerializedName(authSharedPreferences.getString("user_scan_type", "")),
-                    tenantScanType = ScanType.fromSerializedName(authSharedPreferences.getString("tenant_scan_type", "")),
                     userId = authSharedPreferences.getString("userId", "") ?: "",
                 )
             } catch (e: Exception) {
@@ -154,21 +151,12 @@ class AuthRepository(context: Context) {
 
     fun getEffectiveScanType(): ScanType {
         val userContext = getStoredMenuData()
-        return if (userContext != null) {
-            if (userContext.tenantScanType == ScanType.USER_SPECIFIC) {
-                userContext.userScanType
-            } else {
-                userContext.tenantScanType
-            }
-        } else {
-            ScanType.ZEBRA_DATA_WEDGE // Default fallback
-        }
+        return userContext?.userScanType ?: ScanType.ZEBRA_DATA_WEDGE;
     }
 
     fun logout() {
-        authSharedPreferences.edit().clear().apply()
+        authSharedPreferences.edit { clear() }
 
-        // Clear user information from Crashlytics
         CrashlyticsHelper.clearUserInfo()
         CrashlyticsHelper.log("User logged out")
     }

@@ -23,15 +23,12 @@ data class LoginResponse(
 data class UserContextResponse(
     @SerializedName("Menu")
     val menu: List<MenuItem>,
-    
+
     @SerializedName("TrackGeoLocation")
     val trackGeoLocation: Boolean,
 
     @SerializedName("UserScanType")
     val userScanType: ScanType,
-
-    @SerializedName("TenantScanType")
-    val tenantScanType: ScanType,
 
     @SerializedName("UserId")
     val userId: String
@@ -45,10 +42,7 @@ enum class ScanType(val serializedName: String) {
     CAMERA("Camera"),
 
     @SerializedName("LineFeed")
-    LINE_FEED("LineFeed"),
-
-    @SerializedName("UserSpecific")
-    USER_SPECIFIC("UserSpecific");
+    LINE_FEED("LineFeed");
 
     companion object {
         fun fromSerializedName(name: String?): ScanType {

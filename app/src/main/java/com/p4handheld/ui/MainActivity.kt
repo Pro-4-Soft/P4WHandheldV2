@@ -231,7 +231,6 @@ private fun ComponentActivity.captureCurrentScreenJpeg(quality: Int = 85): ByteA
         val canvas = Canvas(bitmap)
         view.draw(canvas)
         val output = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, output)
         output.toByteArray()
     } catch (e: Exception) {
         Log.e("MainActivity", "captureCurrentScreenJpeg failed", e)

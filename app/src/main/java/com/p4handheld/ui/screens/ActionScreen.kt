@@ -1050,7 +1050,6 @@ fun PhotoPromptScreen(
     // Convert Bitmap to Base64 JPEG
     fun Bitmap.toBase64Jpeg(quality: Int = 85): String {
         val output = ByteArrayOutputStream()
-        this.compress(Bitmap.CompressFormat.JPEG, quality, output)
         val bytes = output.toByteArray()
         val base64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
         return "data:image/jpeg;base64,$base64"
@@ -1280,7 +1279,6 @@ fun SignaturePromptScreen(
                     }
                     // Convert to Base64 JPEG
                     val output = ByteArrayOutputStream()
-                    bmp.compress(Bitmap.CompressFormat.JPEG, 85, output)
                     val bytes = output.toByteArray()
                     val base64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
                     val dataUri = "data:image/jpeg;base64,$base64"

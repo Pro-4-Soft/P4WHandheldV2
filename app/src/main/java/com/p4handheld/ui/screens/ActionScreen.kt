@@ -172,7 +172,6 @@ fun ActionScreen(
                 when (uiState.currentPrompt.promptType) {
                     PromptType.SCAN -> {
                         println("ActionScreen: Scan data received (SCAN): $data")
-                        viewModel.updatePromptValue(data)
                         viewModel.processAction(data)
                     }
 
@@ -209,8 +208,7 @@ fun ActionScreen(
                 CameraScannerScreen(
                     onBarcodeScanned = { scannedData ->
                         println("ActionScreen: Camera scan data received: $scannedData")
-                        viewModel.updatePromptValue(scannedData)
-                        viewModel.processAction(scannedData)
+                        viewModel.processAction(promptValue = scannedData)
                         showCameraScanner = false
                     },
                     onCancel = {
@@ -447,7 +445,7 @@ fun DefaultActionScreen(
                 },
                 onSendPrompt = { value ->
                     println("ActionScreen: Sending prompt value: $value")
-                    viewModel.processAction(value)
+                    viewModel.processAction(promptValue = value)
                 },
                 onShowSignature = onShowSignature,
                 onShowCameraScanner = onShowCameraScanner

@@ -37,6 +37,7 @@ import com.p4handheld.data.api.ApiClient
 import com.p4handheld.data.models.P4WEventType
 import com.p4handheld.data.repository.AuthRepository
 import com.p4handheld.firebase.FirebaseManager
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.p4handheld.scanner.DWCommunicationWrapper
 import com.p4handheld.ui.compose.theme.HandheldP4WTheme
 import com.p4handheld.ui.navigation.AppNavigation
@@ -121,6 +122,9 @@ class MainActivity : ComponentActivity() {
 
         val firebaseManager = FirebaseManager.Companion.getInstance(application)
         firebaseManager.initialize()
+        
+        // Initialize Firebase Crashlytics
+        FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(true)
 
         // Register screen request receiver
         if (!screenRequestReceiverRegistered) {

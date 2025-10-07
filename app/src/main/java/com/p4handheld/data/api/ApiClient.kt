@@ -10,6 +10,7 @@ import com.p4handheld.data.models.PromptResponse
 import com.p4handheld.data.models.UserChatMessage
 import com.p4handheld.data.models.UserContact
 import com.p4handheld.data.models.UserContextResponse
+import com.p4handheld.utils.CrashlyticsHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -31,6 +32,16 @@ object ApiClient {
 
     // Guards API calls to avoid overlapping user-initiated network operations
     private val userRequestMutex = Mutex()
+    
+    // Helper function to handle API exceptions with Crashlytics reporting
+    private fun handleApiException(e: Exception, apiMethod: String): ApiResponse<Nothing> {
+        CrashlyticsHelper.recordException(e, mapOf(
+            "api_method" to apiMethod,
+            "error_type" to e.javaClass.simpleName,
+            "base_url" to (runCatching { getBaseUrl() }.getOrNull() ?: "unknown")
+        ))
+        return ApiResponse(false, null, 0, e.message)
+    }
 
     fun initialize(context: Context) {
         appContext = context.applicationContext
@@ -86,7 +97,7 @@ object ApiClient {
                             }
                         }
                     } catch (e: Exception) {
-                        ApiResponse(false, null, 0, e.message)
+                        handleApiException(e, "login")
                     }
                 }
             }

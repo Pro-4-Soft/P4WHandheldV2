@@ -13,6 +13,7 @@ import com.p4handheld.data.models.ScanType
 import com.p4handheld.data.models.UserContextResponse
 import com.p4handheld.firebase.FIREBASE_KEY_FCM_TOKEN
 import com.p4handheld.firebase.FIREBASE_PREFS_NAME
+import com.p4handheld.utils.CrashlyticsHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -36,12 +37,16 @@ class AuthRepository(context: Context) {
                 val response = apiService.login(loginRequest = loginRequest)
 
                 if (response.isSuccessful) {
-                    authSharedPreferences
-                        .edit()
-                        .putBoolean("is_logged_in", true)
-                        .putString("username", username)
-                        .putString("token", response.body?.token)
-                        .apply()
+                    authSharedPreferences.edit {
+                        putBoolean("is_logged_in", true)
+                            .putString("username", username)
+                            .putString("token", response.body?.token)
+                    }
+
+                    // Set user information in Crashlytics
+                    CrashlyticsHelper.setUserInfo(username)
+                    CrashlyticsHelper.log("User logged in successfully: $username")
+
                     Result.success(true)
                 } else {
                     Result.failure(ApiError("${response.errorMessage}", response.code))
@@ -78,6 +83,12 @@ class AuthRepository(context: Context) {
                 .putString("tenant_scan_type", userContextResponse.tenantScanType.toString())
                 .putString("userId", userContextResponse.userId)
         }
+
+        CrashlyticsHelper.setUserId(userContextResponse.userId)
+        CrashlyticsHelper.setCustomKey("track_geo_location", userContextResponse.trackGeoLocation)
+        CrashlyticsHelper.setCustomKey("user_scan_type", userContextResponse.userScanType.toString())
+        CrashlyticsHelper.setCustomKey("tenant_scan_type", userContextResponse.tenantScanType.toString())
+        CrashlyticsHelper.log("User context data updated")
     }
 
     fun getStoredMenuData(): UserContextResponse? {
@@ -156,5 +167,9 @@ class AuthRepository(context: Context) {
 
     fun logout() {
         authSharedPreferences.edit().clear().apply()
+
+        // Clear user information from Crashlytics
+        CrashlyticsHelper.clearUserInfo()
+        CrashlyticsHelper.log("User logged out")
     }
 }

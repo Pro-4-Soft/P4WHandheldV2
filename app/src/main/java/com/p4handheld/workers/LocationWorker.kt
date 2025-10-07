@@ -9,6 +9,7 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.p4handheld.data.api.ApiClient
 import com.p4handheld.data.repository.AuthRepository
+import com.p4handheld.utils.CrashlyticsHelper
 import com.p4handheld.utils.PermissionChecker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
@@ -65,6 +66,11 @@ class LocationWorker(
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error in LocationWorker", e)
+            CrashlyticsHelper.recordException(e, mapOf(
+                "worker_type" to "LocationWorker",
+                "location_tracking_enabled" to authRepository.shouldTrackLocation().toString(),
+                "has_permissions" to PermissionChecker.hasLocationPermissions(applicationContext).toString()
+            ))
             return@withContext Result.retry()
         }
     }
@@ -81,6 +87,10 @@ class LocationWorker(
             ).await()
         } catch (e: Exception) {
             Log.e(TAG, "Error getting current location", e)
+            CrashlyticsHelper.recordException(e, mapOf(
+                "operation" to "getCurrentLocation",
+                "worker_type" to "LocationWorker"
+            ))
             null
         }
     }

@@ -44,7 +44,6 @@ import com.p4handheld.scanner.DWCommunicationWrapper
 import com.p4handheld.ui.compose.theme.HandheldP4WTheme
 import com.p4handheld.ui.navigation.AppNavigation
 import com.p4handheld.ui.navigation.Screen
-import com.p4handheld.ui.screens.LoadingScreen
 import com.p4handheld.ui.screens.viewmodels.LoadingViewModel
 import com.p4handheld.ui.screens.viewmodels.MainViewModel
 import com.p4handheld.utils.PermissionChecker
@@ -274,24 +273,16 @@ fun MainActivityContent(
     }
 
     // Show loading screen or main content
-    if (loadingState.isLoading) {
-        LoadingScreen(
-            loadingText = loadingState.loadingText,
-            progress = loadingState.progress,
-            showProgress = loadingState.progress > 0f,
-            showCustomGif = true
+    Surface(
+        modifier = Modifier.Companion.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        AppNavigation(
+            navController = navController,
+            startDestination = startDestination
         )
-    } else {
-        Surface(
-            modifier = Modifier.Companion.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            AppNavigation(
-                navController = navController,
-                startDestination = startDestination
-            )
-        }
     }
+
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()

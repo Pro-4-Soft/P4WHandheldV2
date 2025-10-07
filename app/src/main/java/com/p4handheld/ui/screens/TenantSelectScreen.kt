@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.p4handheld.GlobalConstants
 import com.p4handheld.ui.screens.viewmodels.TenantUiState
 import com.p4handheld.ui.screens.viewmodels.TenantViewModel
 
@@ -57,7 +58,6 @@ fun TenantSelectScreen(
 ) {
     val viewModel: TenantViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
-
     var tenantName by remember { mutableStateOf("") }
     var baseUrl by remember { mutableStateOf("") }
 
@@ -65,7 +65,7 @@ fun TenantSelectScreen(
     LaunchedEffect(Unit) {
         val existingConfig = viewModel.getTenantConfig()
         if (existingConfig != null) {
-            tenantName = existingConfig.tenantName
+            tenantName = existingConfig.tenantName ?: ""
             baseUrl = existingConfig.baseTenantUrl
         }
     }
@@ -175,10 +175,10 @@ fun TenantSelectScreenContent(
                 //region Base URL Input
                 if (showBaseUrl.value) {
                     OutlinedTextField(
-                        value = baseUrl ?: "https://app.pro4soft.com",
+                        value = baseUrl,
                         onValueChange = onBaseUrlChange,
                         label = { Text("Base URL") },
-                        placeholder = { Text("https://app.pro4soft.com") },
+                        placeholder = { Text(GlobalConstants.DEFAULT_BASE_URL) },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Uri,

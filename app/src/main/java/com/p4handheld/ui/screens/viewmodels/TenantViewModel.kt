@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.core.content.edit
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.p4handheld.GlobalConstants
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,7 +14,7 @@ import kotlinx.coroutines.launch
 import java.net.URL
 
 data class TenantConfig(
-    val tenantName: String,
+    val tenantName: String?,
     val baseTenantUrl: String
 )
 
@@ -110,14 +111,8 @@ class TenantViewModel(application: Application) : AndroidViewModel(application) 
 
     fun getTenantConfig(): TenantConfig? {
         val tenantName = sharedPreferences.getString("tenant_name", null)
-        val baseTenantUrl = sharedPreferences.getString("base_tenant_url", null)
-        val isConfigured = sharedPreferences.getBoolean("is_configured", false)
-
-        return if (isConfigured && tenantName != null && baseTenantUrl != null) {
-            TenantConfig(tenantName, baseTenantUrl)
-        } else {
-            null
-        }
+        val baseTenantUrl = sharedPreferences.getString("base_tenant_url", GlobalConstants.DEFAULT_BASE_URL) ?: GlobalConstants.DEFAULT_BASE_URL
+        return TenantConfig(tenantName, baseTenantUrl)
     }
 
     @Composable

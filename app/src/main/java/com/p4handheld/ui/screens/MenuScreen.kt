@@ -373,8 +373,6 @@ fun MenuTileCard(
             color = Color(MaterialTheme.colorScheme.outline.value)
         )
     ) {
-
-
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,

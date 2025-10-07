@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "P4WHandheldV2"
+rootProject.name = "P4WMobile"
 include(":app")
  

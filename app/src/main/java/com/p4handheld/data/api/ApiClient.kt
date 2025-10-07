@@ -32,14 +32,16 @@ object ApiClient {
 
     // Guards API calls to avoid overlapping user-initiated network operations
     private val userRequestMutex = Mutex()
-    
+
     // Helper function to handle API exceptions with Crashlytics reporting
-    private fun handleApiException(e: Exception, apiMethod: String): ApiResponse<Nothing> {
-        CrashlyticsHelper.recordException(e, mapOf(
-            "api_method" to apiMethod,
-            "error_type" to e.javaClass.simpleName,
-            "base_url" to (runCatching { getBaseUrl() }.getOrNull() ?: "unknown")
-        ))
+    private fun handleApiException(e: Exception): ApiResponse<Nothing> {
+        CrashlyticsHelper.recordException(
+            e, mapOf(
+                "api_method" to "login",
+                "error_type" to e.javaClass.simpleName,
+                "base_url" to (runCatching { getBaseUrl() }.getOrNull() ?: "unknown")
+            )
+        )
         return ApiResponse(false, null, 0, e.message)
     }
 
@@ -70,7 +72,6 @@ object ApiClient {
     }
 
     val apiService: ApiService = object : ApiService {
-
         override suspend fun login(loginRequest: LoginRequest): ApiResponse<LoginResponse> =
             withContext(Dispatchers.IO) {
                 userRequestMutex.withLock {
@@ -97,7 +98,8 @@ object ApiClient {
                             }
                         }
                     } catch (e: Exception) {
-                        handleApiException(e, "login")
+                        handleApiException(e)
+                        ApiResponse(false, null, 0, e.message)
                     }
                 }
             }
@@ -108,7 +110,7 @@ object ApiClient {
                     try {
                         val filter = URLEncoder.encode("UserId eq $userId", "UTF-8")
                         val select = URLEncoder.encode("UserTaskNumber", "UTF-8")
-                        val url = "${getBaseUrl()}odata/UserTask?\$filter=$filter&\$select=$select"
+                        val url = "${getBaseUrl()}/odata/UserTask?\$filter=$filter&\$select=$select"
 
                         client.newCall(Request.Builder().url(url).get().build()).execute().use { response ->
                             val responseBody = response.body?.string().orEmpty()
@@ -145,7 +147,7 @@ object ApiClient {
                             .build()
 
                         val request = Request.Builder()
-                            .url("${getBaseUrl()}mobile/userSession/UpdateScreen")
+                            .url("${getBaseUrl()}/mobile/userSession/UpdateScreen")
                             .post(multipart)
                             .build()
 

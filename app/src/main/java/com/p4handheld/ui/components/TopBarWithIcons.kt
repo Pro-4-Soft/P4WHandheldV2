@@ -107,18 +107,12 @@ fun TopBarWithIcons(
 
             // Messages icon with unread indicator
             Box {
-                IconButton(
-                    onClick = onMessageClick,
-                    modifier = Modifier.size(24.dp),
-                    enabled = enabled
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Message,
-                        contentDescription = "Messages",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(14.dp)
-                    )
-                }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Message,
+                    contentDescription = "Messages",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(14.dp)
+                )
 
                 // Unread messages indicator
                 if (hasUnreadMessages || topState.hasUnreadMessages) {

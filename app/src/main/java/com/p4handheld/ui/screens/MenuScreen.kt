@@ -110,9 +110,8 @@ fun MenuScreen(
         currentMenuItems = currentMenuItems,
         selectedMenuItem = selectedMenuItem,
         breadcrumbStack = breadcrumbStack,
-        onNavigateToLogin = onNavigateToLogin,
         onNavigateToMessages = onNavigateToMessages,
-        logout = { viewModel.logout() },
+        logout = { showLogoutDialog = true },
         onMenuItemClick = { item: MenuItem ->
             if (item.children.isNotEmpty()) {
                 // Navigate deeper into menu hierarchy
@@ -134,7 +133,7 @@ fun MenuScreen(
                 Text(
                     text = "Logout Confirmation",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp
+                    fontSize = 24.sp
                 )
             },
             text = {
@@ -148,14 +147,14 @@ fun MenuScreen(
                         onNavigateToLogin()
                     }
                 ) {
-                    Text("Yes", color = MaterialTheme.colorScheme.error)
+                    Text("Yes", fontSize = 14.sp, color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = { showLogoutDialog = false }
                 ) {
-                    Text("No")
+                    Text("No", fontSize = 14.sp)
                 }
             }
         )
@@ -169,7 +168,6 @@ fun MenuScreenContent(
     currentMenuItems: List<MenuItem>,
     selectedMenuItem: MenuItem?,
     breadcrumbStack: List<String>,
-    onNavigateToLogin: () -> Unit,
     onNavigateToMessages: () -> Unit,
     logout: () -> Unit,
     onMenuItemClick: (MenuItem) -> Unit = {}
@@ -339,7 +337,6 @@ fun MenuScreenContent(
                         onClick = {
                             if (!uiState.isLoading) {
                                 logout()
-                                onNavigateToLogin()
                             }
                         },
                         containerColor = MaterialTheme.colorScheme.error,

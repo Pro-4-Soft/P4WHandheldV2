@@ -28,6 +28,7 @@ class AuthRepository(context: Context) {
     init {
         ApiClient.initialize(context.applicationContext)
         apiService = ApiClient.apiService
+        authSharedPreferences.edit { putString("menu_json", null) }
     }
 
     suspend fun login(username: String, password: String): Result<Boolean> {

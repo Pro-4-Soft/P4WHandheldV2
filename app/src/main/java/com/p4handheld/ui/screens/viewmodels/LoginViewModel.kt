@@ -26,9 +26,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
     fun login(username: String, password: String) {
         if (username.isBlank() || password.isBlank()) {
-            _uiState.value = _uiState.value.copy(
-                errorMessage = "Please enter both username and password"
-            )
+            _uiState.value = _uiState.value.copy(errorMessage = "Please enter both username and password")
             return
         }
 

@@ -209,7 +209,6 @@ class MainActivity : ComponentActivity() {
         val isConfigured = sharedPreferences.getBoolean("is_configured", false)
         val authPreferences = getSharedPreferences("auth_prefs", MODE_PRIVATE)
         authPreferences.edit { putString("menu_json", null) }
-
         val authRepository = AuthRepository(this)
         val hasValidToken = authRepository.hasValidToken()
 

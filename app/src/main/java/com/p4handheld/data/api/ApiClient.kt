@@ -143,11 +143,11 @@ object ApiClient {
                     try {
                         val multipart = MultipartBody.Builder()
                             .setType(MultipartBody.FORM)
-                            .addFormDataPart("file", "screenshot.jpg", screenshotJpeg.toRequestBody("image/jpeg".toMediaType()))
+                            .addFormDataPart("file", "screenshot.png", screenshotJpeg.toRequestBody("image/png".toMediaType()))
                             .build()
 
                         val request = Request.Builder()
-                            .url("${getBaseUrl()}/mobile/userSession/UpdateScreen")
+                            .url("${getBaseUrl()}/hh/userSession/UpdateScreen")
                             .post(multipart)
                             .build()
 

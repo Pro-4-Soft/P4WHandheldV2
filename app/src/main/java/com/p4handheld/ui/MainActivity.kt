@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.os.Bundle
 import android.util.Log
@@ -66,10 +67,10 @@ class MainActivity : ComponentActivity() {
             val eventType = intent.getStringExtra("eventType") ?: return
             if (eventType != P4WEventType.SCREEN_REQUESTED.name) return
             try {
-                captureCurrentScreenJpeg()?.let { bytes ->
+                captureCurrentScreenPng()?.let { bytes ->
                     lifecycleScope.launch(Dispatchers.IO) {
-                        ApiClient.apiService.updateScreen(bytes)
-                        Log.d("MainActivity", "UpdateScreen result: ${'$'}{res.isSuccessful} code=${'$'}{res.code}")
+                        val res = ApiClient.apiService.updateScreen(bytes)
+                        Log.d("MainActivity", "UpdateScreen result: '${res.isSuccessful}' code='${res.code}'")
                     }
                 }
             } catch (e: Exception) {
@@ -221,7 +222,7 @@ class MainActivity : ComponentActivity() {
 }
 
 //region Screenshot helpers
-private fun ComponentActivity.captureCurrentScreenJpeg(): ByteArray? {
+private fun ComponentActivity.captureCurrentScreenPng(): ByteArray? {
     val view = window?.decorView?.rootView ?: return null
     if (view.width == 0 || view.height == 0) return null
     return try {
@@ -229,9 +230,10 @@ private fun ComponentActivity.captureCurrentScreenJpeg(): ByteArray? {
         val canvas = Canvas(bitmap)
         view.draw(canvas)
         val output = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)
         output.toByteArray()
     } catch (e: Exception) {
-        Log.e("MainActivity", "captureCurrentScreenJpeg failed", e)
+        Log.e("MainActivity", "captureCurrentScreenPng failed", e)
         null
     }
 }

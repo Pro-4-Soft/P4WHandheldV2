@@ -70,7 +70,6 @@ fun MenuScreen(
 
     var currentMenuItems by remember { mutableStateOf<List<MenuItem>>(emptyList()) }
     var menuStack by remember { mutableStateOf<List<List<MenuItem>>>(emptyList()) }
-    var breadcrumbStack by remember { mutableStateOf<List<String>>(emptyList()) }
     var selectedMenuItem by remember { mutableStateOf<MenuItem?>(null) }
     var showLogoutDialog by remember { mutableStateOf(false) }
 
@@ -80,7 +79,6 @@ fun MenuScreen(
         if (menuStack.isNotEmpty()) {
             currentMenuItems = menuStack.last()
             menuStack = menuStack.dropLast(1)
-            breadcrumbStack = breadcrumbStack.dropLast(1)
             selectedMenuItem = null
         }
     }
@@ -109,14 +107,12 @@ fun MenuScreen(
         uiState = uiState,
         currentMenuItems = currentMenuItems,
         selectedMenuItem = selectedMenuItem,
-        breadcrumbStack = breadcrumbStack,
         onNavigateToMessages = onNavigateToMessages,
         logout = { showLogoutDialog = true },
         onMenuItemClick = { item: MenuItem ->
             if (item.children.isNotEmpty()) {
                 // Navigate deeper into menu hierarchy
                 menuStack = menuStack + listOf(currentMenuItems)
-                breadcrumbStack = breadcrumbStack + listOf(item.label)
                 currentMenuItems = item.children
             } else {
                 selectedMenuItem = item
@@ -137,7 +133,7 @@ fun MenuScreen(
                 )
             },
             text = {
-                Text("Are you sure you want to logout?")
+                Text("Are you sure you want to logout?", fontSize = 18.sp)
             },
             confirmButton = {
                 TextButton(
@@ -147,14 +143,14 @@ fun MenuScreen(
                         onNavigateToLogin()
                     }
                 ) {
-                    Text("Yes", fontSize = 14.sp, color = MaterialTheme.colorScheme.error)
+                    Text("Yes", fontSize = 20.sp, color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = { showLogoutDialog = false }
                 ) {
-                    Text("No", fontSize = 14.sp)
+                    Text("No", fontSize = 20.sp)
                 }
             }
         )
@@ -167,7 +163,6 @@ fun MenuScreenContent(
     uiState: MenuUiState,
     currentMenuItems: List<MenuItem>,
     selectedMenuItem: MenuItem?,
-    breadcrumbStack: List<String>,
     onNavigateToMessages: () -> Unit,
     logout: () -> Unit,
     onMenuItemClick: (MenuItem) -> Unit = {}
@@ -198,56 +193,20 @@ fun MenuScreenContent(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-
-                //region Title or breadcrumb
                 Column(
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(vertical = 4.dp)
                 )
                 {
-                    if (selectedMenuItem != null) {
-                        Text(
-                            text = selectedMenuItem.label,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .offset((20).dp)
-                        )
-                    } else if (breadcrumbStack.isNotEmpty()) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            breadcrumbStack.forEachIndexed { index, item ->
-                                Text(
-                                    text = item,
-                                    fontSize = if (index < breadcrumbStack.size - 1) 14.sp else 20.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    modifier = Modifier
-                                        .offset((20).dp)
-                                )
-                                if (index < breadcrumbStack.size - 1) {
-                                    Icon(
-                                        imageVector = Icons.Default.Menu,
-                                        contentDescription = null,
-                                        modifier = Modifier.padding(horizontal = 4.dp),
-                                        tint = Color.Gray
-                                    )
-                                }
-                            }
-                        }
-                    } else {
-                        Text(
-                            text = "Main Menu",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
+                    Text(
+                        text = selectedMenuItem?.label ?: "Main Menu",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
-                //endregion
             }
         }
         //endregion

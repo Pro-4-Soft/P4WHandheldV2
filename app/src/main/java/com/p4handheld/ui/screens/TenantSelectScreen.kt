@@ -60,12 +60,14 @@ fun TenantSelectScreen(
     val uiState by viewModel.uiState.collectAsState()
     var tenantName by remember { mutableStateOf<String>("") }
     var baseUrl by remember { mutableStateOf("") }
+    var showAdvanced by remember { mutableStateOf(false) }
 
     // Load existing tenant configuration on screen initialization
     LaunchedEffect(Unit) {
         val existingConfig = viewModel.getTenantConfig()
         tenantName = existingConfig.tenantName ?: ""
         baseUrl = existingConfig.baseApiUrl
+        showAdvanced = baseUrl.isBlank()
     }
 
     // Navigate to Login when configuration is saved
@@ -85,7 +87,7 @@ fun TenantSelectScreen(
             viewModel.saveTenantConfiguration(tenantName, baseUrl)
         },
         logoUrl = viewModel.getLogoUrl(),
-        showAdvanced = baseUrl.isBlank()
+        showAdvanced = showAdvanced
     )
 }
 

@@ -1043,11 +1043,12 @@ fun PhotoPromptScreen(
     val context = LocalContext.current
 
     // Convert Bitmap to Base64 JPEG
-    fun toBase64Jpeg(): String {
+    fun toBase64Jpeg(bitmap: Bitmap): String {
         val output = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)
         val bytes = output.toByteArray()
         val base64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
-        return "data:image/jpeg;base64,$base64"
+        return "data:image/png;base64,$base64"
     }
 
     var captureAttempted by remember { mutableStateOf(false) }
@@ -1057,7 +1058,7 @@ fun PhotoPromptScreen(
         contract = ActivityResultContracts.TakePicturePreview()
     ) { bitmap: Bitmap? ->
         bitmap?.let {
-            val base64 = toBase64Jpeg()
+            val base64 = toBase64Jpeg(bitmap)
             // Update local state and immediately send
             onImageCaptured(base64)
             onSendImage(base64)
@@ -1272,11 +1273,12 @@ fun SignaturePromptScreen(
                         val pt = currentStroke.first()
                         c.drawPoint(pt.x, pt.y, p)
                     }
-                    // Convert to Base64 JPEG
+                    // Convert to Base64 PNG
                     val output = ByteArrayOutputStream()
+                    bmp.compress(Bitmap.CompressFormat.PNG, 100, output)
                     val bytes = output.toByteArray()
                     val base64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
-                    val dataUri = "data:image/jpeg;base64,$base64"
+                    val dataUri = "data:image/png;base64,$base64"
                     onSignatureSaved(dataUri)
                 },
                 colors = ButtonDefaults.buttonColors(

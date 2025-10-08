@@ -54,13 +54,13 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                     } else {
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
-                            errorMessage = "Login successful but failed to load menu: ${menuResult.exceptionOrNull()?.message}"
+                            errorMessage = menuResult.exceptionOrNull()?.message
                         )
                     }
                 } else {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        errorMessage = "Login failed: ${loginResult.exceptionOrNull()?.message}"
+                        errorMessage = loginResult.exceptionOrNull()?.message
                     )
                 }
             } catch (e: Exception) {

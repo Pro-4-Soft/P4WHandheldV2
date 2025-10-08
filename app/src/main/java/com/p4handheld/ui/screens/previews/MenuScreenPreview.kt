@@ -66,8 +66,6 @@ fun MenuScreenContentPreview() {
             uiState = sampleUiState,
             currentMenuItems = sampleMenuItems,
             selectedMenuItem = null,
-            breadcrumbStack = emptyList(),
-            onNavigateToLogin = {},
             logout = {},
             onMenuItemClick = {},
             onNavigateToMessages = {}
@@ -83,8 +81,6 @@ fun MenuScreenContentWithBreadcrumbsPreview() {
             uiState = sampleUiState.copy(),
             currentMenuItems = sampleMenuItems.first().children,
             selectedMenuItem = null,
-            breadcrumbStack = listOf("Main Menu", "Users"),
-            onNavigateToLogin = {},
             logout = {},
             onMenuItemClick = {},
             onNavigateToMessages = {}
@@ -103,8 +99,6 @@ fun MenuScreenContentErrorPreview() {
             ),
             currentMenuItems = emptyList(),
             selectedMenuItem = null,
-            breadcrumbStack = emptyList(),
-            onNavigateToLogin = {},
             logout = {},
             onMenuItemClick = {},
             onNavigateToMessages = {}

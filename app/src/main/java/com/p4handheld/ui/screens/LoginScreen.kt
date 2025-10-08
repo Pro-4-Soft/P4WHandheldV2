@@ -257,16 +257,15 @@ fun LoginScreenContent(
             Text(
                 buildAnnotatedString {
                     append("Powered by ")
-                    withLink(
-                        LinkAnnotation.Url(
-                            "https://www.p4warehouse.com/",
-                            TextLinkStyles(style = SpanStyle(color = Color.Blue))
-                        )
-                    ) {
-                        val currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
-                        append("P4 Warehouse © $currentYear")
-                    }
                 }, fontSize = 10.sp
+            )
+            Text(
+                buildAnnotatedString {
+                    val currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+                    append("P4 Warehouse © $currentYear")
+                },
+                fontSize = 10.sp,
+                color = Color(0xFF3553D0)
             )
         }
         Box(

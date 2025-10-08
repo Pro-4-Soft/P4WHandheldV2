@@ -25,7 +25,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -335,23 +334,6 @@ fun MenuScreenContent(
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Messages button
-                    FloatingActionButton(
-                        onClick = {
-                            if (!uiState.isLoading) {
-                                onNavigateToMessages()
-                            }
-                        },
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.alpha(if (uiState.isLoading) 0.5f else 1f)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Message,
-                            contentDescription = "Messages",
-                            tint = Color.White
-                        )
-                    }
-
                     // Logout button
                     FloatingActionButton(
                         onClick = {

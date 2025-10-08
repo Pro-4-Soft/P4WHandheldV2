@@ -15,7 +15,7 @@ import java.net.URL
 
 data class TenantConfig(
     val tenantName: String?,
-    val baseTenantUrl: String
+    val baseApiUrl: String
 )
 
 data class TenantUiState(
@@ -55,7 +55,7 @@ class TenantViewModel(application: Application) : AndroidViewModel(application) 
 
                 try {
                     URL(normalizedUrl)
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     throw IllegalArgumentException("Invalid URL format")
                 }
 
@@ -104,20 +104,21 @@ class TenantViewModel(application: Application) : AndroidViewModel(application) 
                 uri.query,
                 uri.fragment
             ).toString()
-        } catch (e: Exception) {
-            url // fallback if parsing fails
+        } catch (_: Exception) {
+            url
         }
     }
 
-    fun getTenantConfig(): TenantConfig? {
+    fun getTenantConfig(): TenantConfig {
         val tenantName = sharedPreferences.getString("tenant_name", null)
-        val baseTenantUrl = sharedPreferences.getString("base_tenant_url", GlobalConstants.DEFAULT_BASE_URL) ?: GlobalConstants.DEFAULT_BASE_URL
-        return TenantConfig(tenantName, baseTenantUrl)
+        val baseApiUrl = sharedPreferences.getString("base_url", GlobalConstants.DEFAULT_BASE_URL) ?: GlobalConstants.DEFAULT_BASE_URL
+
+        return TenantConfig(tenantName, baseApiUrl)
     }
 
     @Composable
     fun getLogoUrl(): String {
-        val baseUrl = sharedPreferences.getString("base_tenant_url", "") ?: ""
+        val baseUrl = sharedPreferences.getString("base_tenant_url", "") ?: sharedPreferences.getString("base_url", "")
         val logoUrl = "${baseUrl}/data/logo"
         return logoUrl
     }

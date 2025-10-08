@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.util.Log
-import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.p4handheld.App
 import com.p4handheld.R
@@ -140,13 +139,11 @@ object DWCommunicationWrapper {
 
                 VALUE_COMMAND_IDENTIFIER_CREATE_PROFILE -> {
                     if (result == SUCCESS) {
-                        ScanStateHolder.scanViewStatus.value =
-                            ScanViewState(dwProfileCreate = DWProfileCreate(true))
+                        ScanStateHolder.scanViewStatus.value = ScanViewState(dwProfileCreate = DWProfileCreate(true))
                         "Profile created..!"
                     } else {
                         if (resultCode == "PROFILE_ALREADY_EXISTS") {
-                            ScanStateHolder.scanViewStatus.value =
-                                ScanViewState(dwProfileCreate = DWProfileCreate(true))
+                            ScanStateHolder.scanViewStatus.value = ScanViewState(dwProfileCreate = DWProfileCreate(true))
                             "Profile already exist..!"
                         } else {
                             "Profile creation failed..!"
@@ -157,8 +154,7 @@ object DWCommunicationWrapper {
                 VALUE_COMMAND_IDENTIFIER_SET_CONFIG -> {
                     if (result == SUCCESS) {
                         ScanStateHolder.isLoading.value = false
-                        ScanStateHolder.scanViewStatus.value =
-                            ScanViewState(dwProfileUpdate = DWProfileUpdate(true))
+                        ScanStateHolder.scanViewStatus.value = ScanViewState(dwProfileUpdate = DWProfileUpdate(true))
                         "Profile updated..!"
                     } else {
                         "Set config failed with -> $resultCode"
@@ -199,13 +195,6 @@ object DWCommunicationWrapper {
                 }
             }
 
-            if (msg.isNotEmpty()) {
-                Toast.makeText(
-                    App.getInstance(),
-                    msg,
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
             Log.d(TAG, "RESULT->${result}, $msg")
         }
     }

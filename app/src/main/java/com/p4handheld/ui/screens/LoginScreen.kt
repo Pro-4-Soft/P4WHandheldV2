@@ -137,7 +137,9 @@ fun LoginScreenContent(
                 AsyncImage(
                     model = logoUrl,
                     contentDescription = "App Logo",
-                    modifier = Modifier.size(140.dp)
+                    modifier = Modifier
+                        .size(140.dp)
+                        .padding(4.dp)
                 )
             }
         }
@@ -202,13 +204,13 @@ fun LoginScreenContent(
                         modifier = Modifier
                             .fillMaxWidth(),
                         colors = CardDefaults.cardColors(
-                            containerColor = Color.White
+                            containerColor = MaterialTheme.colorScheme.surfaceBright
                         )
                     ) {
                         Text(
                             text = errorMessage,
                             color = MaterialTheme.colorScheme.error,
-                            maxLines = 2,
+                            maxLines = 3,
                             overflow = TextOverflow.Ellipsis,
                             fontSize = 14.sp,
                         )
@@ -248,7 +250,8 @@ fun LoginScreenContent(
                             TextLinkStyles(style = SpanStyle(color = Color.Blue))
                         )
                     ) {
-                        append("P4 Warehouse © 2025")
+                        val currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+                        append("P4 Warehouse © $currentYear")
                     }
                 }, fontSize = 10.sp
             )

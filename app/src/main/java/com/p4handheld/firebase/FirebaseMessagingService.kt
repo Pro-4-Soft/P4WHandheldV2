@@ -1,16 +1,9 @@
 package com.p4handheld.firebase
 
 import android.annotation.SuppressLint
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.Intent
-import android.media.AudioAttributes
 import android.media.MediaPlayer
-import android.media.RingtoneManager
-import android.os.Build
 import android.util.Log
-import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
@@ -20,7 +13,6 @@ import com.p4handheld.data.ChatStateManager
 import com.p4handheld.data.models.P4WEventType
 import com.p4handheld.data.models.P4WFirebaseNotification
 import com.p4handheld.data.models.UserChatMessage
-import com.p4handheld.ui.MainActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -30,12 +22,6 @@ class FirebaseMessagingService : FirebaseMessagingService() {
 
     companion object {
         private const val TAG = "FCMService"
-        private const val CHANNEL_ID = "p4w_notifications"
-    }
-
-    override fun onCreate() {
-        super.onCreate()
-        createNotificationChannel()
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
@@ -52,7 +38,8 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         val shouldSuppressNotification = shouldSuppressNotificationForMessage(p4wNotification)
 
         if (!shouldSuppressNotification) {
-            showOrNoiseNotification(p4wNotification)
+            // Play internal sounds only, no system notifications
+            playInternalSounds(p4wNotification)
             try {
                 val manager = FirebaseManager.getInstance(applicationContext)
                 if (p4wNotification.eventType == P4WEventType.USER_CHAT_MESSAGE) {
@@ -92,6 +79,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
             body = notification?.body ?: data["body"] ?: "",
             userChatMessage = parseUserChatMessage(data["payload"]),
             eventType = parseEventType(data["eventType"]),
+            taskAdded = data["taskAdded"] == "true",
             userId = data["userId"],
             timestamp = remoteMessage.sentTime.takeIf { it > 0 } ?: System.currentTimeMillis(),
         )
@@ -119,13 +107,14 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
-    private fun showOrNoiseNotification(message: P4WFirebaseNotification) {
+    private fun playInternalSounds(message: P4WFirebaseNotification) {
         if (message.eventType == P4WEventType.USER_CHAT_MESSAGE) {
-            processUserMessageNotification(message);
+            // Only play sound for user messages, no system notification
+            playMessageSound()
         }
         if (message.eventType == P4WEventType.TASKS_CHANGED) {
             try {
-                val sound = R.raw.new_task
+                val sound = if (message.taskAdded) R.raw.new_task else R.raw.task_removed
                 val mediaPlayer = MediaPlayer.create(this, sound)
                 mediaPlayer.start()
                 // Also refresh tasks count and store in prefs so badge is accurate next time UI reads it
@@ -146,28 +135,13 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
-    private fun processUserMessageNotification(message: P4WFirebaseNotification) {
-        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        val intent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            putExtra("messageId", message.id)
+    private fun playMessageSound() {
+        try {
+            val mediaPlayer = MediaPlayer.create(this, R.raw.new_message)
+            mediaPlayer?.start()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to play message sound", e)
         }
-
-        val pendingIntent = PendingIntent.getActivity(
-            this, 0, intent,
-            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(message.title)
-            .setContentText(message.body)
-            .setAutoCancel(true)
-            .setContentIntent(pendingIntent)
-
-        notificationManager.notify(message.id.hashCode(), notificationBuilder.build())
-        val mediaPlayer = MediaPlayer.create(this, R.raw.new_message)
-        mediaPlayer.start()
     }
 
     private fun broadcastMessage(message: P4WFirebaseNotification) {
@@ -182,29 +156,6 @@ class FirebaseMessagingService : FirebaseMessagingService() {
             }
         }
         sendBroadcast(intent)
-    }
-
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-            val audioAttributes = AudioAttributes.Builder()
-                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                .build()
-
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                "My Notifications",
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = "Channel for app notifications"
-                setSound(soundUri, audioAttributes)
-                enableVibration(true)
-            }
-
-            val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel) // 🔹 important
-        }
     }
 
     private fun generateMessageId(): String {

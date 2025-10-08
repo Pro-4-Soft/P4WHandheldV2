@@ -13,78 +13,62 @@ private const val TAG = "FirebaseManager"
 const val FIREBASE_PREFS_NAME = "firebase_prefs"
 const val FIREBASE_KEY_FCM_TOKEN = "fcm_token"
 
-class FirebaseManager private constructor(private val context: Context) {
+class FirebaseManager(private val prefs: SharedPreferences) {
 
     companion object {
         @Volatile
         private var INSTANCE: FirebaseManager? = null
 
-        @Volatile
-        private var hasInitializedTaskCountOnce: Boolean = false
-
         fun getInstance(context: Context): FirebaseManager {
             return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: FirebaseManager(context.applicationContext).also { INSTANCE = it }
+                INSTANCE ?: FirebaseManager(
+                    context.applicationContext.getSharedPreferences(
+                        FIREBASE_PREFS_NAME,
+                        Context.MODE_PRIVATE
+                    )
+                ).also { INSTANCE = it }
             }
         }
     }
 
-    private val prefs: SharedPreferences = context.getSharedPreferences(FIREBASE_PREFS_NAME, Context.MODE_PRIVATE)
-
-    /**
-     * Initialize Firebase messaging and get FCM token
-     */
+    //region Firebase token
     fun initialize() {
-        try {
-            FirebaseMessaging.getInstance().token
-                .addOnSuccessListener { token ->
-                    if (!token.isNullOrEmpty()) {
-                        Log.d(TAG, "Retrieve token successful: $token")
-                        prefs.edit { putString(FIREBASE_KEY_FCM_TOKEN, token) }
-                    } else {
-                        Log.w(TAG, "Token is null or empty")
-                    }
+        FirebaseMessaging.getInstance().token
+            .addOnSuccessListener { token ->
+                if (!token.isNullOrEmpty()) {
+                    Log.d(TAG, "Retrieve token successful: $token")
+                    prefs.edit { putString(FIREBASE_KEY_FCM_TOKEN, token) }
+                } else {
+                    Log.w(TAG, "Token is null or empty")
                 }
-                .addOnFailureListener { e -> Log.e(TAG, "Error getting FCM token", e) }
-        } catch (e: Exception) {
-            Log.e(TAG, "Exception getting FCM token", e)
-        }
+            }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "Error getting FCM token", e)
+            }
     }
+    //endregion
 
-    /**
-     * Check if there are unread messages
-     */
-    fun hasUnreadMessages(): Boolean {
-        return prefs.getBoolean("has_unread_messages", false)
-    }
+    //region Unread messages
+    fun hasUnreadMessages(): Boolean =
+        prefs.getBoolean("has_unread_messages", false)
 
-    /**
-     * Mark messages as read
-     */
-    fun markMessagesAsRead() {
-        prefs.edit { putBoolean("has_unread_messages", false) }
-    }
-
-    /**
-     * Set unread message status
-     */
-    fun setHasUnreadMessages(hasUnread: Boolean) {
+    fun setHasUnreadMessages(hasUnread: Boolean) =
         prefs.edit { putBoolean("has_unread_messages", hasUnread) }
-    }
+    //endregion
 
     //region Tasks badge helpers
-    fun getTasksCount(): Int {
-        return prefs.getInt("tasks_count", 0)
-    }
+    fun getTasksCount(): Int =
+        prefs.getInt("tasks_count", 0)
 
-    fun setTasksCount(count: Int) {
+    fun setTasksCount(count: Int) =
         prefs.edit { putInt("tasks_count", count) }
-    }
 
-    /** Ensure we fetched tasks count once per application process */
+    @Volatile
+    private var hasInitializedTaskCountOnce = false
+
     suspend fun ensureTasksCountInitialized() {
         if (hasInitializedTaskCountOnce) return
-        synchronized(FirebaseManager::class.java) {
+        synchronized(this) {
             if (hasInitializedTaskCountOnce) return
             hasInitializedTaskCountOnce = true
         }
@@ -95,22 +79,16 @@ class FirebaseManager private constructor(private val context: Context) {
         }
     }
 
-    /** Fetch actual tasks count from server and store it */
-    suspend fun refreshTasksCountFromServer(): Int {
-        return withContext(Dispatchers.IO) {
-            val userId = context
-                .getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-                .getString("userId", null)
-            if (userId.isNullOrEmpty()) return@withContext getTasksCount()
-            val res = ApiClient.apiService.getAssignedTaskCount(userId)
-            if (res.isSuccessful && res.body != null) {
-                setTasksCount(res.body)
-                res.body
-            } else {
-                getTasksCount()
-            }
+    suspend fun refreshTasksCountFromServer(): Int = withContext(Dispatchers.IO) {
+        val userId = prefs.getString("userId", null)
+        if (userId.isNullOrEmpty()) return@withContext getTasksCount()
+        val res = ApiClient.apiService.getAssignedTaskCount(userId)
+        if (res.isSuccessful && res.body != null) {
+            setTasksCount(res.body)
+            res.body
+        } else {
+            getTasksCount()
         }
     }
     //endregion
-
 }

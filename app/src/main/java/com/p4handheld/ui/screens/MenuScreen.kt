@@ -27,16 +27,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -74,7 +73,9 @@ fun MenuScreen(
     var menuStack by remember { mutableStateOf<List<List<MenuItem>>>(emptyList()) }
     var breadcrumbStack by remember { mutableStateOf<List<String>>(emptyList()) }
     var selectedMenuItem by remember { mutableStateOf<MenuItem?>(null) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
+    // Handle back navigation within menu hierarchy
     BackHandler(enabled = menuStack.isNotEmpty()) {
         viewModel.navigateBack()
         if (menuStack.isNotEmpty()) {
@@ -83,6 +84,11 @@ fun MenuScreen(
             breadcrumbStack = breadcrumbStack.dropLast(1)
             selectedMenuItem = null
         }
+    }
+
+    // Handle back press on main menu - show logout confirmation
+    BackHandler(enabled = menuStack.isEmpty()) {
+        showLogoutDialog = true
     }
 
     LaunchedEffect(uiState.menuItems) {
@@ -105,7 +111,6 @@ fun MenuScreen(
         currentMenuItems = currentMenuItems,
         selectedMenuItem = selectedMenuItem,
         breadcrumbStack = breadcrumbStack,
-        refreshMenu = { viewModel.refreshMenu() },
         onNavigateToLogin = onNavigateToLogin,
         onNavigateToMessages = onNavigateToMessages,
         logout = { viewModel.logout() },
@@ -121,6 +126,42 @@ fun MenuScreen(
             }
         }
     )
+
+    //region Logout confirmation dialog
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = {
+                Text(
+                    text = "Logout Confirmation",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp
+                )
+            },
+            text = {
+                Text("Are you sure you want to logout?")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showLogoutDialog = false
+                        viewModel.logout()
+                        onNavigateToLogin()
+                    }
+                ) {
+                    Text("Yes", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showLogoutDialog = false }
+                ) {
+                    Text("No")
+                }
+            }
+        )
+    }
+    //endregion
 }
 
 @Composable
@@ -129,7 +170,6 @@ fun MenuScreenContent(
     currentMenuItems: List<MenuItem>,
     selectedMenuItem: MenuItem?,
     breadcrumbStack: List<String>,
-    refreshMenu: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToMessages: () -> Unit,
     logout: () -> Unit,
@@ -206,26 +246,7 @@ fun MenuScreenContent(
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .offset((20).dp)
-                        )
-                    }
-                }
-                //endregion
-
-                //region Refresh button
-                IconButton(
-                    onClick = { refreshMenu() },
-                    enabled = !uiState.isLoading
-                )
-                {
-                    if (uiState.isLoading) {
-                        CircularProgressIndicator(modifier = Modifier.size(20.dp))
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Refresh"
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }

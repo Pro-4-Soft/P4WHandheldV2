@@ -94,10 +94,6 @@ class MenuViewModel(application: Application) : AndroidViewModel(application) {
         authRepository.logout()
     }
 
-    fun refreshMenu() {
-        loadMenuData()
-    }
-
     fun navigateBack() {
         val currentState = _uiState.value
         if (currentState.menuStack.isNotEmpty()) {

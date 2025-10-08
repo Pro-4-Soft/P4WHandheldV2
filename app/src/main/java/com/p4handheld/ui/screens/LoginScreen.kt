@@ -38,6 +38,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.LinkAnnotation
@@ -67,6 +69,8 @@ fun LoginScreen(
     val viewModel: LoginViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
 
+    val passwordFocusRequester = remember { FocusRequester() }
+
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
@@ -84,6 +88,7 @@ fun LoginScreen(
         uiState = uiState,
         username = username,
         password = password,
+        passwordFocusRequester = passwordFocusRequester,
         onUsernameChange = {
             username = it
             viewModel.clearError()
@@ -107,6 +112,7 @@ fun LoginScreenContent(
     uiState: LoginUiState,
     username: String,
     password: String,
+    passwordFocusRequester: FocusRequester,
     onUsernameChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onLoginClick: () -> Unit,
@@ -173,7 +179,13 @@ fun LoginScreenContent(
                     label = { Text("Username") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    enabled = !uiState.isLoading
+                    enabled = !uiState.isLoading,
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { passwordFocusRequester.requestFocus() }
+                    )
                 )
 
                 OutlinedTextField(
@@ -181,7 +193,8 @@ fun LoginScreenContent(
                     onValueChange = { onPasswordChange(it) },
                     label = { Text("Password") },
                     modifier = Modifier
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .focusRequester(passwordFocusRequester),
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
                     enabled = !uiState.isLoading,
@@ -308,6 +321,7 @@ fun LoginScreenPreview() {
             ),
             username = "demo",
             password = "1234",
+            passwordFocusRequester = remember { FocusRequester() },
             onUsernameChange = {},
             onPasswordChange = {},
             onLoginClick = {},

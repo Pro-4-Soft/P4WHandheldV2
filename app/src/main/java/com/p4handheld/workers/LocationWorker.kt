@@ -24,8 +24,7 @@ class LocationWorker(
         private const val TAG = "LocationWorker"
     }
 
-    private val fusedLocationClient: FusedLocationProviderClient =
-        LocationServices.getFusedLocationProviderClient(applicationContext)
+    private val fusedLocationClient: FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(applicationContext)
 
     private val authRepository = AuthRepository(applicationContext)
 
@@ -66,11 +65,13 @@ class LocationWorker(
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error in LocationWorker", e)
-            CrashlyticsHelper.recordException(e, mapOf(
-                "worker_type" to "LocationWorker",
-                "location_tracking_enabled" to authRepository.shouldTrackLocation().toString(),
-                "has_permissions" to PermissionChecker.hasLocationPermissions(applicationContext).toString()
-            ))
+            CrashlyticsHelper.recordException(
+                e, mapOf(
+                    "worker_type" to "LocationWorker",
+                    "location_tracking_enabled" to authRepository.shouldTrackLocation().toString(),
+                    "has_permissions" to PermissionChecker.hasLocationPermissions(applicationContext).toString()
+                )
+            )
             return@withContext Result.retry()
         }
     }
@@ -87,10 +88,12 @@ class LocationWorker(
             ).await()
         } catch (e: Exception) {
             Log.e(TAG, "Error getting current location", e)
-            CrashlyticsHelper.recordException(e, mapOf(
-                "operation" to "getCurrentLocation",
-                "worker_type" to "LocationWorker"
-            ))
+            CrashlyticsHelper.recordException(
+                e, mapOf(
+                    "operation" to "getCurrentLocation",
+                    "worker_type" to "LocationWorker"
+                )
+            )
             null
         }
     }

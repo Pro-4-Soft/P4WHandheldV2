@@ -31,9 +31,6 @@ import androidx.core.content.edit
 import androidx.core.graphics.createBitmap
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.p4handheld.R
 import com.p4handheld.data.api.ApiClient
@@ -41,16 +38,15 @@ import com.p4handheld.data.models.P4WEventType
 import com.p4handheld.data.repository.AuthRepository
 import com.p4handheld.firebase.FirebaseManager
 import com.p4handheld.scanner.DWCommunicationWrapper
+import com.p4handheld.services.LocationService
 import com.p4handheld.ui.compose.theme.HandheldP4WTheme
 import com.p4handheld.ui.navigation.AppNavigation
 import com.p4handheld.ui.navigation.Screen
 import com.p4handheld.ui.screens.viewmodels.MainViewModel
 import com.p4handheld.utils.PermissionChecker
-import com.p4handheld.workers.LocationWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
-import java.util.concurrent.TimeUnit
 
 // Main activity that handles UI initialization, observes ViewModel state, and interacts with DataWedge.
 class MainActivity : ComponentActivity() {
@@ -109,16 +105,8 @@ class MainActivity : ComponentActivity() {
         // Query DataWedge status to initialize the profile and settings.
         viewModel.getStatus()
 
-        //location worker
-        val workRequest = PeriodicWorkRequestBuilder<LocationWorker>(2, TimeUnit.MINUTES) // minimum is 15 min
-            .build()
-
-        WorkManager.Companion.getInstance(this)
-            .enqueueUniquePeriodicWork(
-                "LocationWorker",
-                ExistingPeriodicWorkPolicy.UPDATE,
-                workRequest
-            )
+        // Start location service
+        LocationService.startService(this)
 
         val firebaseManager = FirebaseManager.Companion.getInstance(application)
         firebaseManager.initialize()
@@ -190,6 +178,9 @@ class MainActivity : ComponentActivity() {
         // Unregister broadcast receivers and notifications.
         DWCommunicationWrapper.unregisterReceivers()
         viewModel.unregisterNotifications()
+
+        // Stop location service
+        LocationService.stopService(this)
         if (screenRequestReceiverRegistered) {
             try {
                 unregisterReceiver(screenRequestReceiver)

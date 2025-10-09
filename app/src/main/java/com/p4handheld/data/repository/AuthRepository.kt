@@ -84,6 +84,8 @@ class AuthRepository(context: Context) {
                 .putString("userId", userContextResponse.userId)
         }
 
+        firebaseSharedPreferences.edit { putString("userId", userContextResponse.userId) }
+
         CrashlyticsHelper.setUserId(userContextResponse.userId)
         CrashlyticsHelper.setCustomKey("track_geo_location", userContextResponse.trackGeoLocation)
         CrashlyticsHelper.setCustomKey("user_scan_type", userContextResponse.userScanType.toString())
@@ -135,13 +137,15 @@ class AuthRepository(context: Context) {
         return if (userScanType.isNullOrBlank()) ScanType.ZEBRA_DATA_WEDGE else enumValueOf<ScanType>(userScanType)
     }
 
-    fun resetUserContextData(): Unit {
+    fun resetUserContextData() {
         authSharedPreferences.edit {
             putString("menu_json", null)
                 .putBoolean("track_geo_location", false)
                 .putString("user_scan_type", ScanType.ZEBRA_DATA_WEDGE.toString())
                 .putString("userId", null)
         }
+
+        firebaseSharedPreferences.edit { putString("userId", null) }
     }
 
     fun logout() {

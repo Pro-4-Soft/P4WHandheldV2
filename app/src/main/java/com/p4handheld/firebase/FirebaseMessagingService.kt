@@ -13,6 +13,7 @@ import com.p4handheld.data.ChatStateManager
 import com.p4handheld.data.models.P4WEventType
 import com.p4handheld.data.models.P4WFirebaseNotification
 import com.p4handheld.data.models.UserChatMessage
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -79,7 +80,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
             body = notification?.body ?: data["body"] ?: "",
             userChatMessage = parseUserChatMessage(data["payload"]),
             eventType = parseEventType(data["eventType"]),
-            taskAdded = data["taskAdded"] == "true",
+            taskAdded = data["taskAdded"] == "true" || data["taskAdded"] == "True",
             userId = data["userId"],
             timestamp = remoteMessage.sentTime.takeIf { it > 0 } ?: System.currentTimeMillis(),
         )
@@ -107,6 +108,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     private fun playInternalSounds(message: P4WFirebaseNotification) {
         if (message.eventType == P4WEventType.USER_CHAT_MESSAGE) {
             // Only play sound for user messages, no system notification
@@ -114,9 +116,13 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         }
         if (message.eventType == P4WEventType.TASKS_CHANGED) {
             try {
-                val sound = if (message.taskAdded) R.raw.new_task else R.raw.task_removed
-                val mediaPlayer = MediaPlayer.create(this, sound)
-                mediaPlayer.start()
+                if (message.taskAdded) {
+                    val mediaPlayerNewTask = MediaPlayer.create(this, R.raw.new_task)
+                    mediaPlayerNewTask?.start()
+                } else {
+                    val mediaPlayerTaskRemoved = MediaPlayer.create(this, R.raw.task_removed)
+                    mediaPlayerTaskRemoved?.start()
+                }
                 // Also refresh tasks count and store in prefs so badge is accurate next time UI reads it
                 try {
                     val manager = FirebaseManager.getInstance(applicationContext)

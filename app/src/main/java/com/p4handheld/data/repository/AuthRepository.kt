@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.p4handheld.data.api.ApiClient
 import com.p4handheld.data.api.ApiService
 import com.p4handheld.data.models.ApiError
@@ -16,7 +17,6 @@ import com.p4handheld.firebase.FIREBASE_PREFS_NAME
 import com.p4handheld.utils.CrashlyticsHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
 
 class AuthRepository(context: Context) {
     private val authSharedPreferences: SharedPreferences = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
@@ -27,12 +27,12 @@ class AuthRepository(context: Context) {
     init {
         ApiClient.initialize(context.applicationContext)
         apiService = ApiClient.apiService
-        authSharedPreferences.edit { putString("menu_json", null) }
     }
 
     suspend fun login(username: String, password: String): Result<Boolean> {
         return withContext(Dispatchers.IO) {
             try {
+                resetUserContextData()
                 val fcmToken = firebaseSharedPreferences.getString(FIREBASE_KEY_FCM_TOKEN, null)
                 val loginRequest = LoginRequest(username, password, fcmToken)
                 val response = apiService.login(loginRequest = loginRequest)
@@ -90,26 +90,14 @@ class AuthRepository(context: Context) {
         CrashlyticsHelper.log("User context data updated")
     }
 
-    fun getStoredMenuData(): UserContextResponse? {
+    fun getStoredUserContextData(): UserContextResponse? {
         val menuJson = authSharedPreferences.getString("menu_json", null)
 
         return if (menuJson != null) {
             try {
-                val menuArray = JSONArray(menuJson)
-                val menuItems = mutableListOf<MenuItem>()
+                val listType = object : TypeToken<List<MenuItem>>() {}.type
+                val menuItems: List<MenuItem> = Gson().fromJson(menuJson, listType)
 
-                for (i in 0 until menuArray.length()) {
-                    val menuObj = menuArray.getJSONObject(i)
-                    val menuItem = MenuItem(
-                        id = if (menuObj.isNull("Id")) null else menuObj.getString("Id"),
-                        label = menuObj.getString("Label"),
-                        state = if (menuObj.isNull("State")) null else menuObj.getString("State"),
-                        stateParams = if (menuObj.isNull("StateParams")) null else menuObj.get("StateParams"),
-                        icon = if (menuObj.isNull("Icon")) null else menuObj.getString("Icon"),
-                        children = emptyList()
-                    )
-                    menuItems.add(menuItem)
-                }
                 val userScanType = authSharedPreferences.getString("user_scan_type", null)
                 UserContextResponse(
                     menu = menuItems,
@@ -130,7 +118,7 @@ class AuthRepository(context: Context) {
     }
 
     fun getStateParamsForPage(pageKey: String): Any? {
-        return getStoredMenuData()
+        return getStoredUserContextData()
             ?.menu
             ?.firstOrNull { it.state == pageKey }
             ?.stateParams
@@ -145,6 +133,15 @@ class AuthRepository(context: Context) {
     fun getEffectiveScanType(): ScanType {
         val userScanType = authSharedPreferences.getString("user_scan_type", null)
         return if (userScanType.isNullOrBlank()) ScanType.ZEBRA_DATA_WEDGE else enumValueOf<ScanType>(userScanType)
+    }
+
+    fun resetUserContextData(): Unit {
+        authSharedPreferences.edit {
+            putString("menu_json", null)
+                .putBoolean("track_geo_location", false)
+                .putString("user_scan_type", ScanType.ZEBRA_DATA_WEDGE.toString())
+                .putString("userId", null)
+        }
     }
 
     fun logout() {

@@ -27,7 +27,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
-import androidx.core.content.edit
 import androidx.core.graphics.createBitmap
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
@@ -199,11 +198,10 @@ class MainActivity : ComponentActivity() {
     private fun getStartDestination(): String {
         val sharedPreferences = getSharedPreferences("tenant_config", MODE_PRIVATE)
         val isConfigured = sharedPreferences.getBoolean("is_configured", false)
-        val authPreferences = getSharedPreferences("auth_prefs", MODE_PRIVATE)
-        authPreferences.edit { putString("menu_json", null) }
+
         val authRepository = AuthRepository(this)
         val hasValidToken = authRepository.hasValidToken()
-
+        authRepository.resetUserContextData()//👈 reset just menu and user settings that might be updated from last usage
         return when {
             !isConfigured -> Screen.TenantSelect.route
             hasValidToken -> Screen.Menu.route

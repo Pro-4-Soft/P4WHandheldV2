@@ -45,7 +45,7 @@ class MenuViewModel(application: Application) : AndroidViewModel(application) {
 
             try {
                 // First try to get stored menu data
-                val storedMenu = authRepository.getStoredMenuData()
+                val storedMenu = authRepository.getStoredUserContextData()
 
                 if (storedMenu != null) {
                     _uiState.value = _uiState.value.copy(

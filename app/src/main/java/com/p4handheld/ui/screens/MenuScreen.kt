@@ -70,17 +70,20 @@ fun MenuScreen(
 
     var currentMenuItems by remember { mutableStateOf<List<MenuItem>>(emptyList()) }
     var menuStack by remember { mutableStateOf<List<List<MenuItem>>>(emptyList()) }
+    var menuTitleStack by remember { mutableStateOf<List<String>>(emptyList()) }
+    var currentMenuTitle by remember { mutableStateOf("Main Menu") }
     var selectedMenuItem by remember { mutableStateOf<MenuItem?>(null) }
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     // Handle back navigation within menu hierarchy
     BackHandler(enabled = menuStack.isNotEmpty()) {
+        // Navigate back in menu hierarchy
+        currentMenuItems = menuStack.last()
+        menuStack = menuStack.dropLast(1)
+        currentMenuTitle = if (menuTitleStack.isNotEmpty()) menuTitleStack.last() else "Main Menu"
+        menuTitleStack = menuTitleStack.dropLast(1)
+        selectedMenuItem = null
         viewModel.navigateBack()
-        if (menuStack.isNotEmpty()) {
-            currentMenuItems = menuStack.last()
-            menuStack = menuStack.dropLast(1)
-            selectedMenuItem = null
-        }
     }
 
     // Handle back press on main menu - show logout confirmation
@@ -106,6 +109,7 @@ fun MenuScreen(
     MenuScreenContent(
         uiState = uiState,
         currentMenuItems = currentMenuItems,
+        currentMenuTitle = currentMenuTitle,
         selectedMenuItem = selectedMenuItem,
         onNavigateToMessages = onNavigateToMessages,
         logout = { showLogoutDialog = true },
@@ -113,7 +117,9 @@ fun MenuScreen(
             if (item.children.isNotEmpty()) {
                 // Navigate deeper into menu hierarchy
                 menuStack = menuStack + listOf(currentMenuItems)
+                menuTitleStack = menuTitleStack + listOf(currentMenuTitle)
                 currentMenuItems = item.children
+                currentMenuTitle = item.label
             } else {
                 selectedMenuItem = item
                 onNavigateToAction(item.label, item.state ?: "")
@@ -162,6 +168,7 @@ fun MenuScreen(
 fun MenuScreenContent(
     uiState: MenuUiState,
     currentMenuItems: List<MenuItem>,
+    currentMenuTitle: String,
     selectedMenuItem: MenuItem?,
     onNavigateToMessages: () -> Unit,
     logout: () -> Unit,
@@ -200,11 +207,13 @@ fun MenuScreenContent(
                 )
                 {
                     Text(
-                        text = selectedMenuItem?.label ?: "Main Menu",
+                        text = currentMenuTitle,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(4.dp)
                     )
                 }
             }

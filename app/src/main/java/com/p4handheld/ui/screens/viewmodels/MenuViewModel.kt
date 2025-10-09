@@ -94,6 +94,15 @@ class MenuViewModel(application: Application) : AndroidViewModel(application) {
         authRepository.logout()
     }
 
+    fun navigateToSubMenu(menuItem: MenuItem) {
+        val currentState = _uiState.value
+        _uiState.value = currentState.copy(
+            menuStack = currentState.menuStack + listOf(currentState.currentMenuItems),
+            breadcrumbStack = currentState.breadcrumbStack + listOf(menuItem.label),
+            currentMenuItems = menuItem.children
+        )
+    }
+
     fun navigateBack() {
         val currentState = _uiState.value
         if (currentState.menuStack.isNotEmpty()) {

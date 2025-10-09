@@ -64,12 +64,10 @@ fun MenuScreenContentPreview() {
     HandheldP4WTheme {
         MenuScreenContent(
             uiState = sampleUiState,
-            currentMenuItems = sampleMenuItems,
             selectedMenuItem = null,
             logout = {},
             onMenuItemClick = {},
             onNavigateToMessages = {},
-            currentMenuTitle = ""
         )
     }
 }
@@ -80,12 +78,10 @@ fun MenuScreenContentWithBreadcrumbsPreview() {
     HandheldP4WTheme {
         MenuScreenContent(
             uiState = sampleUiState.copy(),
-            currentMenuItems = sampleMenuItems.first().children,
             selectedMenuItem = null,
             logout = {},
             onMenuItemClick = {},
             onNavigateToMessages = {},
-            currentMenuTitle = ""
 
         )
     }
@@ -100,13 +96,11 @@ fun MenuScreenContentErrorPreview() {
             uiState = sampleUiState.copy(
                 errorMessage = "Failed to load menu items. Please check your connection and try again.",
             ),
-            currentMenuItems = emptyList(),
             selectedMenuItem = null,
             logout = {},
             onMenuItemClick = {},
             onNavigateToMessages = {},
-            currentMenuTitle = ""
-            
+
         )
     }
 }

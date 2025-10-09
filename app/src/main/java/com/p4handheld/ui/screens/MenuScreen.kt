@@ -41,6 +41,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -68,33 +69,22 @@ fun MenuScreen(
     val viewModel: MenuViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
 
-    var currentMenuItems by remember { mutableStateOf<List<MenuItem>>(emptyList()) }
-    var menuStack by remember { mutableStateOf<List<List<MenuItem>>>(emptyList()) }
-    var menuTitleStack by remember { mutableStateOf<List<String>>(emptyList()) }
-    var currentMenuTitle by remember { mutableStateOf("Main Menu") }
     var selectedMenuItem by remember { mutableStateOf<MenuItem?>(null) }
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     // Handle back navigation within menu hierarchy
-    BackHandler(enabled = menuStack.isNotEmpty()) {
+    BackHandler(enabled = uiState.menuStack.isNotEmpty()) {
         // Navigate back in menu hierarchy
-        currentMenuItems = menuStack.last()
-        menuStack = menuStack.dropLast(1)
-        currentMenuTitle = if (menuTitleStack.isNotEmpty()) menuTitleStack.last() else "Main Menu"
-        menuTitleStack = menuTitleStack.dropLast(1)
-        selectedMenuItem = null
         viewModel.navigateBack()
+        selectedMenuItem = null
     }
 
     // Handle back press on main menu - show logout confirmation
-    BackHandler(enabled = menuStack.isEmpty()) {
+    BackHandler(enabled = uiState.menuStack.isEmpty()) {
         showLogoutDialog = true
     }
 
-    LaunchedEffect(uiState.menuItems) {
-        if (uiState.menuItems.isNotEmpty() && currentMenuItems.isEmpty()) {
-            currentMenuItems = uiState.menuItems
-        }
+    LaunchedEffect(uiState.httpStatusCode) {
         if (uiState.httpStatusCode == 401) {
             onNavigateToLogin()
         }
@@ -108,18 +98,13 @@ fun MenuScreen(
 
     MenuScreenContent(
         uiState = uiState,
-        currentMenuItems = currentMenuItems,
-        currentMenuTitle = currentMenuTitle,
         selectedMenuItem = selectedMenuItem,
         onNavigateToMessages = onNavigateToMessages,
         logout = { showLogoutDialog = true },
         onMenuItemClick = { item: MenuItem ->
             if (item.children.isNotEmpty()) {
                 // Navigate deeper into menu hierarchy
-                menuStack = menuStack + listOf(currentMenuItems)
-                menuTitleStack = menuTitleStack + listOf(currentMenuTitle)
-                currentMenuItems = item.children
-                currentMenuTitle = item.label
+                viewModel.navigateToSubMenu(item)
             } else {
                 selectedMenuItem = item
                 onNavigateToAction(item.label, item.state ?: "")
@@ -167,13 +152,16 @@ fun MenuScreen(
 @Composable
 fun MenuScreenContent(
     uiState: MenuUiState,
-    currentMenuItems: List<MenuItem>,
-    currentMenuTitle: String,
     selectedMenuItem: MenuItem?,
     onNavigateToMessages: () -> Unit,
     logout: () -> Unit,
     onMenuItemClick: (MenuItem) -> Unit = {}
 ) {
+    val currentMenuTitle = if (uiState.breadcrumbStack.isNotEmpty()) {
+        uiState.breadcrumbStack.last()
+    } else {
+        "Main Menu"
+    }
 
     Column(
         modifier = Modifier
@@ -241,7 +229,7 @@ fun MenuScreenContent(
 
         //region Menu content
         if (selectedMenuItem == null) {
-            if (currentMenuItems.isNotEmpty()) {
+            if (uiState.currentMenuItems.isNotEmpty()) {
 
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
@@ -249,7 +237,7 @@ fun MenuScreenContent(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(currentMenuItems) { menuItem ->
+                    items(uiState.currentMenuItems) { menuItem ->
                         Box(
                             modifier = Modifier.padding(1.dp) // extra spacing inside each cell
                         ) {

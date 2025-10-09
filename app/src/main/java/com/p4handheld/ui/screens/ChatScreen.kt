@@ -32,15 +32,16 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -73,6 +74,7 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+//@SuppressLint("UnsafeImplicitIntentLaunch")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
@@ -80,14 +82,17 @@ fun ChatScreen(
     contactName: String,
     hasUnreadMessages: Boolean = false,
     isTrackingLocation: Boolean = false,
-    onMessageClick: () -> Unit = {},
     onNavigateToLogin: () -> Unit = {}
 ) {
     val viewModel: ChatViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
-    val ctx = LocalContext.current;
+    val ctx = LocalContext.current
+
+    var hasInitiallyScrolled by remember { mutableStateOf(false) }
+    var previousMessageCount by remember { mutableIntStateOf(0) }
+    var scrollIndexBeforeLoad by remember { mutableIntStateOf(0) }
 
     // Register this chat screen as active for the contact
     DisposableEffect(contactId) {
@@ -108,18 +113,28 @@ fun ChatScreen(
     LaunchedEffect(listState) {
         snapshotFlow { listState.firstVisibleItemIndex }
             .collect { index ->
-                if (index <= 2) {
+                if (index <= 2 && !uiState.isLoadingMore) {
+                    // Capture current position before loading more
+                    scrollIndexBeforeLoad = listState.firstVisibleItemIndex
+                    previousMessageCount = uiState.messages.size
                     viewModel.loadMore()
                 }
             }
     }
 
     LaunchedEffect(contactId) {
+        // Reset scroll flags for new contact
+        hasInitiallyScrolled = false
+        previousMessageCount = 0
+        scrollIndexBeforeLoad = 0
+
         viewModel.loadMessages(contactId)
         // Clear unread badge when opening a chat
         try {
             FirebaseManager.getInstance(ctx).setHasUnreadMessages(false)
-            ctx.sendBroadcast(Intent("com.p4handheld.FIREBASE_MESSAGE_RECEIVED"))
+            val intent = Intent("com.p4handheld.FIREBASE_MESSAGE_RECEIVED")
+            intent.setPackage(ctx.packageName)
+            ctx.sendBroadcast(intent)
         } catch (_: Exception) {
         }
     }
@@ -258,12 +273,30 @@ fun ChatScreen(
                 }
             }
 
-            // Auto-scroll to bottom when new messages arrive (but not when loading more older)
-            LaunchedEffect(uiState.messages.size, uiState.isLoadingMore) {
-                if (uiState.messages.isNotEmpty() && !uiState.isLoadingMore) {
+            // Scroll to bottom only on initial load to show newest messages
+            LaunchedEffect(contactId, uiState.isLoading, hasInitiallyScrolled) {
+                if (!uiState.isLoading && uiState.messages.isNotEmpty() && !hasInitiallyScrolled) {
                     coroutineScope.launch {
-                        listState.animateScrollToItem(uiState.messages.size)
+                        listState.scrollToItem(uiState.messages.size - 1)
+                        hasInitiallyScrolled = true
                     }
+                }
+            }
+
+            // Maintain scroll position when loading older messages
+            LaunchedEffect(uiState.messages.size, uiState.isLoadingMore) {
+                if (!uiState.isLoadingMore && previousMessageCount > 0 && uiState.messages.size > previousMessageCount) {
+                    // Calculate how many new messages were added at the top and adjust scroll position to maintain visual continuity
+                    val newMessagesAdded = uiState.messages.size - previousMessageCount
+                    val newScrollIndex = scrollIndexBeforeLoad + newMessagesAdded
+
+                    coroutineScope.launch {
+                        listState.scrollToItem(newScrollIndex)
+                    }
+
+                    // Reset tracking variables
+                    previousMessageCount = 0
+                    scrollIndexBeforeLoad = 0
                 }
             }
 
@@ -290,12 +323,14 @@ fun ChatScreen(
                             }
                         }
                     ),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        containerColor = Color.White,
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        disabledContainerColor = Color.White,
+                        errorContainerColor = Color.Transparent,
                         cursorColor = MaterialTheme.colorScheme.primary,
-                        focusedLabelColor = MaterialTheme.colorScheme.primary,
-                        unfocusedLabelColor = Color.Gray
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary
                     )
                 )
 

@@ -111,7 +111,6 @@ fun AppNavigation(
                 contactName = contactName,
                 hasUnreadMessages = false,
                 isTrackingLocation = isTrackingLocation,
-                onMessageClick = { navController.navigate(Screen.Contacts.route) },
                 onNavigateToLogin = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Menu.route) { inclusive = true }

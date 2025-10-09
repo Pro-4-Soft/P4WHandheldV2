@@ -26,13 +26,6 @@ enum class P4WEventType {
     UNKNOWN
 }
 
-data class FirebaseTokenRequest(
-    val token: String,
-    val userId: String,
-    val deviceId: String,
-    val eventTypes: List<String> = emptyList()
-)
-
 data class MessageResponse(
     val success: Boolean,
     val message: String? = null,

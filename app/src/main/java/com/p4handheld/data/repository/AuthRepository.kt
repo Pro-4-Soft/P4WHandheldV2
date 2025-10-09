@@ -10,7 +10,6 @@ import com.p4handheld.data.models.ApiError
 import com.p4handheld.data.models.LoginRequest
 import com.p4handheld.data.models.MenuItem
 import com.p4handheld.data.models.ScanType
-import com.p4handheld.data.models.ScanType.ZEBRA_DATA_WEDGE
 import com.p4handheld.data.models.UserContextResponse
 import com.p4handheld.firebase.FIREBASE_KEY_FCM_TOKEN
 import com.p4handheld.firebase.FIREBASE_PREFS_NAME
@@ -144,8 +143,8 @@ class AuthRepository(context: Context) {
     }
 
     fun getEffectiveScanType(): ScanType {
-        val userContext = getStoredMenuData()
-        return userContext?.userScanType ?: ZEBRA_DATA_WEDGE
+        val userScanType = authSharedPreferences.getString("user_scan_type", null)
+        return if (userScanType.isNullOrBlank()) ScanType.ZEBRA_DATA_WEDGE else ScanType.fromSerializedName(userScanType)
     }
 
     fun logout() {

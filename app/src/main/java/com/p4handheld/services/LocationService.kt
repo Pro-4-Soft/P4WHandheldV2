@@ -4,6 +4,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.location.Location
+import android.location.LocationManager
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
@@ -93,17 +94,27 @@ class LocationService : Service() {
             // Check if location tracking is enabled for this user
             if (!authRepository.shouldTrackLocation()) {
                 Log.d(TAG, "Location tracking is disabled for this user")
+                broadcastLocationStatus(LocationStatus.DISABLED)
                 return
             }
 
             if (!PermissionChecker.hasLocationPermissions(applicationContext)) {
                 Log.w(TAG, "Location permissions not granted")
+                broadcastLocationStatus(LocationStatus.DISABLED)
+                return
+            }
+
+            // Check if location services are enabled
+            if (!isLocationServicesEnabled()) {
+                Log.w(TAG, "Location services are disabled")
+                broadcastLocationStatus(LocationStatus.UNAVAILABLE)
                 return
             }
 
             val location = getCurrentLocation()
             if (location != null) {
                 Log.d(TAG, "Location obtained: lat=${location.latitude}, lon=${location.longitude}")
+                broadcastLocationStatus(LocationStatus.AVAILABLE)
 
                 val response = ApiClient.apiService.updateUserLocation(
                     lat = location.latitude,
@@ -115,9 +126,11 @@ class LocationService : Service() {
                 }
             } else {
                 Log.w(TAG, "Could not obtain location")
+                broadcastLocationStatus(LocationStatus.UNAVAILABLE)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error updating location", e)
+            broadcastLocationStatus(LocationStatus.UNAVAILABLE)
             CrashlyticsHelper.recordException(
                 e, mapOf(
                     "service_type" to "LocationService",
@@ -146,4 +159,24 @@ class LocationService : Service() {
             null
         }
     }
+
+    private fun broadcastLocationStatus(status: LocationStatus) {
+        val intent = Intent("com.p4handheld.LOCATION_STATUS_CHANGED").apply {
+            putExtra("locationStatus", status.toString())
+        }
+        sendBroadcast(intent)
+        Log.d(TAG, "Broadcasted location status: $status")
+    }
+
+    private fun isLocationServicesEnabled(): Boolean {
+        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+    }
+}
+
+enum class LocationStatus {
+    AVAILABLE,
+    UNAVAILABLE,
+    DISABLED
 }

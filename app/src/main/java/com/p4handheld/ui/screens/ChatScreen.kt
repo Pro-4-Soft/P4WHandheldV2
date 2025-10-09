@@ -159,8 +159,7 @@ fun ChatScreen(
         topBar = {
             TopBarWithIcons(
                 isTrackingLocation = isTrackingLocation,
-                hasUnreadMessages = hasUnreadMessages,
-                onMessageClick = onMessageClick
+                hasUnreadMessages = hasUnreadMessages
             )
         }
     ) { padding ->

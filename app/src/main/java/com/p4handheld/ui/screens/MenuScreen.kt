@@ -41,7 +41,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,7 +62,6 @@ import com.p4handheld.ui.screens.viewmodels.MenuViewModel
 @Composable
 fun MenuScreen(
     onNavigateToAction: (String, String) -> Unit,
-    onNavigateToMessages: () -> Unit,
     onNavigateToLogin: () -> Unit
 ) {
     val viewModel: MenuViewModel = viewModel()
@@ -99,7 +97,6 @@ fun MenuScreen(
     MenuScreenContent(
         uiState = uiState,
         selectedMenuItem = selectedMenuItem,
-        onNavigateToMessages = onNavigateToMessages,
         logout = { showLogoutDialog = true },
         onMenuItemClick = { item: MenuItem ->
             if (item.children.isNotEmpty()) {
@@ -153,7 +150,6 @@ fun MenuScreen(
 fun MenuScreenContent(
     uiState: MenuUiState,
     selectedMenuItem: MenuItem?,
-    onNavigateToMessages: () -> Unit,
     logout: () -> Unit,
     onMenuItemClick: (MenuItem) -> Unit = {}
 ) {
@@ -174,8 +170,7 @@ fun MenuScreenContent(
         // Top bar with geolocation and message icons
         TopBarWithIcons(
             isTrackingLocation = uiState.isTrackingLocation,
-            hasUnreadMessages = uiState.hasUnreadMessages,
-            onMessageClick = onNavigateToMessages
+            hasUnreadMessages = uiState.hasUnreadMessages
         )
 
         //region Header with back button and breadcrumb

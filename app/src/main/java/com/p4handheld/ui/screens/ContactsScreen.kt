@@ -101,8 +101,7 @@ fun ContactsScreen(
         topBar = {
             TopBarWithIcons(
                 isTrackingLocation = isTrackingLocation,
-                hasUnreadMessages = hasUnreadMessages,
-                onMessageClick = onMessageClick
+                hasUnreadMessages = hasUnreadMessages
             )
         },
         modifier = Modifier
@@ -256,8 +255,7 @@ fun PreviewContactsScree2n() {
             topBar = {
                 TopBarWithIcons(
                     isTrackingLocation = true,
-                    hasUnreadMessages = true,
-                    onMessageClick = { }
+                    hasUnreadMessages = true
                 )
             }
         ) { padding ->

@@ -308,9 +308,7 @@ fun ActionScreenWrapper(
         // Global TopBar with icons and username
         TopBarWithIcons(
             isTrackingLocation = isTrackingLocation,
-            hasUnreadMessages = hasUnreadMessages,
-            onMessageClick = onMessageClick,
-            enabled = !uiState.isLoading
+            hasUnreadMessages = hasUnreadMessages
         )
 
         //region Header with page title

@@ -10,6 +10,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.p4handheld.data.repository.AuthRepository
 import com.p4handheld.firebase.FirebaseManager
+import com.p4handheld.services.LocationStatus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,6 +19,7 @@ import kotlinx.coroutines.launch
 data class TopBarUiState(
     val hasUnreadMessages: Boolean = false,
     val isTrackingLocation: Boolean = false,
+    val locationStatus: LocationStatus = LocationStatus.DISABLED,
     val username: String = "",
     val taskCount: Int = 0
 )
@@ -37,18 +39,27 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == "com.p4handheld.FIREBASE_MESSAGE_RECEIVED") {
-                refreshFromManagers()
-                val eventType = intent.getStringExtra("eventType")
-                if (eventType == "TASKS_CHANGED") {
-                    viewModelScope.launch {
-                        try {
-                            val manager = firebaseManager
-                            val newCount = manager.refreshTasksCountFromServer()
-                            _uiState.value = _uiState.value.copy(taskCount = newCount)
-                        } catch (_: Exception) {
+            when (intent?.action) {
+                "com.p4handheld.FIREBASE_MESSAGE_RECEIVED" -> {
+                    refreshFromManagers()
+                    val eventType = intent.getStringExtra("eventType")
+                    if (eventType == "TASKS_CHANGED") {
+                        viewModelScope.launch {
+                            try {
+                                val manager = firebaseManager
+                                val newCount = manager.refreshTasksCountFromServer()
+                                _uiState.value = _uiState.value.copy(taskCount = newCount)
+                            } catch (_: Exception) {
+                            }
                         }
                     }
+                }
+
+                "com.p4handheld.LOCATION_STATUS_CHANGED" -> {
+                    val statusString = intent.getStringExtra("locationStatus")
+                    val statusEnum = LocationStatus.valueOf(statusString ?: "DISABLED")
+
+                    _uiState.value = _uiState.value.copy(locationStatus = statusEnum)
                 }
             }
         }
@@ -75,7 +86,11 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
     private fun registerReceiver() {
         if (!registered) {
             val appCtx = getApplication<Application>().applicationContext
-            ContextCompat.registerReceiver(appCtx, receiver, IntentFilter("com.p4handheld.FIREBASE_MESSAGE_RECEIVED"), ContextCompat.RECEIVER_NOT_EXPORTED)
+            val intentFilter = IntentFilter().apply {
+                addAction("com.p4handheld.FIREBASE_MESSAGE_RECEIVED")
+                addAction("com.p4handheld.LOCATION_STATUS_CHANGED")
+            }
+            ContextCompat.registerReceiver(appCtx, receiver, intentFilter, ContextCompat.RECEIVER_NOT_EXPORTED)
             registered = true
         }
     }
@@ -87,6 +102,7 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
             .getString("username", "") ?: ""
         val tracking = authRepository.shouldTrackLocation()
         val hasUnread = firebaseManager.hasUnreadMessages()
+
         _uiState.value = _uiState.value.copy(
             username = username,
             isTrackingLocation = tracking,

@@ -60,10 +60,6 @@ fun AppNavigation(
                         navController.navigate(Screen.Action.createRoute(menuItemLabel, menuItemState))
                     }
                 },
-                onNavigateToMessages = {
-                    // Navigate to new Contacts screen
-                    navController.navigate(Screen.Contacts.route)
-                },
                 onNavigateToLogin = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Menu.route) { inclusive = true }

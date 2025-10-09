@@ -66,8 +66,7 @@ fun MenuScreenContentPreview() {
             uiState = sampleUiState,
             selectedMenuItem = null,
             logout = {},
-            onMenuItemClick = {},
-            onNavigateToMessages = {},
+            onMenuItemClick = {}
         )
     }
 }
@@ -80,9 +79,7 @@ fun MenuScreenContentWithBreadcrumbsPreview() {
             uiState = sampleUiState.copy(),
             selectedMenuItem = null,
             logout = {},
-            onMenuItemClick = {},
-            onNavigateToMessages = {},
-
+            onMenuItemClick = {}
         )
     }
 }
@@ -98,9 +95,7 @@ fun MenuScreenContentErrorPreview() {
             ),
             selectedMenuItem = null,
             logout = {},
-            onMenuItemClick = {},
-            onNavigateToMessages = {},
-
+            onMenuItemClick = {}
         )
     }
 }

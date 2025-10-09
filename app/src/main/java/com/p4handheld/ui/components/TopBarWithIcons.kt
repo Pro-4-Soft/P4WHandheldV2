@@ -1,7 +1,6 @@
 package com.p4handheld.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -32,14 +31,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.p4handheld.services.LocationStatus
 import com.p4handheld.ui.compose.theme.HandheldP4WTheme
 
 @Composable
 fun TopBarWithIcons(
     isTrackingLocation: Boolean = false,
-    hasUnreadMessages: Boolean = false,
-    onMessageClick: () -> Unit = {},
-    enabled: Boolean = true
+    hasUnreadMessages: Boolean = false
 ) {
     val vm: TopBarViewModel = viewModel()
     val topState = vm.uiState.collectAsState().value
@@ -57,21 +55,52 @@ fun TopBarWithIcons(
         ) {
 
             if (isTrackingLocation || topState.isTrackingLocation) {
-                // Notifications icon with indicator
+                // Location icon with status indicator
                 Box {
                     IconButton(
                         onClick = { },
                         modifier = Modifier.size(24.dp),
                     ) {
+                        val (iconColor, contentDescription) = when (topState.locationStatus) {
+                            LocationStatus.AVAILABLE -> Color(0xFF10B981) to "Location tracking active"
+                            LocationStatus.UNAVAILABLE -> Color(0xFFEF4444) to "Location unavailable"
+                            LocationStatus.DISABLED -> Color(0xFF6B7280) to "Location tracking disabled"
+                        }
+
                         Icon(
                             imageVector = Icons.Default.LocationOn,
-                            contentDescription = "Location tracking active",
-                            tint = Color(0xFF10B981),
+                            contentDescription = contentDescription,
+                            tint = iconColor,
                             modifier = Modifier.size(14.dp)
                         )
                     }
                 }
             }
+
+            // Messages icon with unread indicator
+            Box {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Message,
+                    contentDescription = "Messages",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(14.dp)
+                )
+
+                // Unread messages indicator
+                if (hasUnreadMessages || topState.hasUnreadMessages) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .background(Color.Red, CircleShape)
+                            .align(Alignment.TopEnd),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // Small red dot to indicate unread messages
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
 
             //region active tasks Rectangular badge (show only if > 0)
             if (topState.taskCount > 0) {
@@ -104,31 +133,6 @@ fun TopBarWithIcons(
                 }
             }
             //endregion
-
-            // Messages icon with unread indicator
-            Box {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Message,
-                    contentDescription = "Messages",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(14.dp)
-                )
-
-                // Unread messages indicator
-                if (hasUnreadMessages || topState.hasUnreadMessages) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .background(Color.Red, CircleShape)
-                            .align(Alignment.TopEnd),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        // Small red dot to indicate unread messages
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
 
             val context = LocalContext.current
             val username = remember(topState.username) {

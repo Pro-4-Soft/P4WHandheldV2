@@ -9,6 +9,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
+import androidx.core.app.NotificationCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.p4handheld.GlobalConstants
@@ -27,6 +28,8 @@ class LocationService : Service() {
     companion object {
         private const val TAG = "LocationService"
         private const val UPDATE_INTERVAL_MS = GlobalConstants.LOCATION_UPDATE_INTERVAL_MS
+        private const val CHANNEL_ID = "location_service_channel"
+        private const val NOTIFICATION_ID = 101
 
         fun startService(context: Context) {
             val intent = Intent(context, LocationService::class.java)
@@ -57,9 +60,10 @@ class LocationService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "LocationService started")
 
+        startForegroundNotification()
         startLocationUpdates()
 
-        return START_STICKY // Restart service if killed
+        return START_STICKY
     }
 
     override fun onDestroy() {
@@ -69,6 +73,18 @@ class LocationService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
+
+    private fun startForegroundNotification() {
+        //this is just 'plug' since Android enforce using notification
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("")
+            .setContentText("")
+            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setOngoing(true)
+            .build()
+
+        startForeground(NOTIFICATION_ID, notification)
+    }
 
     private fun startLocationUpdates() {
         locationUpdateRunnable = object : Runnable {
@@ -91,29 +107,27 @@ class LocationService : Service() {
         try {
             Log.d(TAG, "Updating location...")
 
-            // Check if location tracking is enabled for this user
             if (!authRepository.shouldTrackLocation()) {
-                Log.d(TAG, "Location tracking is disabled for this user")
+                Log.d(TAG, "Location tracking disabled for user")
                 broadcastLocationStatus(LocationStatus.DISABLED)
                 return
             }
 
             if (!PermissionChecker.hasLocationPermissions(applicationContext)) {
-                Log.w(TAG, "Location permissions not granted")
+                Log.w(TAG, "Location permission not granted")
                 broadcastLocationStatus(LocationStatus.DISABLED)
                 return
             }
 
-            // Check if location services are enabled
             if (!isLocationServicesEnabled()) {
-                Log.w(TAG, "Location services are disabled")
+                Log.w(TAG, "Location services disabled")
                 broadcastLocationStatus(LocationStatus.UNAVAILABLE)
                 return
             }
 
             val location = getCurrentLocation()
             if (location != null) {
-                Log.d(TAG, "Location obtained: lat=${location.latitude}, lon=${location.longitude}")
+                Log.d(TAG, "Location obtained: ${location.latitude}, ${location.longitude}")
                 broadcastLocationStatus(LocationStatus.AVAILABLE)
 
                 val response = ApiClient.apiService.updateUserLocation(
@@ -132,7 +146,8 @@ class LocationService : Service() {
             Log.e(TAG, "Error updating location", e)
             broadcastLocationStatus(LocationStatus.UNAVAILABLE)
             CrashlyticsHelper.recordException(
-                e, mapOf(
+                e,
+                mapOf(
                     "service_type" to "LocationService",
                     "location_tracking_enabled" to authRepository.shouldTrackLocation().toString(),
                     "has_permissions" to PermissionChecker.hasLocationPermissions(applicationContext).toString()
@@ -151,10 +166,8 @@ class LocationService : Service() {
         } catch (e: Exception) {
             Log.e(TAG, "Error getting current location", e)
             CrashlyticsHelper.recordException(
-                e, mapOf(
-                    "operation" to "getCurrentLocation",
-                    "service_type" to "LocationService"
-                )
+                e,
+                mapOf("operation" to "getCurrentLocation", "service_type" to "LocationService")
             )
             null
         }
@@ -163,6 +176,7 @@ class LocationService : Service() {
     private fun broadcastLocationStatus(status: LocationStatus) {
         val intent = Intent("com.p4handheld.LOCATION_STATUS_CHANGED").apply {
             putExtra("locationStatus", status.toString())
+            setPackage(packageName) // 👈 required on Android 13+ for internal broadcasts
         }
         sendBroadcast(intent)
         Log.d(TAG, "Broadcasted location status: $status")

@@ -447,9 +447,7 @@ fun DefaultActionScreen(
             )
         } else {
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
+                modifier = Modifier.fillMaxWidth(),
                 shape = RectangleShape,
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.background

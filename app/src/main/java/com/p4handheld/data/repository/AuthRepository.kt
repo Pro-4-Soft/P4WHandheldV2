@@ -110,11 +110,11 @@ class AuthRepository(context: Context) {
                     )
                     menuItems.add(menuItem)
                 }
-
+                val userScanType = authSharedPreferences.getString("user_scan_type", null)
                 UserContextResponse(
                     menu = menuItems,
                     trackGeoLocation = authSharedPreferences.getBoolean("track_geo_location", false),
-                    userScanType = ScanType.fromSerializedName(authSharedPreferences.getString("user_scan_type", "")),
+                    userScanType = if (userScanType.isNullOrBlank()) ScanType.ZEBRA_DATA_WEDGE else enumValueOf<ScanType>(userScanType),
                     userId = authSharedPreferences.getString("userId", "") ?: "",
                 )
             } catch (_: Exception) {
@@ -144,7 +144,7 @@ class AuthRepository(context: Context) {
 
     fun getEffectiveScanType(): ScanType {
         val userScanType = authSharedPreferences.getString("user_scan_type", null)
-        return if (userScanType.isNullOrBlank()) ScanType.ZEBRA_DATA_WEDGE else ScanType.fromSerializedName(userScanType)
+        return if (userScanType.isNullOrBlank()) ScanType.ZEBRA_DATA_WEDGE else enumValueOf<ScanType>(userScanType)
     }
 
     fun logout() {

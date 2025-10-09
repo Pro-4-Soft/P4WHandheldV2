@@ -34,22 +34,15 @@ data class UserContextResponse(
     val userId: String
 )
 
-enum class ScanType(val serializedName: String) {
+enum class ScanType() {
     @SerializedName("ZebraDataWedge")
-    ZEBRA_DATA_WEDGE("ZebraDataWedge"),
+    ZEBRA_DATA_WEDGE,
 
     @SerializedName("Camera")
-    CAMERA("Camera"),
+    CAMERA,
 
     @SerializedName("LineFeed")
-    LINE_FEED("LineFeed");
-
-    companion object {
-        fun fromSerializedName(name: String?): ScanType {
-            if (name.isNullOrBlank()) return ZEBRA_DATA_WEDGE
-            return entries.first { it.serializedName.equals(name, ignoreCase = true) }
-        }
-    }
+    LINE_FEED;
 }
 
 data class MenuItem(

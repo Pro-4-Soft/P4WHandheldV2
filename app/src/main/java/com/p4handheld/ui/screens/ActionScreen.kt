@@ -818,7 +818,7 @@ fun PromptInputArea(
                                 contentDescription = null,
                                 modifier = Modifier.padding(end = 8.dp)
                             )
-                            Text("Scan with Camera")
+                            Text(prompt.promptPlaceholder)
                         }
                     } else {
                         // DataWedge scan placeholder

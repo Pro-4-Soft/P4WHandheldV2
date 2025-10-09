@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -224,49 +225,73 @@ fun MenuScreenContent(
 
         //region Menu content
         if (selectedMenuItem == null) {
-            if (uiState.currentMenuItems.isNotEmpty()) {
-
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(3),
-                    modifier = Modifier.padding(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(uiState.currentMenuItems) { menuItem ->
-                        Box(
-                            modifier = Modifier.padding(1.dp) // extra spacing inside each cell
-                        ) {
-                            MenuTileCard(
-                                menuItem = menuItem,
-                                onItemClick = { item -> onMenuItemClick(item) }
-                            )
+            when {
+                uiState.isLoading -> {
+                    //region Loading indicator
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(48.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Loading menu...",
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    //endregion
+                }
+                uiState.currentMenuItems.isNotEmpty() -> {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(3),
+                        modifier = Modifier.padding(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(uiState.currentMenuItems) { menuItem ->
+                            Box(
+                                modifier = Modifier.padding(1.dp) // extra spacing inside each cell
+                            ) {
+                                MenuTileCard(
+                                    menuItem = menuItem,
+                                    onItemClick = { item -> onMenuItemClick(item) }
+                                )
+                            }
+                            Spacer(modifier = Modifier.size(20.dp))
                         }
-                        Spacer(modifier = Modifier.size(20.dp))
                     }
                 }
-            } else if (!uiState.isLoading) {
-                //region No menu items available Fallback content
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Menu,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = Color.Gray
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "No menu items available",
-                        fontSize = 16.sp,
-                        color = Color.Gray
-                    )
+                else -> {
+                    //region No menu items available Fallback content
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Menu,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = Color.Gray
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "No menu items available",
+                            fontSize = 16.sp,
+                            color = Color.Gray
+                        )
+                    }
+                    //endregion
                 }
-                //endregion
             }
         }
         //endregion

@@ -48,11 +48,13 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
+import com.p4handheld.data.models.Prompt
 import java.util.concurrent.Executors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CameraScannerScreen(
+    prompt: Prompt,
     onBarcodeScanned: (String) -> Unit,
     onCancel: () -> Unit
 ) {
@@ -154,7 +156,7 @@ fun CameraScannerScreen(
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
-                    text = "Point camera at barcode to scan",
+                    text = prompt.promptPlaceholder.ifBlank { "Point camera at barcode to scan" },
                     color = Color.White,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,

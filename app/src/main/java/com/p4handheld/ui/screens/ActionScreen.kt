@@ -205,6 +205,7 @@ fun ActionScreen(
                 showCameraScanner -> {
             {
                 CameraScannerScreen(
+                    prompt = uiState.currentPrompt,
                     onBarcodeScanned = { scannedData ->
                         println("ActionScreen: Camera scan data received: $scannedData")
                         viewModel.processAction(promptValue = scannedData)

@@ -62,6 +62,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
+import com.p4handheld.GlobalConstants
 import com.p4handheld.data.ChatStateManager
 import com.p4handheld.data.models.UserChatMessage
 import com.p4handheld.firebase.FirebaseManager
@@ -132,7 +133,7 @@ fun ChatScreen(
         // Clear unread badge when opening a chat
         try {
             FirebaseManager.getInstance(ctx).setHasUnreadMessages(false)
-            val intent = Intent("com.p4handheld.FIREBASE_MESSAGE_RECEIVED")
+            val intent = Intent(GlobalConstants.Intents.FIREBASE_MESSAGE_RECEIVED)
             intent.setPackage(ctx.packageName)
             ctx.sendBroadcast(intent)
         } catch (_: Exception) {
@@ -141,7 +142,7 @@ fun ChatScreen(
 
     // Listen for incoming FCM broadcasts and append messages to this chat if they match
     DisposableEffect(contactId) {
-        val filter = IntentFilter("com.p4handheld.FIREBASE_MESSAGE_RECEIVED")
+        val filter = IntentFilter(GlobalConstants.Intents.FIREBASE_MESSAGE_RECEIVED)
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 if (intent == null) return

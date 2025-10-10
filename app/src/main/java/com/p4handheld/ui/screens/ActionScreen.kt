@@ -1,6 +1,10 @@
 package com.p4handheld.ui.screens
 
 import android.Manifest
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -61,6 +65,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -92,8 +97,10 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.p4handheld.GlobalConstants
 import com.p4handheld.data.ScanStateHolder
 import com.p4handheld.data.models.Message
+import com.p4handheld.data.models.P4WEventType
 import com.p4handheld.data.models.Prompt
 import com.p4handheld.data.models.PromptType
 import com.p4handheld.data.models.ScanType
@@ -196,6 +203,32 @@ fun ActionScreen(
                     }
                 }
             }
+        }
+    }
+
+    // Listen for task change notifications and reload if on myTasks page
+    DisposableEffect(initialPageKey) {
+        if (initialPageKey == "main.myTasks") {
+            val filter = IntentFilter(GlobalConstants.Intents.FIREBASE_MESSAGE_RECEIVED)
+            val receiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent?) {
+                    if (intent == null) return
+                    val eventType = intent.getStringExtra("eventType") ?: return
+                    if (eventType == P4WEventType.TASKS_CHANGED.toString()) {
+                        viewModel.messageStackCleanUp()
+                        viewModel.processAction()
+                    }
+                }
+            }
+            ContextCompat.registerReceiver(context, receiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
+            onDispose {
+                try {
+                    context.unregisterReceiver(receiver)
+                } catch (_: Exception) {
+                }
+            }
+        } else {
+            onDispose { }
         }
     }
 

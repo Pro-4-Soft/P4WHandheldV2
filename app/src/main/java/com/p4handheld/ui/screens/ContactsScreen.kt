@@ -48,6 +48,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
+import com.p4handheld.GlobalConstants
 import com.p4handheld.data.models.UserContact
 import com.p4handheld.ui.components.TopBarWithIcons
 import com.p4handheld.ui.screens.viewmodels.ContactsViewModel
@@ -72,7 +73,7 @@ fun ContactsScreen(
     // Listen for incoming chat message broadcasts to update unread badges in the list
     val ctx = androidx.compose.ui.platform.LocalContext.current
     DisposableEffect(Unit) {
-        val filter = IntentFilter("com.p4handheld.FIREBASE_MESSAGE_RECEIVED")
+        val filter = IntentFilter(GlobalConstants.Intents.FIREBASE_MESSAGE_RECEIVED)
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 if (intent == null) return

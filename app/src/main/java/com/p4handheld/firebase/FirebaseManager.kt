@@ -14,7 +14,6 @@ const val FIREBASE_PREFS_NAME = "firebase_prefs"
 const val FIREBASE_KEY_FCM_TOKEN = "fcm_token"
 
 class FirebaseManager(private val prefs: SharedPreferences) {
-
     companion object {
         @Volatile
         private var INSTANCE: FirebaseManager? = null
@@ -49,19 +48,15 @@ class FirebaseManager(private val prefs: SharedPreferences) {
     //endregion
 
     //region Unread messages
-    fun hasUnreadMessages(): Boolean =
-        prefs.getBoolean("has_unread_messages", false)
+    fun hasUnreadMessages(): Boolean = prefs.getBoolean("has_unread_messages", false)
 
-    fun setHasUnreadMessages(hasUnread: Boolean) =
-        prefs.edit { putBoolean("has_unread_messages", hasUnread) }
+    fun setHasUnreadMessages(hasUnread: Boolean) = prefs.edit { putBoolean("has_unread_messages", hasUnread) }
     //endregion
 
     //region Tasks badge helpers
-    fun getTasksCount(): Int =
-        prefs.getInt("tasks_count", 0)
+    fun getTasksCount(): Int = prefs.getInt("tasks_count", 0)
 
-    fun setTasksCount(count: Int) =
-        prefs.edit { putInt("tasks_count", count) }
+    fun setTasksCount(count: Int) = prefs.edit { putInt("tasks_count", count) }
 
     @Volatile
     private var hasInitializedTaskCountOnce = false

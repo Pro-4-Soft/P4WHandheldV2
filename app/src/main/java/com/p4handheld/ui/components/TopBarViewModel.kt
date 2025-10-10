@@ -8,6 +8,7 @@ import android.content.IntentFilter
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.p4handheld.GlobalConstants
 import com.p4handheld.data.repository.AuthRepository
 import com.p4handheld.firebase.FirebaseManager
 import com.p4handheld.services.LocationStatus
@@ -40,7 +41,7 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
-                "com.p4handheld.FIREBASE_MESSAGE_RECEIVED" -> {
+                GlobalConstants.Intents.FIREBASE_MESSAGE_RECEIVED -> {
                     refreshFromManagers()
                     val eventType = intent.getStringExtra("eventType")
                     if (eventType == "TASKS_CHANGED") {
@@ -55,7 +56,7 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
                     }
                 }
 
-                "com.p4handheld.LOCATION_STATUS_CHANGED" -> {
+                GlobalConstants.Intents.LOCATION_STATUS_CHANGED -> {
                     val statusString = intent.getStringExtra("locationStatus")
                     val statusEnum = LocationStatus.valueOf(statusString ?: "DISABLED")
 
@@ -87,8 +88,8 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
         if (!registered) {
             val appCtx = getApplication<Application>().applicationContext
             val intentFilter = IntentFilter().apply {
-                addAction("com.p4handheld.FIREBASE_MESSAGE_RECEIVED")
-                addAction("com.p4handheld.LOCATION_STATUS_CHANGED")
+                addAction(GlobalConstants.Intents.FIREBASE_MESSAGE_RECEIVED)
+                addAction(GlobalConstants.Intents.LOCATION_STATUS_CHANGED)
             }
             ContextCompat.registerReceiver(appCtx, receiver, intentFilter, ContextCompat.RECEIVER_NOT_EXPORTED)
             registered = true

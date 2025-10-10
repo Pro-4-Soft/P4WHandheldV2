@@ -31,6 +31,7 @@ import androidx.core.graphics.createBitmap
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.p4handheld.GlobalConstants
 import com.p4handheld.R
 import com.p4handheld.data.api.ApiClient
 import com.p4handheld.data.models.P4WEventType
@@ -118,7 +119,7 @@ class MainActivity : ComponentActivity() {
             ContextCompat.registerReceiver(
                 this,
                 screenRequestReceiver,
-                IntentFilter("com.p4handheld.FIREBASE_MESSAGE_RECEIVED"),
+                IntentFilter(GlobalConstants.Intents.FIREBASE_MESSAGE_RECEIVED),
                 ContextCompat.RECEIVER_NOT_EXPORTED
             )
             screenRequestReceiverRegistered = true

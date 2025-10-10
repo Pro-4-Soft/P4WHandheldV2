@@ -139,6 +139,14 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
         _uiState.value = _uiState.value.copy(capturedImage = imageBase64)
     }
 
+    fun messageStackCleanUp() {
+        _uiState.value = _uiState.value.copy(
+            messageStack = emptyList(),
+            pageTitle = _uiState.value.pageTitle,
+            toolbarActions = _uiState.value.toolbarActions,
+        )
+    }
+
     //region Private methods
     private fun addTakenPictureToMessageStack(
         messages: List<Message>,

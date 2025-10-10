@@ -8,6 +8,7 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
+import com.p4handheld.GlobalConstants
 import com.p4handheld.R
 import com.p4handheld.data.ChatStateManager
 import com.p4handheld.data.models.P4WEventType
@@ -151,7 +152,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
     }
 
     private fun broadcastMessage(message: P4WFirebaseNotification) {
-        val intent = Intent("com.p4handheld.FIREBASE_MESSAGE_RECEIVED").apply {
+        val intent = Intent(GlobalConstants.Intents.FIREBASE_MESSAGE_RECEIVED).apply {
             putExtra("messageId", message.id)
             putExtra("eventType", message.eventType.name)
             putExtra("title", message.title)

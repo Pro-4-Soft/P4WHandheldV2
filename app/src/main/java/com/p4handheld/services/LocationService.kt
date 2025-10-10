@@ -174,7 +174,7 @@ class LocationService : Service() {
     }
 
     private fun broadcastLocationStatus(status: LocationStatus) {
-        val intent = Intent("com.p4handheld.LOCATION_STATUS_CHANGED").apply {
+        val intent = Intent(GlobalConstants.Intents.LOCATION_STATUS_CHANGED).apply {
             putExtra("locationStatus", status.toString())
             setPackage(packageName) // 👈 required on Android 13+ for internal broadcasts
         }

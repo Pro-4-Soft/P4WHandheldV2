@@ -220,7 +220,6 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             try {
                 TranslationManager.getInstance(this@MainActivity).loadTranslations()
-                Log.d("MainActivity", "Translations initialized successfully")
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to initialize translations", e)
             }

@@ -7,12 +7,11 @@ import android.util.Log
 import androidx.core.content.edit
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.p4handheld.GlobalConstants
 import com.p4handheld.R
 import com.p4handheld.data.api.ApiClient
 import com.p4handheld.data.models.CachedTranslations
 import com.p4handheld.data.models.TranslationRequest
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 class TranslationManager private constructor(
     private val appContext: Context
@@ -22,6 +21,7 @@ class TranslationManager private constructor(
         private const val TAG = "TranslationManager"
         private const val PREFS_NAME = "translation_prefs"
         private const val KEY_CACHED_TRANSLATIONS = "cached_translations"
+        private const val KEY_CACHED_TENANT = "cached_tenant"
 
         @Volatile
         @SuppressLint("StaticFieldLeak") // Safe — we use application context only
@@ -50,8 +50,21 @@ class TranslationManager private constructor(
 
     fun getString(key: String, fallback: String = key): String = cachedTranslations?.translations?.get(key) ?: fallback
 
-    suspend fun loadTranslations(): Result<Boolean> = withContext(Dispatchers.IO) {
+
+    suspend fun loadTranslations() {
         try {
+            val currentTenant = getCurrentTenant()
+            if (currentTenant == null) {
+                return
+            }
+            val cachedTenant = getCachedTenant()
+
+            if (currentTenant != cachedTenant) {
+                Log.d(TAG, "Tenant changed from '$cachedTenant' to '$currentTenant', reloading translations")
+                clearCache()
+            }
+
+            Log.d(TAG, "Loading translations for tenant: $currentTenant")
             val keys = getAllTranslationKeys()
             val response = ApiClient.apiService.getTranslations(TranslationRequest(keys))
 
@@ -61,8 +74,9 @@ class TranslationManager private constructor(
                     lastUpdated = System.currentTimeMillis()
                 )
                 cacheTranslations(newTranslations)
+                cacheTenant(currentTenant)
                 cachedTranslations = newTranslations
-                Log.d(TAG, "Loaded ${newTranslations.translations.size} translations")
+                Log.d(TAG, "Loaded ${newTranslations.translations.size} translations for tenant: $currentTenant")
                 Result.success(true)
             } else {
                 Result.failure(Exception("Failed: ${response.errorMessage}"))
@@ -92,72 +106,78 @@ class TranslationManager private constructor(
         }
     }
 
+    private fun getCurrentTenant(): String? {
+        return try {
+            val tenantPrefs = appContext.getSharedPreferences(GlobalConstants.AppPreferences.TENANT_PREFS, Context.MODE_PRIVATE)
+            tenantPrefs.getString("base_tenant_url", null)
+        } catch (e: Exception) {
+            Log.w(TAG, "Error getting current tenant", e)
+            null
+        }
+    }
+
+    private fun getCachedTenant(): String? {
+        return prefs.getString(KEY_CACHED_TENANT, null)
+    }
+
+    private fun cacheTenant(tenant: String?) {
+        try {
+            prefs.edit { putString(KEY_CACHED_TENANT, tenant) }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error caching tenant", e)
+        }
+    }
+
+    fun clearCache() {
+        try {
+            prefs.edit {
+                remove(KEY_CACHED_TRANSLATIONS)
+                remove(KEY_CACHED_TENANT)
+            }
+            cachedTranslations = null
+            Log.d(TAG, "Translation cache cleared")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error clearing cache", e)
+        }
+    }
+
+
+    suspend fun onTenantChanged() {
+        Log.d(TAG, "Tenant changed, clearing cache and reloading translations")
+        clearCache()
+        return loadTranslations()
+    }
+
     fun getAllTranslationKeys(): List<String> {
-        val ids = listOf(
-            // Login Screen
-            R.string.login_title,
-            R.string.username_label,
-            R.string.password_label,
-            R.string.login_button,
-            R.string.login_error_empty_fields,
-            R.string.login_error_network,
-            R.string.powered_by,
-            R.string.copyright_text,
-            R.string.tenant_button,
-            R.string.app_logo_description,
+        return try {
+            val stringClass = R.string::class.java
+            val fields = stringClass.declaredFields
 
-            // Menu Screen
-            R.string.menu_title,
-            R.string.logout_button,
-
-            // Action Screen
-            R.string.action_title,
-            R.string.scan_button,
-            R.string.submit_button,
-            R.string.cancel_button,
-
-            // Chat Screen
-            R.string.chat_title,
-            R.string.send_button,
-            R.string.message_placeholder,
-
-            // Contacts Screen
-            R.string.contacts_title,
-            R.string.no_contacts,
-
-            // Tenant Screen
-            R.string.tenant_title,
-            R.string.tenant_url_label,
-            R.string.save_button,
-
-            // Common
-            R.string.loading,
-            R.string.error,
-            R.string.success,
-            R.string.retry,
-            R.string.ok,
-            R.string.cancel,
-
-            // Firebase Messages
-            R.string.notification_new_message,
-            R.string.notification_task_added,
-            R.string.notification_task_removed,
-
-            // DataWedge Messages
-            R.string.profile_creation_failed,
-            R.string.profile_switch_success,
-            R.string.profile_already_switched,
-            R.string.profile_switch_failed,
-
-            // Location
-            R.string.location_permission_required,
-            R.string.location_permission_granted,
-
-            // Scanner
-            R.string.scanner_ready,
-            R.string.scanner_error,
-            R.string.scan_result
-        )
-        return ids.map { appContext.resources.getResourceEntryName(it) }
+            fields
+                .filter { field ->
+                    // Only include public static final int fields (string resources)
+                    field.type == Int::class.javaPrimitiveType &&
+                            java.lang.reflect.Modifier.isStatic(field.modifiers) &&
+                            java.lang.reflect.Modifier.isFinal(field.modifiers) &&
+                            java.lang.reflect.Modifier.isPublic(field.modifiers)
+                }
+                .mapNotNull { field ->
+                    try {
+                        val resourceId = field.getInt(null)
+                        appContext.resources.getResourceEntryName(resourceId)
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to get resource name for field: ${field.name}", e)
+                        null
+                    }
+                }
+                .sorted()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get string resources via reflection", e)
+            // Fallback to essential strings if reflection fails
+            listOf(
+                "app_name", "login_title", "username_label", "password_label",
+                "login_button", "ok", "cancel", "error", "loading"
+            )
+        }
     }
 }

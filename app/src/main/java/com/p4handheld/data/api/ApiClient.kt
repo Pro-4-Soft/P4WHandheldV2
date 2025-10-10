@@ -2,6 +2,7 @@ package com.p4handheld.data.api
 
 import android.content.Context
 import com.google.gson.Gson
+import com.p4handheld.GlobalConstants
 import com.p4handheld.data.models.LoginRequest
 import com.p4handheld.data.models.LoginResponse
 import com.p4handheld.data.models.MessageResponse
@@ -61,7 +62,7 @@ object ApiClient {
             .writeTimeout(120, TimeUnit.SECONDS)
             .addInterceptor { chain ->
                 val requestBuilder = chain.request().newBuilder()
-                val authPrefs = appContext.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+                val authPrefs = appContext.getSharedPreferences(GlobalConstants.AppPreferences.AUTH_PREFS, Context.MODE_PRIVATE)
                 val token = authPrefs.getString("token", null) ?: authToken
                 token?.let {
                     requestBuilder.addHeader("Authenticationtoken", it)

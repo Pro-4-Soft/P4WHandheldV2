@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.media.MediaPlayer
 import android.util.Log
+import androidx.core.content.edit
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
@@ -32,11 +33,11 @@ class FirebaseMessagingService : FirebaseMessagingService() {
 
         val p4wNotification = convertToP4WMessage(remoteMessage)
 
-        if (isItMineUserMessageNotification(p4wNotification)) {
+        if (isItMineMessageNotification(p4wNotification)) {
             return
         }
 
-        // checck if user is in chat screen
+        // check if user is in chat screen
         val shouldSuppressNotification = shouldSuppressNotificationForMessage(p4wNotification)
 
         if (!shouldSuppressNotification) {
@@ -56,9 +57,9 @@ class FirebaseMessagingService : FirebaseMessagingService() {
     }
 
     //region Private functions
-    private fun isItMineUserMessageNotification(p4wMessage: P4WFirebaseNotification): Boolean {
+    private fun isItMineMessageNotification(p4wMessage: P4WFirebaseNotification): Boolean {
         val userId = applicationContext
-            .getSharedPreferences("auth_prefs", MODE_PRIVATE)
+            .getSharedPreferences(GlobalConstants.AppPreferences.AUTH_PREFS, MODE_PRIVATE)
             .getString("userId", "") ?: ""
         return p4wMessage.eventType == P4WEventType.USER_CHAT_MESSAGE && p4wMessage.userChatMessage?.fromUserId == userId
     }

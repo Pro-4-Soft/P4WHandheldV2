@@ -8,4 +8,8 @@ object GlobalConstants {
         const val FIREBASE_MESSAGE_RECEIVED = "com.p4handheld.FIREBASE_MESSAGE_RECEIVED"
         const val LOCATION_STATUS_CHANGED = "com.p4handheld.LOCATION_STATUS_CHANGED"
     }
+
+    object AppPreferences {
+        const val AUTH_PREFS = "auth_prefs"
+    }
 }

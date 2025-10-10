@@ -221,7 +221,7 @@ fun ChatScreen(
                     } else {
                         val context = LocalContext.current
                         val currentUsername = remember {
-                            context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+                            context.getSharedPreferences(GlobalConstants.AppPreferences.AUTH_PREFS, Context.MODE_PRIVATE)
                                 .getString("username", null)
                         }
 

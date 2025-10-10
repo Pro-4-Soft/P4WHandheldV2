@@ -3,6 +3,7 @@ package com.p4handheld.ui.screens.viewmodels
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.p4handheld.GlobalConstants
 import com.p4handheld.data.api.ApiClient
 import com.p4handheld.data.models.UserChatMessage
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -86,7 +87,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             val result = ApiClient.apiService.sendMessage(toUserId, message)
             if (result.isSuccessful) {
                 val context = getApplication<Application>()
-                val username = context.getSharedPreferences("auth_prefs", Application.MODE_PRIVATE)
+                val username = context.getSharedPreferences(GlobalConstants.AppPreferences.AUTH_PREFS, Application.MODE_PRIVATE)
                     .getString("username", "Me") ?: "Me"
 
                 val newMsg = UserChatMessage(

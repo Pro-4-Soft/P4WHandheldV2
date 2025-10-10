@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.p4handheld.GlobalConstants
 import com.p4handheld.data.api.ApiClient
 import com.p4handheld.data.api.ApiService
 import com.p4handheld.data.models.ApiError
@@ -14,12 +15,13 @@ import com.p4handheld.data.models.ScanType
 import com.p4handheld.data.models.UserContextResponse
 import com.p4handheld.firebase.FIREBASE_KEY_FCM_TOKEN
 import com.p4handheld.firebase.FIREBASE_PREFS_NAME
+import com.p4handheld.firebase.FirebaseManager
 import com.p4handheld.utils.CrashlyticsHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class AuthRepository(context: Context) {
-    private val authSharedPreferences: SharedPreferences = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+    private val authSharedPreferences: SharedPreferences = context.getSharedPreferences(GlobalConstants.AppPreferences.AUTH_PREFS, Context.MODE_PRIVATE)
     private val firebaseSharedPreferences: SharedPreferences = context.getSharedPreferences(FIREBASE_PREFS_NAME, Context.MODE_PRIVATE)
 
     private val apiService: ApiService

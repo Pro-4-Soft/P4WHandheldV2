@@ -99,7 +99,7 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
     private fun refreshFromManagers() {
         val ctx = getApplication<Application>().applicationContext
         val username = ctx
-            .getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+            .getSharedPreferences(GlobalConstants.AppPreferences.AUTH_PREFS, Context.MODE_PRIVATE)
             .getString("username", "") ?: ""
         val tracking = authRepository.shouldTrackLocation()
         val hasUnread = firebaseManager.hasUnreadMessages()

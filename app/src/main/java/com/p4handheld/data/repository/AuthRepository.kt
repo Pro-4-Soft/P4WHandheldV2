@@ -15,7 +15,6 @@ import com.p4handheld.data.models.ScanType
 import com.p4handheld.data.models.UserContextResponse
 import com.p4handheld.firebase.FIREBASE_KEY_FCM_TOKEN
 import com.p4handheld.firebase.FIREBASE_PREFS_NAME
-import com.p4handheld.firebase.FirebaseManager
 import com.p4handheld.utils.CrashlyticsHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -63,7 +62,7 @@ class AuthRepository(context: Context) {
     suspend fun getUserContext(): Result<UserContextResponse> {
         return withContext(Dispatchers.IO) {
             try {
-                val response = apiService.getCurrentMenu()
+                val response = apiService.getCurrent()
 
                 if (response.isSuccessful && response.body != null) {
                     val userContextResponse = response.body
@@ -84,6 +83,7 @@ class AuthRepository(context: Context) {
                 .putBoolean("track_geo_location", userContextResponse.trackGeoLocation)
                 .putString("user_scan_type", userContextResponse.userScanType.toString())
                 .putString("userId", userContextResponse.userId)
+                .putString("languageId", userContextResponse.languageId)
         }
 
         firebaseSharedPreferences.edit { putString("userId", userContextResponse.userId) }
@@ -108,6 +108,7 @@ class AuthRepository(context: Context) {
                     trackGeoLocation = authSharedPreferences.getBoolean("track_geo_location", false),
                     userScanType = if (userScanType.isNullOrBlank()) ScanType.ZEBRA_DATA_WEDGE else enumValueOf<ScanType>(userScanType),
                     userId = authSharedPreferences.getString("userId", "") ?: "",
+                    languageId = authSharedPreferences.getString("languageId", "") ?: "",
                 )
             } catch (_: Exception) {
                 null
@@ -117,9 +118,7 @@ class AuthRepository(context: Context) {
         }
     }
 
-    fun shouldTrackLocation(): Boolean {
-        return authSharedPreferences.getBoolean("track_geo_location", false)
-    }
+    fun shouldTrackLocation(): Boolean = authSharedPreferences.getBoolean("track_geo_location", false)
 
     fun getStateParamsForPage(pageKey: String): Any? {
         return getStoredUserContextData()
@@ -140,13 +139,7 @@ class AuthRepository(context: Context) {
     }
 
     fun resetUserContextData() {
-        authSharedPreferences.edit {
-            putString("menu_json", null)
-                .putBoolean("track_geo_location", false)
-                .putString("user_scan_type", ScanType.ZEBRA_DATA_WEDGE.toString())
-                .putString("userId", null)
-        }
-
+        authSharedPreferences.edit { clear() }
         firebaseSharedPreferences.edit { putString("userId", null) }
     }
 

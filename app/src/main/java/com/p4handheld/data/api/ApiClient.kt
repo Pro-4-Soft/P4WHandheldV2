@@ -8,6 +8,8 @@ import com.p4handheld.data.models.LoginResponse
 import com.p4handheld.data.models.MessageResponse
 import com.p4handheld.data.models.ProcessRequest
 import com.p4handheld.data.models.PromptResponse
+import com.p4handheld.data.models.TranslationRequest
+import com.p4handheld.data.models.TranslationResponse
 import com.p4handheld.data.models.UserChatMessage
 import com.p4handheld.data.models.UserContact
 import com.p4handheld.data.models.UserContextResponse
@@ -193,7 +195,7 @@ object ApiClient {
                 }
             }
 
-        override suspend fun getCurrentMenu(): ApiResponse<UserContextResponse> =
+        override suspend fun getCurrent(): ApiResponse<UserContextResponse> =
             withContext(Dispatchers.IO) {
                 userRequestMutex.withLock {
                     try {
@@ -312,6 +314,30 @@ object ApiClient {
                                 ApiResponse(true, Gson().fromJson(body, Array<UserChatMessage>::class.java).toList(), response.code)
                             else
                                 ApiResponse(false, null, response.code, body)
+                        }
+                    } catch (e: Exception) {
+                        ApiResponse(false, null, 0, e.message)
+                    }
+                }
+            }
+
+        override suspend fun getTranslations(langId: String, translationRequest: TranslationRequest): ApiResponse<TranslationResponse> =
+            withContext(Dispatchers.IO) {
+                userRequestMutex.withLock {
+                    try {
+                        val url = "${getBaseUrl()}/api/LangApi/GetTokens/$langId"
+                        val json = Gson().toJson(translationRequest)
+                        val requestBody = json.toRequestBody("application/json".toMediaType())
+                        val request = Request.Builder().url(url).post(requestBody).build()
+
+                        client.newCall(request).execute().use { response ->
+                            val body = response.body?.string().orEmpty()
+                            if (response.isSuccessful) {
+                                val translationResponse = Gson().fromJson(body, TranslationResponse::class.java)
+                                ApiResponse(true, translationResponse, response.code)
+                            } else {
+                                ApiResponse(false, null, response.code, body)
+                            }
                         }
                     } catch (e: Exception) {
                         ApiResponse(false, null, 0, e.message)

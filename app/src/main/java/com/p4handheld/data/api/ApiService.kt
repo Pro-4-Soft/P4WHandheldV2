@@ -5,6 +5,8 @@ import com.p4handheld.data.models.LoginResponse
 import com.p4handheld.data.models.MessageResponse
 import com.p4handheld.data.models.ProcessRequest
 import com.p4handheld.data.models.PromptResponse
+import com.p4handheld.data.models.TranslationRequest
+import com.p4handheld.data.models.TranslationResponse
 import com.p4handheld.data.models.UserChatMessage
 import com.p4handheld.data.models.UserContact
 import com.p4handheld.data.models.UserContextResponse
@@ -12,7 +14,7 @@ import com.p4handheld.data.models.UserContextResponse
 interface ApiService {
     suspend fun login(loginRequest: LoginRequest): ApiResponse<LoginResponse>
 
-    suspend fun getCurrentMenu(): ApiResponse<UserContextResponse>
+    suspend fun getCurrent(): ApiResponse<UserContextResponse>
 
     suspend fun processAction(pageKey: String, processRequest: ProcessRequest, taskId: String? = null): ApiResponse<PromptResponse>
 
@@ -27,6 +29,8 @@ interface ApiService {
     suspend fun sendMessage(toUserId: String, message: String): ApiResponse<MessageResponse>
 
     suspend fun getAssignedTaskCount(userId: String): ApiResponse<Int>
+
+    suspend fun getTranslations(langId: String, translationRequest: TranslationRequest): ApiResponse<TranslationResponse>
 }
 
 data class ApiResponse<T>(

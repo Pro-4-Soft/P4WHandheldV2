@@ -31,7 +31,10 @@ data class UserContextResponse(
     val userScanType: ScanType,
 
     @SerializedName("UserId")
-    val userId: String
+    val userId: String,
+
+    @SerializedName("LanguageId")
+    val languageId: String
 )
 
 enum class ScanType() {

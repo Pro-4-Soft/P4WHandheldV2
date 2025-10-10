@@ -33,7 +33,7 @@ import com.p4handheld.data.state.ScanViewState
 
 // Wrapper for handling communication with DataWedge through broadcast intents.
 object DWCommunicationWrapper {
-    private val SUCCESS = "SUCCESS"
+    private const val SUCCESS = "SUCCESS"
     private val TAG = this.javaClass.canonicalName
 
     // Registers broadcast receivers to listen for DataWedge-related intents.
@@ -163,8 +163,7 @@ object DWCommunicationWrapper {
 
                 VALUE_COMMAND_IDENTIFIER_SWITCH_PROFILE -> {
                     if (result == SUCCESS) {
-                        ScanStateHolder.scanViewStatus.value =
-                            ScanViewState(dwProfileSwitch = DWProfileSwitch(true))
+                        ScanStateHolder.scanViewStatus.value = ScanViewState(dwProfileSwitch = DWProfileSwitch(true))
                         App.getInstance().getString(R.string.profile_switch_success)
                     } else {
                         val isSwitched = when (resultCode) {

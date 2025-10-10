@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.media.MediaPlayer
 import android.util.Log
-import androidx.core.content.edit
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
@@ -33,7 +32,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
 
         val p4wNotification = convertToP4WMessage(remoteMessage)
 
-        if (isItMineMessageNotification(p4wNotification)) {
+        if (ignoreNotification(p4wNotification)) {
             return
         }
 
@@ -57,11 +56,27 @@ class FirebaseMessagingService : FirebaseMessagingService() {
     }
 
     //region Private functions
-    private fun isItMineMessageNotification(p4wMessage: P4WFirebaseNotification): Boolean {
-        val userId = applicationContext
-            .getSharedPreferences(GlobalConstants.AppPreferences.AUTH_PREFS, MODE_PRIVATE)
-            .getString("userId", "") ?: ""
-        return p4wMessage.eventType == P4WEventType.USER_CHAT_MESSAGE && p4wMessage.userChatMessage?.fromUserId == userId
+    private fun ignoreNotification(p4wMessage: P4WFirebaseNotification): Boolean {
+        val authPrefs = applicationContext.getSharedPreferences(GlobalConstants.AppPreferences.AUTH_PREFS, MODE_PRIVATE)
+        val userId = authPrefs.getString("userId", "") ?: ""
+        val isLoggedIn = authPrefs.getBoolean("is_logged_in", false)
+        val hasToken = !authPrefs.getString("token", null).isNullOrEmpty()
+
+        // If user is not logged in or doesn't have valid token, ignore all notifications
+        if (!isLoggedIn || !hasToken) {
+            Log.d(TAG, "User not logged in or no valid token, ignoring notification")
+            return true
+        }
+
+        // Check if this is a chat message from the current user (should be ignored)
+        val isItMineChatMessage = p4wMessage.eventType == P4WEventType.USER_CHAT_MESSAGE &&
+                p4wMessage.userChatMessage?.fromUserId == userId
+
+        if (isItMineChatMessage) {
+            Log.d(TAG, "Ignoring notification from current user")
+        }
+
+        return isItMineChatMessage
     }
 
     private fun shouldSuppressNotificationForMessage(p4wMessage: P4WFirebaseNotification): Boolean {

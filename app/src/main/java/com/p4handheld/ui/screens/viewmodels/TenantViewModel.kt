@@ -70,7 +70,7 @@ class TenantViewModel(application: Application) : AndroidViewModel(application) 
                     putBoolean("is_configured", true)
                 }
 
-                TranslationManager.getInstance(getApplication()).loadTranslations(forceReload = true)
+                TranslationManager.getInstance(getApplication()).loadTranslations()
 
 
                 _uiState.value = _uiState.value.copy(

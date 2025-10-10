@@ -326,7 +326,7 @@ object ApiClient {
             withContext(Dispatchers.IO) {
                 userRequestMutex.withLock {
                     try {
-                        val url = "${getBaseUrl()}/api/LangApi/GetTokens"
+                        val url = "${getBaseUrl()}/api/Lang/GetTokens"
                         val json = Gson().toJson(translationRequest)
                         val requestBody = json.toRequestBody("application/json".toMediaType())
                         val request = Request.Builder().url(url).post(requestBody).build()

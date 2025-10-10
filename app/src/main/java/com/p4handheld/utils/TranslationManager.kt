@@ -51,19 +51,19 @@ class TranslationManager private constructor(
     }
 
     fun getString(key: String, fallback: String = key): String = cachedTranslations?.translations?.get(key) ?: fallback
-    
-    suspend fun loadTranslations(forceReload: Boolean = false) = withContext(Dispatchers.IO) {
+
+    suspend fun loadTranslations() = withContext(Dispatchers.IO) {
         try {
-            val currentTenant = getCurrentTenant()
+            val currentTenant = getCurrentTenantName()
             if (currentTenant == null) {
                 Log.d(TAG, "No tenant configured, skipping translation loading")
                 return@withContext
             }
-            
+
             val cachedTenant = getCachedTenant()
 
             // Check if we already have translations for this tenant (unless force reload)
-            if (!forceReload && currentTenant == cachedTenant && cachedTranslations != null) {
+            if (currentTenant == cachedTenant && cachedTranslations != null) {
                 Log.d(TAG, "Using cached translations for tenant: $currentTenant")
                 return@withContext
             }
@@ -113,10 +113,10 @@ class TranslationManager private constructor(
         }
     }
 
-    private fun getCurrentTenant(): String? {
+    private fun getCurrentTenantName(): String? {
         return try {
             val tenantPrefs = appContext.getSharedPreferences(GlobalConstants.AppPreferences.TENANT_PREFS, Context.MODE_PRIVATE)
-            tenantPrefs.getString("base_tenant_url", null)
+            tenantPrefs.getString("tenant_name", null)
         } catch (e: Exception) {
             Log.w(TAG, "Error getting current tenant", e)
             null
@@ -152,31 +152,44 @@ class TranslationManager private constructor(
         return try {
             val stringClass = R.string::class.java
             val fields = stringClass.declaredFields
+            val packageName = appContext.packageName
+            
+            val excludedPrefixes = listOf(
+                "com.google.",
+                "firebase_",
+                "google_",
+                "default_web_",
+                "gcm_",
+                "project_",
+            )
 
             fields
-                .filter { field ->
-                    // Only include public static final int fields (string resources)
-                    field.type == Int::class.javaPrimitiveType &&
-                            java.lang.reflect.Modifier.isStatic(field.modifiers) &&
-                            java.lang.reflect.Modifier.isFinal(field.modifiers) &&
-                            java.lang.reflect.Modifier.isPublic(field.modifiers)
+                .filter {
+                    it.type == Int::class.javaPrimitiveType &&
+                            java.lang.reflect.Modifier.isStatic(it.modifiers) &&
+                            java.lang.reflect.Modifier.isPublic(it.modifiers)
                 }
                 .mapNotNull { field ->
                     try {
-                        val resourceId = field.getInt(null)
-                        appContext.resources.getResourceEntryName(resourceId)
+                        val resId = field.getInt(null)
+                        val key = appContext.resources.getResourceEntryName(resId)
+                        val pkg = appContext.resources.getResourcePackageName(resId)
+                        if (pkg != packageName) return@mapNotNull null
+                        if (excludedPrefixes.any { key.startsWith(it) }) return@mapNotNull null
+
+                        key
                     } catch (e: Exception) {
-                        Log.w(TAG, "Failed to get resource name for field: ${field.name}", e)
+                        Log.w(TAG, "Skipping invalid string field: ${field.name}", e)
                         null
                     }
                 }
+                .distinct()
                 .sorted()
         } catch (e: Exception) {
             Log.e(TAG, "Failed to get string resources via reflection", e)
-            // Fallback to essential strings if reflection fails
             listOf(
-                "app_name", "login_title", "username_label", "password_label",
-                "login_button", "ok", "cancel", "error", "loading"
+                "login_title", "username_label", "password_label", "login_button",
+                "ok", "cancel", "error", "loading"
             )
         }
     }

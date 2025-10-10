@@ -139,7 +139,12 @@ class AuthRepository(context: Context) {
     }
 
     fun resetUserContextData() {
-        authSharedPreferences.edit { clear() }
+        authSharedPreferences.edit {
+            putString("menu_json", null)
+                .putBoolean("track_geo_location", false)
+                .putString("user_scan_type", ScanType.ZEBRA_DATA_WEDGE.toString())
+                .putString("userId", null)
+        }
         firebaseSharedPreferences.edit { putString("userId", null) }
     }
 

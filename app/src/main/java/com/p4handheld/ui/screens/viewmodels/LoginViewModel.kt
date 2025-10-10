@@ -6,7 +6,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.p4handheld.GlobalConstants.AppPreferences.TENANT_PREFS
+import com.p4handheld.R
 import com.p4handheld.data.repository.AuthRepository
+import com.p4handheld.utils.Translations
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,7 +29,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
     fun login(username: String, password: String) {
         if (username.isBlank() || password.isBlank()) {
-            _uiState.value = _uiState.value.copy(errorMessage = "Please enter both username and password")
+            _uiState.value = _uiState.value.copy(errorMessage = Translations[getApplication(), R.string.login_error_empty_fields])
             return
         }
 
@@ -66,7 +69,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = "Unexpected error: ${e.message}"
+                    errorMessage = Translations.format(getApplication(), R.string.login_error_network, e.message ?: "")
                 )
             }
         }
@@ -79,7 +82,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     @Composable
     fun getLogoUrl(): String {
         val context = LocalContext.current
-        val sharedPreferences = context.getSharedPreferences("tenant_config", Context.MODE_PRIVATE)
+        val sharedPreferences = context.getSharedPreferences(TENANT_PREFS, Context.MODE_PRIVATE)
         val baseUrl = sharedPreferences.getString("base_tenant_url", "") ?: ""
         val logoUrl = "${baseUrl}/data/logo"
         return logoUrl

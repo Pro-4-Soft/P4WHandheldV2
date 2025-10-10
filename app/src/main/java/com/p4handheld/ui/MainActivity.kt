@@ -45,8 +45,8 @@ import com.p4handheld.ui.navigation.AppNavigation
 import com.p4handheld.ui.navigation.Screen
 import com.p4handheld.ui.screens.viewmodels.MainViewModel
 import com.p4handheld.utils.PermissionChecker
-import com.p4handheld.utils.TranslationHelper
 import com.p4handheld.utils.TranslationManager
+import com.p4handheld.utils.Translations
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
@@ -291,8 +291,8 @@ fun MainActivityContent(
     ) { permissions ->
         if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
             // Location permissions granted
-            Toast.makeText(navController.context, TranslationHelper.locationPermissionGranted(navController.context), Toast.LENGTH_LONG).show()
-            Log.d("MainActivity", TranslationHelper.locationPermissionGranted(navController.context))
+            Toast.makeText(navController.context, Translations[navController.context, R.string.location_permission_granted], Toast.LENGTH_LONG).show()
+            Log.d("MainActivity", Translations[navController.context, R.string.location_permission_granted])
         }
     }
 

@@ -42,24 +42,23 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.LinkAnnotation
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.p4handheld.R
 import com.p4handheld.ui.compose.theme.HandheldP4WTheme
 import com.p4handheld.ui.screens.viewmodels.LoginUiState
 import com.p4handheld.ui.screens.viewmodels.LoginViewModel
+import com.p4handheld.utils.Translations
 
 @Composable
 fun LoginScreen(
@@ -142,7 +141,7 @@ fun LoginScreenContent(
             ) {
                 AsyncImage(
                     model = logoUrl,
-                    contentDescription = "App Logo",
+                    contentDescription = Translations[R.string.app_logo_description],
                     modifier = Modifier
                         .size(140.dp)
                         .padding(4.dp)
@@ -165,7 +164,7 @@ fun LoginScreenContent(
             ) {
 
                 Text(
-                    text = "Login",
+                    text = Translations[R.string.login_title],
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -176,7 +175,7 @@ fun LoginScreenContent(
                     onValueChange = {
                         onUsernameChange(it)
                     },
-                    label = { Text("Username") },
+                    label = { Text(Translations[R.string.username_label]) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     enabled = !uiState.isLoading,
@@ -191,7 +190,7 @@ fun LoginScreenContent(
                 OutlinedTextField(
                     value = password,
                     onValueChange = { onPasswordChange(it) },
-                    label = { Text("Password") },
+                    label = { Text(Translations[R.string.password_label]) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(passwordFocusRequester),
@@ -244,7 +243,7 @@ fun LoginScreenContent(
                             color = MaterialTheme.colorScheme.onPrimary
                         )
                     } else {
-                        Text("Login", fontSize = 16.sp)
+                        Text(Translations[R.string.login_button], fontSize = 16.sp)
                     }
                 }
             }
@@ -256,13 +255,13 @@ fun LoginScreenContent(
         ) {
             Text(
                 buildAnnotatedString {
-                    append("Powered by ")
+                    append(Translations[R.string.powered_by] + " ")
                 }, fontSize = 10.sp
             )
             Text(
                 buildAnnotatedString {
                     val currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
-                    append("P4 Warehouse © $currentYear")
+                    append(Translations.format(R.string.copyright_text, currentYear))
                 },
                 fontSize = 10.sp,
                 color = Color(0xFF3553D0)
@@ -289,12 +288,12 @@ fun LoginScreenContent(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Settings,
-                        contentDescription = "Tenant",
+                        contentDescription = Translations[R.string.tenant_button],
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "Tenant",
+                        text = Translations[R.string.tenant_button],
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }

@@ -7,6 +7,7 @@ import androidx.core.content.edit
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.p4handheld.GlobalConstants
+import com.p4handheld.GlobalConstants.AppPreferences.TENANT_PREFS
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,7 +29,7 @@ class TenantViewModel(application: Application) : AndroidViewModel(application) 
     private val _uiState = MutableStateFlow(TenantUiState())
     val uiState: StateFlow<TenantUiState> = _uiState.asStateFlow()
 
-    private val sharedPreferences = application.getSharedPreferences("tenant_config", Context.MODE_PRIVATE)
+    private val sharedPreferences = application.getSharedPreferences(TENANT_PREFS, Context.MODE_PRIVATE)
 
     fun saveTenantConfiguration(tenantName: String, baseUrl: String) {
         viewModelScope.launch {

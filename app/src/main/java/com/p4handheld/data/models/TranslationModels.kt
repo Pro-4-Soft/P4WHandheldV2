@@ -13,7 +13,6 @@ data class TranslationResponse(
 )
 
 data class CachedTranslations(
-    val languageCode: String,
     val translations: Map<String, String>,
     val lastUpdated: Long = System.currentTimeMillis()
 )

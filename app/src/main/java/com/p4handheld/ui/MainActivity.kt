@@ -32,6 +32,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.p4handheld.GlobalConstants
+import com.p4handheld.GlobalConstants.AppPreferences.TENANT_PREFS
 import com.p4handheld.R
 import com.p4handheld.data.api.ApiClient
 import com.p4handheld.data.models.P4WEventType
@@ -44,6 +45,8 @@ import com.p4handheld.ui.navigation.AppNavigation
 import com.p4handheld.ui.navigation.Screen
 import com.p4handheld.ui.screens.viewmodels.MainViewModel
 import com.p4handheld.utils.PermissionChecker
+import com.p4handheld.utils.TranslationHelper
+import com.p4handheld.utils.TranslationManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
@@ -113,6 +116,9 @@ class MainActivity : ComponentActivity() {
 
         // Initialize Firebase Crashlytics
         FirebaseCrashlytics.getInstance().isCrashlyticsCollectionEnabled = true
+
+        // Initialize translations
+        initializeTranslations()
 
         // Register screen request receiver
         if (!screenRequestReceiverRegistered) {
@@ -197,7 +203,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun getStartDestination(): String {
-        val sharedPreferences = getSharedPreferences("tenant_config", MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences(TENANT_PREFS, MODE_PRIVATE)
         val isConfigured = sharedPreferences.getBoolean("is_configured", false)
 
         val authRepository = AuthRepository(this)
@@ -207,6 +213,17 @@ class MainActivity : ComponentActivity() {
             !isConfigured -> Screen.TenantSelect.route
             hasValidToken -> Screen.Menu.route
             else -> Screen.Login.route
+        }
+    }
+
+    private fun initializeTranslations() {
+        lifecycleScope.launch {
+            try {
+                TranslationManager.getInstance(this@MainActivity).loadTranslations()
+                Log.d("MainActivity", "Translations initialized successfully")
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Failed to initialize translations", e)
+            }
         }
     }
 }
@@ -274,8 +291,8 @@ fun MainActivityContent(
     ) { permissions ->
         if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
             // Location permissions granted
-            Toast.makeText(navController.context, "Location permissions granted", Toast.LENGTH_LONG).show()
-            Log.d("MainActivity", "Location permissions granted")
+            Toast.makeText(navController.context, TranslationHelper.locationPermissionGranted(navController.context), Toast.LENGTH_LONG).show()
+            Log.d("MainActivity", TranslationHelper.locationPermissionGranted(navController.context))
         }
     }
 

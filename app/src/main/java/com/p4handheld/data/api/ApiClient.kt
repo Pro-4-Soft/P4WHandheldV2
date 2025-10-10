@@ -3,6 +3,7 @@ package com.p4handheld.data.api
 import android.content.Context
 import com.google.gson.Gson
 import com.p4handheld.GlobalConstants
+import com.p4handheld.GlobalConstants.AppPreferences.TENANT_PREFS
 import com.p4handheld.data.models.LoginRequest
 import com.p4handheld.data.models.LoginResponse
 import com.p4handheld.data.models.MessageResponse
@@ -53,7 +54,7 @@ object ApiClient {
     }
 
     private fun getBaseUrl(): String {
-        val prefs = appContext.getSharedPreferences("tenant_config", Context.MODE_PRIVATE)
+        val prefs = appContext.getSharedPreferences(TENANT_PREFS, Context.MODE_PRIVATE)
         return prefs.getString("base_tenant_url", "https://app.p4warehouse.com") ?: throw Exception("Tenant url is not retrieved in api client!")
     }
 
@@ -321,11 +322,11 @@ object ApiClient {
                 }
             }
 
-        override suspend fun getTranslations(langId: String, translationRequest: TranslationRequest): ApiResponse<TranslationResponse> =
+        override suspend fun getTranslations(translationRequest: TranslationRequest): ApiResponse<TranslationResponse> =
             withContext(Dispatchers.IO) {
                 userRequestMutex.withLock {
                     try {
-                        val url = "${getBaseUrl()}/api/LangApi/GetTokens/$langId"
+                        val url = "${getBaseUrl()}/api/LangApi/GetTokens"
                         val json = Gson().toJson(translationRequest)
                         val requestBody = json.toRequestBody("application/json".toMediaType())
                         val request = Request.Builder().url(url).post(requestBody).build()

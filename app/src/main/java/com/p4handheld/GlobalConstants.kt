@@ -11,5 +11,6 @@ object GlobalConstants {
 
     object AppPreferences {
         const val AUTH_PREFS = "auth_prefs"
+        const val TENANT_PREFS = "tenant_prefs"
     }
 }

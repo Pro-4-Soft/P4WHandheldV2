@@ -30,7 +30,7 @@ interface ApiService {
 
     suspend fun getAssignedTaskCount(userId: String): ApiResponse<Int>
 
-    suspend fun getTranslations(langId: String, translationRequest: TranslationRequest): ApiResponse<TranslationResponse>
+    suspend fun getTranslations(translationRequest: TranslationRequest): ApiResponse<TranslationResponse>
 }
 
 data class ApiResponse<T>(

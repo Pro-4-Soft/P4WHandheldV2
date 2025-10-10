@@ -12,6 +12,8 @@ import com.p4handheld.R
 import com.p4handheld.data.api.ApiClient
 import com.p4handheld.data.models.CachedTranslations
 import com.p4handheld.data.models.TranslationRequest
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class TranslationManager private constructor(
     private val appContext: Context
@@ -49,15 +51,22 @@ class TranslationManager private constructor(
     }
 
     fun getString(key: String, fallback: String = key): String = cachedTranslations?.translations?.get(key) ?: fallback
-
-
-    suspend fun loadTranslations() {
+    
+    suspend fun loadTranslations(forceReload: Boolean = false) = withContext(Dispatchers.IO) {
         try {
             val currentTenant = getCurrentTenant()
             if (currentTenant == null) {
-                return
+                Log.d(TAG, "No tenant configured, skipping translation loading")
+                return@withContext
             }
+            
             val cachedTenant = getCachedTenant()
+
+            // Check if we already have translations for this tenant (unless force reload)
+            if (!forceReload && currentTenant == cachedTenant && cachedTranslations != null) {
+                Log.d(TAG, "Using cached translations for tenant: $currentTenant")
+                return@withContext
+            }
 
             if (currentTenant != cachedTenant) {
                 Log.d(TAG, "Tenant changed from '$cachedTenant' to '$currentTenant', reloading translations")
@@ -77,13 +86,11 @@ class TranslationManager private constructor(
                 cacheTenant(currentTenant)
                 cachedTranslations = newTranslations
                 Log.d(TAG, "Loaded ${newTranslations.translations.size} translations for tenant: $currentTenant")
-                Result.success(true)
             } else {
-                Result.failure(Exception("Failed: ${response.errorMessage}"))
+                Log.e(TAG, "Failed to load translations: ${response.errorMessage}")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error loading translations", e)
-            Result.failure(e)
         }
     }
 
@@ -139,13 +146,6 @@ class TranslationManager private constructor(
         } catch (e: Exception) {
             Log.e(TAG, "Error clearing cache", e)
         }
-    }
-
-
-    suspend fun onTenantChanged() {
-        Log.d(TAG, "Tenant changed, clearing cache and reloading translations")
-        clearCache()
-        return loadTranslations()
     }
 
     fun getAllTranslationKeys(): List<String> {

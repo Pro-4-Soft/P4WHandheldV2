@@ -8,6 +8,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.p4handheld.GlobalConstants
 import com.p4handheld.GlobalConstants.AppPreferences.TENANT_PREFS
+import com.p4handheld.utils.TranslationManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -68,6 +69,9 @@ class TenantViewModel(application: Application) : AndroidViewModel(application) 
                     putString("base_tenant_url", tenantUri)
                     putBoolean("is_configured", true)
                 }
+
+                TranslationManager.getInstance(getApplication()).loadTranslations(forceReload = true)
+
 
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,

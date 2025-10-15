@@ -41,6 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -48,6 +49,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import coil.request.CachePolicy
+import coil.request.ImageRequest
 import com.p4handheld.GlobalConstants
 import com.p4handheld.ui.screens.viewmodels.TenantUiState
 import com.p4handheld.ui.screens.viewmodels.TenantViewModel
@@ -128,8 +131,12 @@ fun TenantSelectScreenContent(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 AsyncImage(
-                    model = logoUrl,
                     contentDescription = "App Logo",
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(logoUrl)
+                        .memoryCachePolicy(CachePolicy.DISABLED)
+                        .diskCachePolicy(CachePolicy.DISABLED)
+                        .build(),
                     modifier = Modifier
                         .size(140.dp)
                         .padding(4.dp)

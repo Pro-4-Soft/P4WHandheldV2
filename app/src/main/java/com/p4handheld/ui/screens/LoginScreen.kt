@@ -42,7 +42,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -54,6 +53,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import coil.request.CachePolicy
+import coil.request.ImageRequest
 import com.p4handheld.R
 import com.p4handheld.ui.compose.theme.HandheldP4WTheme
 import com.p4handheld.ui.screens.viewmodels.LoginUiState
@@ -140,7 +141,11 @@ fun LoginScreenContent(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 AsyncImage(
-                    model = logoUrl,
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(logoUrl)
+                        .memoryCachePolicy(CachePolicy.DISABLED)
+                        .diskCachePolicy(CachePolicy.DISABLED)
+                        .build(),
                     contentDescription = Translations[R.string.app_logo_description],
                     modifier = Modifier
                         .size(140.dp)

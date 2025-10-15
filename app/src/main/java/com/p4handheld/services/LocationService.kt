@@ -1,18 +1,14 @@
 package com.p4handheld.services
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.location.LocationManager
-import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
-import androidx.core.app.NotificationCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.p4handheld.GlobalConstants
@@ -31,8 +27,6 @@ class LocationService : Service() {
     companion object {
         private const val TAG = "LocationService"
         private const val UPDATE_INTERVAL_MS = GlobalConstants.LOCATION_UPDATE_INTERVAL_MS
-        private const val CHANNEL_ID = "location_service_channel"
-        private const val NOTIFICATION_ID = 101
 
         fun startService(context: Context) {
             val intent = Intent(context, LocationService::class.java)
@@ -58,14 +52,11 @@ class LocationService : Service() {
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         authRepository = AuthRepository(applicationContext)
-        
-        createNotificationChannel()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "LocationService started")
 
-        startForegroundNotification()
         startLocationUpdates()
 
         return START_STICKY
@@ -78,35 +69,6 @@ class LocationService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
-
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                "Location Service",
-                NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = "Background location tracking"
-                setShowBadge(false)
-            }
-            
-            val notificationManager = getSystemService(NotificationManager::class.java)
-            notificationManager.createNotificationChannel(channel)
-        }
-    }
-
-    private fun startForegroundNotification() {
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("P4 Warehouse Location")
-            .setContentText("Tracking location in background")
-            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setOngoing(true)
-            .setShowWhen(false)
-            .build()
-
-        startForeground(NOTIFICATION_ID, notification)
-    }
 
     private fun startLocationUpdates() {
         locationUpdateRunnable = object : Runnable {

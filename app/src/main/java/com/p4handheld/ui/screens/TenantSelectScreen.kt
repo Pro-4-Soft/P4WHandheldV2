@@ -51,7 +51,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
-import com.p4handheld.GlobalConstants
 import com.p4handheld.ui.screens.viewmodels.TenantUiState
 import com.p4handheld.ui.screens.viewmodels.TenantViewModel
 
@@ -188,7 +187,6 @@ fun TenantSelectScreenContent(
                         value = baseUrl,
                         onValueChange = onBaseUrlChange,
                         label = { Text("Base URL") },
-                        placeholder = { Text(GlobalConstants.DEFAULT_BASE_URL) },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Uri,

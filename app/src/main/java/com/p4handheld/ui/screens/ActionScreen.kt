@@ -176,7 +176,8 @@ fun ActionScreen(
     LaunchedEffect(scanViewState?.dwOutputData) {
         scanViewState?.dwOutputData?.let { outputData ->
             val data = outputData.data
-            if (data.isNotEmpty() && authRepository.getEffectiveScanType() != ScanType.CAMERA) {
+            val effectiveScanType = authRepository.getEffectiveScanType()
+            if (data.isNotEmpty() && effectiveScanType != ScanType.CAMERA) {
                 when (uiState.currentPrompt.promptType) {
                     PromptType.SCAN -> {
                         println("ActionScreen: Scan data received (SCAN): $data")
@@ -838,42 +839,104 @@ fun PromptInputArea(
                 val authRepository = remember { AuthRepository(context) }
                 val effectiveScanType = remember { authRepository.getEffectiveScanType() }
 
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    if (effectiveScanType == ScanType.CAMERA) {
-                        Button(
-                            onClick = onShowCameraScanner,
+                when (effectiveScanType) {
+                    ScanType.LINE_FEED -> {
+                        // Force manual text input for LINE_FEED scan type
+                        val scanFocusRequester = remember { FocusRequester() }
+                        LaunchedEffect(Unit) {
+                            scanFocusRequester.requestFocus()
+                        }
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 4.dp),
-                            enabled = !isLoading,
-                            shape = RoundedCornerShape(5.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
-                            )
+                                .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 8.dp),
+                            verticalAlignment = Alignment.Bottom,
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.CameraAlt,
-                                contentDescription = null,
-                                modifier = Modifier.padding(end = 8.dp)
+                            OutlinedTextField(
+                                value = promptValue,
+                                onValueChange = onPromptValueChange,
+                                label = { Text(prompt.promptPlaceholder.ifBlank { "Enter scan data manually" }) },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .focusRequester(scanFocusRequester),
+                                keyboardOptions = KeyboardOptions(
+                                    imeAction = ImeAction.Send
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onSend = {
+                                        if (promptValue.isNotEmpty()) {
+                                            onSendPrompt(promptValue)
+                                        }
+                                    }
+                                )
                             )
-                            Text(prompt.promptPlaceholder)
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Button(
+                                onClick = {
+                                    if (promptValue.isNotEmpty()) {
+                                        onSendPrompt(promptValue)
+                                    }
+                                },
+                                enabled = promptValue.isNotEmpty() && !isLoading,
+                                modifier = Modifier.height(56.dp),
+                                shape = RoundedCornerShape(5.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF4CAF50)
+                                )
+                            ) {
+                                Text(text = "Send", fontSize = 18.sp)
+                            }
                         }
-                    } else {
-                        // DataWedge scan placeholder
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.Bottom
+                    }
+
+                    ScanType.CAMERA -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Text(
-                                text = prompt.promptPlaceholder,
-                                modifier = Modifier.align(Alignment.CenterVertically)
-                            )
+                            Button(
+                                onClick = onShowCameraScanner,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 4.dp),
+                                enabled = !isLoading,
+                                shape = RoundedCornerShape(5.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CameraAlt,
+                                    contentDescription = null,
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+                                Text(prompt.promptPlaceholder)
+                            }
+                        }
+                    }
+
+                    else -> {
+                        // DataWedge scan placeholder for ZEBRA_DATA_WEDGE
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.Bottom
+                            ) {
+                                Text(
+                                    text = prompt.promptPlaceholder,
+                                    modifier = Modifier.align(Alignment.CenterVertically)
+                                )
+                            }
                         }
                     }
                 }

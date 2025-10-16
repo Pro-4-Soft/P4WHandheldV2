@@ -72,7 +72,6 @@ class TenantViewModel(application: Application) : AndroidViewModel(application) 
 
                 TranslationManager.getInstance(getApplication()).loadTranslations()
 
-
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     isConfigurationSaved = true,

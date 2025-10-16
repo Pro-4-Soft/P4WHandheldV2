@@ -113,6 +113,7 @@ import com.p4handheld.ui.screens.viewmodels.ActionUiState
 import com.p4handheld.ui.screens.viewmodels.ActionViewModel
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.time.Instant
 import java.time.ZoneId
 
@@ -1072,8 +1073,8 @@ fun PhotoPromptScreen(
 ) {
     val context = LocalContext.current
 
-    // Convert Bitmap to Base64 JPEG
-    fun toBase64Jpeg(bitmap: Bitmap): String {
+    // Convert Bitmap to Base64 PNG with maximum quality (no compression)
+    fun bitmapToBase64MaxQuality(bitmap: Bitmap): String {
         val output = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)
         val bytes = output.toByteArray()
@@ -1083,21 +1084,55 @@ fun PhotoPromptScreen(
 
     var captureAttempted by remember { mutableStateOf(false) }
     var errorMsg by remember { mutableStateOf<String?>(null) }
+    var isCapturing by remember { mutableStateOf(false) }
 
+    // Create temporary file for full-resolution capture
+    val photoFile = remember {
+        File(context.cacheDir, "temp_photo_${System.currentTimeMillis()}.jpg")
+    }
+    val photoUri = remember {
+        androidx.core.content.FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            photoFile
+        )
+    }
+
+    // Use TakePicture contract for full resolution instead of TakePicturePreview
     val previewLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview()
-    ) { bitmap: Bitmap? ->
-        bitmap?.let {
-            val base64 = toBase64Jpeg(bitmap)
-            // Update local state and immediately send
-            onImageCaptured(base64)
-            onSendImage(base64)
-            errorMsg = null
-        }
-        if (bitmap == null) {
-            // User cancelled or camera failed
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        isCapturing = false
+        if (success && photoFile.exists()) {
+            try {
+                val options = BitmapFactory.Options().apply {
+                    inPreferredConfig = Bitmap.Config.ARGB_8888
+                    inSampleSize = 1
+                    inJustDecodeBounds = false
+                }
+                val bitmap = BitmapFactory.decodeFile(photoFile.absolutePath, options)
+                if (bitmap != null) {
+                    val base64 = bitmapToBase64MaxQuality(bitmap)
+
+                    onImageCaptured(base64)
+                    onSendImage(base64)
+                    errorMsg = null
+
+                    bitmap.recycle()
+                } else {
+                    captureAttempted = true
+                    errorMsg = "Failed to decode captured image"
+                }
+            } catch (e: Exception) {
+                captureAttempted = true
+                errorMsg = "Error processing image: ${e.message}"
+            } finally {
+                photoFile.delete()
+            }
+        } else {
             captureAttempted = true
             errorMsg = "No photo captured"
+            photoFile.delete()
         }
     }
 
@@ -1105,10 +1140,10 @@ fun PhotoPromptScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) {
-            previewLauncher.launch(null)
+            isCapturing = true
+            previewLauncher.launch(photoUri)
             errorMsg = null
-        }
-        if (!granted) {
+        } else {
             captureAttempted = true
             errorMsg = "Camera permission denied"
         }
@@ -1117,7 +1152,8 @@ fun PhotoPromptScreen(
     fun launchCameraWithPermission() {
         val permissionStatus = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
         if (permissionStatus == PackageManager.PERMISSION_GRANTED) {
-            previewLauncher.launch(null)
+            isCapturing = true
+            previewLauncher.launch(photoUri)
         } else {
             permissionLauncher.launch(Manifest.permission.CAMERA)
         }

@@ -94,6 +94,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -137,6 +138,7 @@ fun ActionScreen(
     val scanViewState by ScanStateHolder.scanViewStatus.observeAsState()
     var showSignaturePad by remember { mutableStateOf(false) }
     var showCameraScanner by remember { mutableStateOf(false) }
+    var showFullImage by remember { mutableStateOf<String?>(null) }
 
     val context = LocalContext.current
     val authRepository = remember { AuthRepository(context) }
@@ -303,6 +305,10 @@ fun ActionScreen(
                             if (authRepository.getEffectiveScanType() == ScanType.CAMERA) {
                                 showCameraScanner = true
                             }
+                        },
+                        onImageClick = { imageUrl ->
+                            val originalImageUrl = imageUrl.replace("/small", "/original")
+                            showFullImage = originalImageUrl
                         }
                     )
                 }
@@ -320,6 +326,11 @@ fun ActionScreen(
                         if (authRepository.getEffectiveScanType() == ScanType.CAMERA) {
                             showCameraScanner = true
                         }
+                    },
+                    onImageClick = { imageUrl ->
+                        // Convert /small to /original for full image
+                        val originalImageUrl = imageUrl.replace("/small", "/original")
+                        showFullImage = originalImageUrl
                     }
                 )
             }
@@ -333,6 +344,9 @@ fun ActionScreen(
         hasUnreadMessages = hasUnreadMessages,
         isTrackingLocation = isTrackingLocation,
         onMessageClick = onMessageClick,
+        showFullImage = showFullImage,
+        onShowFullImage = { imageUrl -> showFullImage = imageUrl },
+        onHideFullImage = { showFullImage = null }
     )
 }
 
@@ -344,6 +358,9 @@ fun ActionScreenWrapper(
     hasUnreadMessages: Boolean = false,
     isTrackingLocation: Boolean = false,
     onMessageClick: () -> Unit = {},
+    showFullImage: String? = null,
+    onShowFullImage: (String) -> Unit = {},
+    onHideFullImage: () -> Unit = {}
 ) {
 
     Column(
@@ -395,6 +412,45 @@ fun ActionScreenWrapper(
 
         promptInputComponent()
     }
+
+    // Full image dialog
+    showFullImage?.let { imageUrl ->
+        Dialog(onDismissRequest = onHideFullImage) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 32.dp)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.White, RoundedCornerShape(12.dp))
+                        .border(1.dp, Color.Gray, RoundedCornerShape(12.dp))
+                        .padding(12.dp)
+                ) {
+                    Image(
+                        painter = rememberAsyncImagePainter(model = imageUrl),
+                        contentDescription = "Full size image",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color.White)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Button(
+                        onClick = onHideFullImage,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    ) {
+                        Text("Close")
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -403,7 +459,8 @@ fun DefaultActionScreen(
     listState: LazyListState,
     viewModel: ActionViewModel,
     onShowSignature: () -> Unit = {},
-    onShowCameraScanner: () -> Unit = {}
+    onShowCameraScanner: () -> Unit = {},
+    onImageClick: (String) -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -447,7 +504,8 @@ fun DefaultActionScreen(
                                 onClick = {
                                     println("ActionScreen: Message clicked: ${message.title}")
                                     viewModel.onMessageClick(message, index)
-                                }
+                                },
+                                onImageClick = onImageClick
                             )
                         }
                     }
@@ -557,7 +615,8 @@ fun ToolBarActions(
 @Composable
 fun MessageCard(
     message: Message,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onImageClick: (String) -> Unit = {}
 ) {
     if (message.title == "divider") {
         HorizontalDivider(
@@ -589,7 +648,10 @@ fun MessageCard(
                         contentDescription = null,
                         modifier = Modifier
                             .fillMaxSize()
-                            .clip(RoundedCornerShape(6.dp)),
+                            .clip(RoundedCornerShape(6.dp))
+                            .clickable {
+                                message.imageResource?.let { onImageClick(it) }
+                            },
                         contentScale = ContentScale.Crop
                     )
                 }
@@ -637,6 +699,9 @@ fun MessageCard(
                         modifier = Modifier
                             .size(260.dp)
                             .clip(RoundedCornerShape(6.dp))
+                            .clickable {
+                                onImageClick(src)
+                            }
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                 } else {
@@ -649,6 +714,9 @@ fun MessageCard(
                             .clip(RoundedCornerShape(6.dp))
                             .border(1.dp, Color.Gray, RoundedCornerShape(6.dp))
                             .background(Color.White)
+                            .clickable {
+                                onImageClick(src)
+                            }
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                 }

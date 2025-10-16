@@ -107,6 +107,7 @@ import com.p4handheld.data.models.PromptType
 import com.p4handheld.data.models.ScanType
 import com.p4handheld.data.models.ToolbarAction
 import com.p4handheld.data.repository.AuthRepository
+import com.p4handheld.scanner.DWCommunicationWrapper
 import com.p4handheld.ui.components.CameraScannerScreen
 import com.p4handheld.ui.components.TopBarWithIcons
 import com.p4handheld.ui.screens.previews.spaceCamel
@@ -169,6 +170,17 @@ fun ActionScreen(
             coroutineScope.launch {
                 listState.animateScrollToItem(uiState.messageStack.size - 1)
             }
+        }
+    }
+
+    // Control DataWedge scanner based on loading state to save energy
+    LaunchedEffect(uiState.isLoading) {
+        if (uiState.isLoading) {
+            println("ActionScreen: Disabling DataWedge scanner during API call")
+            DWCommunicationWrapper.disableScanner()
+        } else {
+            println("ActionScreen: Enabling DataWedge scanner after API call")
+            DWCommunicationWrapper.enableScanner()
         }
     }
 

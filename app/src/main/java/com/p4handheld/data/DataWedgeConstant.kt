@@ -43,6 +43,11 @@ object DataWedgeConstant {
     // Notification identifiers for scanner status and profile switching events.
     const val PROFILE_SWITCH = "PROFILE_SWITCH"
 
+    // Scanner control actions
+    const val SCANNER_INPUT_PLUGIN = "com.symbol.datawedge.api.SCANNER_INPUT_PLUGIN"
+    const val ENABLE_PLUGIN = "ENABLE_PLUGIN"
+    const val DISABLE_PLUGIN = "DISABLE_PLUGIN"
+
     // Delay constants for various operations to prevent rapid polling or switching.
     const val DW_POLLING_DELAY = 500L
 }

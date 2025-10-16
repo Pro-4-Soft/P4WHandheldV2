@@ -7,10 +7,13 @@ import com.p4handheld.App
 import com.p4handheld.data.DataWedgeConstant.ACTION_DATAWEDGE
 import com.p4handheld.data.DataWedgeConstant.APPLICATION_EVENT_ACTION
 import com.p4handheld.data.DataWedgeConstant.COMMAND_IDENTIFIER
+import com.p4handheld.data.DataWedgeConstant.DISABLE_PLUGIN
+import com.p4handheld.data.DataWedgeConstant.ENABLE_PLUGIN
 import com.p4handheld.data.DataWedgeConstant.EXTRA_CREATE_PROFILE
 import com.p4handheld.data.DataWedgeConstant.EXTRA_PROFILE_NAME_1
 import com.p4handheld.data.DataWedgeConstant.EXTRA_SET_CONFIG
 import com.p4handheld.data.DataWedgeConstant.REGISTER_FOR_NOTIFICATION
+import com.p4handheld.data.DataWedgeConstant.SCANNER_INPUT_PLUGIN
 import com.p4handheld.data.DataWedgeConstant.UNREGISTER_FOR_NOTIFICATION
 import com.p4handheld.data.DataWedgeConstant.VALUE_COMMAND_IDENTIFIER_CREATE_PROFILE
 import com.p4handheld.data.DataWedgeConstant.VALUE_COMMAND_IDENTIFIER_SET_CONFIG
@@ -120,6 +123,32 @@ class ConfigurationManager {
             }
             sendBroadcast(intent)
         }
+    }
+
+    // Alternative method: Enable scanner using direct plugin control
+    fun enableScannerDirect() {
+        Log.d(TAG, "Enabling DataWedge scanner (direct plugin control)")
+        Log.d(TAG, "Intent action: $ACTION_DATAWEDGE")
+        Log.d(TAG, "Plugin control: $SCANNER_INPUT_PLUGIN = $ENABLE_PLUGIN")
+
+        val intent = Intent(ACTION_DATAWEDGE).apply {
+            putExtra(SCANNER_INPUT_PLUGIN, ENABLE_PLUGIN)
+            putExtra("SEND_RESULT", "true")
+        }
+        sendBroadcast(intent)
+    }
+
+    // Alternative method: Disable scanner using direct plugin control
+    fun disableScannerDirect() {
+        Log.d(TAG, "Disabling DataWedge scanner (direct plugin control)")
+        Log.d(TAG, "Intent action: $ACTION_DATAWEDGE")
+        Log.d(TAG, "Plugin control: $SCANNER_INPUT_PLUGIN = $DISABLE_PLUGIN")
+
+        val intent = Intent(ACTION_DATAWEDGE).apply {
+            putExtra(SCANNER_INPUT_PLUGIN, DISABLE_PLUGIN)
+            putExtra("SEND_RESULT", "true")
+        }
+        sendBroadcast(intent)
     }
 
     // Unregisters from specified notifications from DataWedge.

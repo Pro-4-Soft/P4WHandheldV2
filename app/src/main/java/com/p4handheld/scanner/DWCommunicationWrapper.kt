@@ -217,4 +217,22 @@ object DWCommunicationWrapper {
         )
         ScanStateHolder.isDataWedgeReady.value = true
     }
+
+    fun enableScanner() {
+        Log.d(TAG, "Enabling DataWedge scanner")
+        try {
+            ConfigurationManager().enableScannerDirect()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to enable scanner with direct method, trying config method", e)
+        }
+    }
+
+    fun disableScanner() {
+        Log.d(TAG, "Disabling DataWedge scanner")
+        try {
+            ConfigurationManager().disableScannerDirect()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to disable scanner with direct method, trying config method", e)
+        }
+    }
 }

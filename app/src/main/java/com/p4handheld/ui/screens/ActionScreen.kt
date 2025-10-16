@@ -97,6 +97,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.rememberAsyncImagePainter
 import com.p4handheld.GlobalConstants
 import com.p4handheld.data.ScanStateHolder
 import com.p4handheld.data.models.Message
@@ -626,6 +627,16 @@ fun MessageCard(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                 } else {
+                    Image(
+                        painter = rememberAsyncImagePainter(model = message.imageResource),
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .border(1.dp, Color.Gray, RoundedCornerShape(6.dp))
+                            .background(Color.White)
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
                 }
             }

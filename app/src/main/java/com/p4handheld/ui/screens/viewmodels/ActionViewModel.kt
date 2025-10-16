@@ -32,6 +32,7 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
     private val apiService = ApiClient.apiService
     private val authRepository = AuthRepository(application.applicationContext)
     private val _uiState = MutableStateFlow(ActionUiState())
+    private val baseTenantUrl = authRepository.getBaseTenantUrl()
 
     val uiState: StateFlow<ActionUiState> = _uiState.asStateFlow()
     val unauthorizedEvent = MutableSharedFlow<Unit>()
@@ -61,7 +62,15 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
                     val newMessages = if (promptValue?.startsWith("data:image") == true) {
                         addTakenPictureToMessageStack(response.messages, promptValue)
                     } else {
-                        response.messages
+                        response.messages.map { message ->
+                            message.copy(
+                                imageResource = if (message.imageResource?.isNotBlank() == true) {
+                                    "$baseTenantUrl/resource/${message.imageResource}/small"
+                                } else {
+                                    message.imageResource
+                                }
+                            )
+                        }
                     }
 
                     val updatedMessageStack = currentState.messageStack.dropLast(response.cleanLastMessages) + newMessages

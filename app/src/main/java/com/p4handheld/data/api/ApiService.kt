@@ -31,6 +31,8 @@ interface ApiService {
     suspend fun getAssignedTaskCount(userId: String): ApiResponse<Int>
 
     suspend fun getTranslations(translationRequest: TranslationRequest): ApiResponse<TranslationResponse>
+    
+    suspend fun preflightCheck(): ApiResponse<Unit>
 }
 
 data class ApiResponse<T>(

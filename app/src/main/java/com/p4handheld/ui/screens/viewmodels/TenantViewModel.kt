@@ -8,6 +8,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.p4handheld.GlobalConstants
 import com.p4handheld.GlobalConstants.AppPreferences.TENANT_PREFS
+import com.p4handheld.data.api.ApiClient
 import com.p4handheld.utils.TranslationManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +24,8 @@ data class TenantConfig(
 data class TenantUiState(
     val isLoading: Boolean = false,
     val isConfigurationSaved: Boolean = false,
+    val isPreflightChecking: Boolean = false,
+    val preflightSuccess: Boolean = false,
     val errorMessage: String? = null
 )
 
@@ -78,10 +81,50 @@ class TenantViewModel(application: Application) : AndroidViewModel(application) 
                     errorMessage = null
                 )
 
+                performPreflightCheck()
+
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     errorMessage = e.message ?: "An error occurred while saving configuration"
+                )
+            }
+        }
+    }
+
+    private fun performPreflightCheck() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isPreflightChecking = true,
+                errorMessage = null,
+                isLoading = true
+            )
+
+            try {
+                ApiClient.initialize(getApplication())
+                val result = ApiClient.apiService.preflightCheck()
+
+                if (result.isSuccessful) {
+                    _uiState.value = _uiState.value.copy(
+                        isPreflightChecking = false,
+                        preflightSuccess = true,
+                        errorMessage = null,
+                        isLoading = false
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isPreflightChecking = false,
+                        preflightSuccess = false,
+                        errorMessage = result.errorMessage ?: "Please verify your tenant configuration.",
+                        isLoading = false
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isPreflightChecking = false,
+                    preflightSuccess = false,
+                    errorMessage = "Network error: ${e.message ?: "Unable to connect to server"}",
+                    isLoading = false
                 )
             }
         }

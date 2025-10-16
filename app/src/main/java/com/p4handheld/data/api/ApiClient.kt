@@ -345,5 +345,41 @@ object ApiClient {
                     }
                 }
             }
+
+        override suspend fun preflightCheck(): ApiResponse<Unit> =
+            withContext(Dispatchers.IO) {
+                try {
+                    val url = "${getBaseUrl()}/data/loginInfo"
+
+                    val preflightClient = OkHttpClient.Builder()
+                        .connectTimeout(5, TimeUnit.SECONDS)
+                        .readTimeout(5, TimeUnit.SECONDS)
+                        .writeTimeout(5, TimeUnit.SECONDS)
+                        .build()
+
+                    val request = Request.Builder()
+                        .url(url)
+                        .get()
+                        .build()
+
+                    preflightClient.newCall(request).execute().use { response ->
+                        if (response.isSuccessful) {
+                            ApiResponse(true, Unit, response.code)
+                        } else {
+                            val body = response.body?.string().orEmpty()
+                            ApiResponse(false, null, response.code, body.ifEmpty { "Preflight check failed" })
+                        }
+                    }
+                } catch (e: Exception) {
+                    CrashlyticsHelper.recordException(
+                        e, mapOf(
+                            "api_method" to "preflightCheck",
+                            "error_type" to e.javaClass.simpleName,
+                            "base_url" to (runCatching { getBaseUrl() }.getOrNull() ?: "unknown")
+                        )
+                    )
+                    ApiResponse(false, null, 0, e.message ?: "Network error during preflight check")
+                }
+            }
     }
 }

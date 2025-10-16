@@ -72,9 +72,9 @@ fun TenantSelectScreen(
         showAdvanced = baseUrl.isBlank()
     }
 
-    // Navigate to Login when configuration is saved
-    LaunchedEffect(uiState.isConfigurationSaved) {
-        if (uiState.isConfigurationSaved) {
+    // Navigate to Login only when preflight check succeeds
+    LaunchedEffect(uiState.preflightSuccess) {
+        if (uiState.preflightSuccess) {
             onNavigateToLogin()
         }
     }
@@ -238,28 +238,51 @@ fun TenantSelectScreenContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
-                    enabled = tenantName.isNotBlank() && baseUrl.isNotBlank() && !uiState.isLoading,
+                    enabled = tenantName.isNotBlank() && baseUrl.isNotBlank() && !uiState.isLoading && !uiState.isPreflightChecking,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
                     ),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    if (uiState.isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = Color.White
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null,
-                            modifier = Modifier.padding(end = 8.dp)
-                        )
-                        Text(
-                            text = "Apply configuration",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium
-                        )
+                    when {
+                        uiState.isLoading -> {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color.White
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Saving configuration...",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+
+                        uiState.isPreflightChecking -> {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color.White
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Checking connection...",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+
+                        else -> {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            Text(
+                                text = "Apply configuration",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
                 }
                 //endregion
@@ -279,6 +302,7 @@ fun TenantSelectScreenContent(
                     containerColor = Color.Transparent,
                     contentColor = MaterialTheme.colorScheme.onSurface
                 ),
+                enabled = !uiState.isLoading
             ) {
                 Icon(
                     imageVector = Icons.Default.Settings,

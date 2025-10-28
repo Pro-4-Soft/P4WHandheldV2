@@ -87,6 +87,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -769,6 +770,7 @@ fun PromptInputArea(
     onShowSignature: () -> Unit,
     onShowCameraScanner: () -> Unit = {}
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RectangleShape,
@@ -855,6 +857,7 @@ fun PromptInputArea(
                     keyboardActions = KeyboardActions(
                         onSend = {
                             if (promptValue.isNotEmpty()) {
+                                keyboardController?.hide()
                                 onSendPrompt(promptValue)
                             }
                         }
@@ -888,6 +891,7 @@ fun PromptInputArea(
                             keyboardActions = KeyboardActions(
                                 onSend = {
                                     if (promptValue.isNotEmpty()) {
+                                        keyboardController?.hide()
                                         onSendPrompt(promptValue)
                                     }
                                 }
@@ -1085,6 +1089,7 @@ fun PromptInputArea(
                     keyboardActions = KeyboardActions(
                         onSend = {
                             if (promptValue.isNotEmpty()) {
+                                keyboardController?.hide()
                                 onSendPrompt(promptValue)
                             }
                         }

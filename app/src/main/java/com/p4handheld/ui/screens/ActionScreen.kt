@@ -307,7 +307,7 @@ fun ActionScreen(
                             }
                         },
                         onImageClick = { imageUrl ->
-                            val originalImageUrl = imageUrl.replace("/small", "/original")
+                            val originalImageUrl = imageUrl.replace("/medium", "/original")
                             showFullImage = originalImageUrl
                         }
                     )
@@ -329,7 +329,7 @@ fun ActionScreen(
                     },
                     onImageClick = { imageUrl ->
                         // Convert /small to /original for full image
-                        val originalImageUrl = imageUrl.replace("/small", "/original")
+                        val originalImageUrl = imageUrl.replace("/medium", "/original")
                         showFullImage = originalImageUrl
                     }
                 )
@@ -815,49 +815,21 @@ fun PromptInputArea(
                     }
                 }
 
-                Row(
+                OutlinedTextField(
+                    value = promptValue,
+                    onValueChange = {},
+                    label = { Text(prompt.promptPlaceholder.ifBlank { "Select date" }) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 8.dp),
-                    verticalAlignment = Alignment.Bottom,
-                ) {
-                    OutlinedTextField(
-                        value = promptValue,
-                        onValueChange = {},
-                        label = { Text(prompt.promptPlaceholder.ifBlank { "Select date" }) },
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = LocalIndication.current,
-                                onClick = { showPicker = true }
-                            ),
-                        readOnly = true,
-                        enabled = true
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Button(
-                        onClick = {
-                            if (promptValue.isNotEmpty()) {
-                                onSendPrompt(promptValue)
-                            } else {
-                                // If not yet set but selected in dialog, try to send it
-                                val formatted = formatSelectedDate()
-                                if (formatted != null) onSendPrompt(formatted)
-                            }
-                        },
-                        enabled = (promptValue.isNotEmpty() || dateState.selectedDateMillis != null) && !isLoading,
-                        modifier = Modifier.height(56.dp),
-                        shape = RoundedCornerShape(5.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF4CAF50)
-                        )
-                    ) {
-                        Text(text = "Send", fontSize = 18.sp)
-                    }
-                }
+                        .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 8.dp)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = LocalIndication.current,
+                            onClick = { showPicker = true }
+                        ),
+                    readOnly = true,
+                    enabled = true
+                )
             }
 
             PromptType.NUMBER -> {
@@ -865,53 +837,29 @@ fun PromptInputArea(
                 LaunchedEffect(Unit) {
                     numberFocusRequester.requestFocus()
                 }
-                Row(
+                OutlinedTextField(
+                    value = promptValue,
+                    onValueChange = { newVal ->
+                        val digitsOnly = newVal.filter { it.isDigit() }
+                        onPromptValueChange(digitsOnly)
+                    },
+                    label = { Text(prompt.promptPlaceholder.ifBlank { "Enter number" }) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 8.dp),
-                    verticalAlignment = Alignment.Bottom,
-                ) {
-                    OutlinedTextField(
-                        value = promptValue,
-                        onValueChange = { newVal ->
-                            val digitsOnly = newVal.filter { it.isDigit() }
-                            onPromptValueChange(digitsOnly)
-                        },
-                        label = { Text(prompt.promptPlaceholder.ifBlank { "Enter number" }) },
-                        modifier = Modifier
-                            .weight(1f)
-                            .focusRequester(numberFocusRequester),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Number,
-                            imeAction = ImeAction.Send
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onSend = {
-                                if (promptValue.isNotEmpty()) {
-                                    onSendPrompt(promptValue)
-                                }
-                            }
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Button(
-                        onClick = {
+                        .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 8.dp)
+                        .focusRequester(numberFocusRequester),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Send
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onSend = {
                             if (promptValue.isNotEmpty()) {
                                 onSendPrompt(promptValue)
                             }
-                        },
-                        enabled = promptValue.isNotEmpty() && !isLoading,
-                        modifier = Modifier.height(56.dp),
-                        shape = RoundedCornerShape(5.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF4CAF50)
-                        )
-                    ) {
-                        Text(text = "Send", fontSize = 18.sp)
-                    }
-                }
+                        }
+                    )
+                )
             }
 
             PromptType.SCAN -> {
@@ -926,49 +874,25 @@ fun PromptInputArea(
                         LaunchedEffect(Unit) {
                             scanFocusRequester.requestFocus()
                         }
-                        Row(
+                        OutlinedTextField(
+                            value = promptValue,
+                            onValueChange = onPromptValueChange,
+                            label = { Text(prompt.promptPlaceholder.ifBlank { "Enter scan data manually" }) },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 8.dp),
-                            verticalAlignment = Alignment.Bottom,
-                        ) {
-                            OutlinedTextField(
-                                value = promptValue,
-                                onValueChange = onPromptValueChange,
-                                label = { Text(prompt.promptPlaceholder.ifBlank { "Enter scan data manually" }) },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .focusRequester(scanFocusRequester),
-                                keyboardOptions = KeyboardOptions(
-                                    imeAction = ImeAction.Send
-                                ),
-                                keyboardActions = KeyboardActions(
-                                    onSend = {
-                                        if (promptValue.isNotEmpty()) {
-                                            onSendPrompt(promptValue)
-                                        }
-                                    }
-                                )
-                            )
-
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                            Button(
-                                onClick = {
+                                .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 8.dp)
+                                .focusRequester(scanFocusRequester),
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Send
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onSend = {
                                     if (promptValue.isNotEmpty()) {
                                         onSendPrompt(promptValue)
                                     }
-                                },
-                                enabled = promptValue.isNotEmpty() && !isLoading,
-                                modifier = Modifier.height(56.dp),
-                                shape = RoundedCornerShape(5.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFF4CAF50)
-                                )
-                            ) {
-                                Text(text = "Send", fontSize = 18.sp)
-                            }
-                        }
+                                }
+                            )
+                        )
                     }
 
                     ScanType.CAMERA -> {
@@ -1114,41 +1038,21 @@ fun PromptInputArea(
                 }
 
                 // Re-open control similar to DATE read-only field
-                Row(
+                OutlinedTextField(
+                    value = "",
+                    onValueChange = {},
+                    label = { Text(prompt.promptPlaceholder.ifBlank { "Select option" }) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 8.dp),
-                    verticalAlignment = Alignment.Bottom,
-                ) {
-                    OutlinedTextField(
-                        value = "",
-                        onValueChange = {},
-                        label = { Text(prompt.promptPlaceholder.ifBlank { "Select option" }) },
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = LocalIndication.current,
-                                onClick = { showPicker = true }
-                            ),
-                        readOnly = true,
-                        enabled = true
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Button(
-                        onClick = { showPicker = true },
-                        modifier = Modifier.height(56.dp),
-                        enabled = !isLoading,
-                        shape = RoundedCornerShape(5.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Text(text = "Choose")
-                    }
-                }
+                        .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 8.dp)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = LocalIndication.current,
+                            onClick = { showPicker = true }
+                        ),
+                    readOnly = true,
+                    enabled = true
+                )
             }
 
             PromptType.GO_TO_NEW_PAGE -> {
@@ -1167,49 +1071,25 @@ fun PromptInputArea(
                 LaunchedEffect(Unit) {
                     textFocusRequester.requestFocus()
                 }
-                Row(
+                OutlinedTextField(
+                    value = promptValue,
+                    onValueChange = onPromptValueChange,
+                    label = { Text(prompt.promptPlaceholder) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 8.dp),
-                    verticalAlignment = Alignment.Bottom,
-                ) {
-                    OutlinedTextField(
-                        value = promptValue,
-                        onValueChange = onPromptValueChange,
-                        label = { Text(prompt.promptPlaceholder) },
-                        modifier = Modifier
-                            .weight(1f)
-                            .focusRequester(textFocusRequester),
-                        keyboardOptions = KeyboardOptions(
-                            imeAction = ImeAction.Send
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onSend = {
-                                if (promptValue.isNotEmpty()) {
-                                    onSendPrompt(promptValue)
-                                }
-                            }
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Button(
-                        onClick = {
+                        .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 8.dp)
+                        .focusRequester(textFocusRequester),
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Send
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onSend = {
                             if (promptValue.isNotEmpty()) {
                                 onSendPrompt(promptValue)
                             }
-                        },
-                        enabled = promptValue.isNotEmpty(),
-                        modifier = Modifier.height(56.dp),
-                        shape = RoundedCornerShape(5.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF4CAF50)
-                        )
-                    ) {
-                        Text(text = "Send", fontSize = 18.sp)
-                    }
-                }
+                        }
+                    )
+                )
             }
 
             else -> {

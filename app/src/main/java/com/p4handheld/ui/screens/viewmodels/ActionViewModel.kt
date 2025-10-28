@@ -65,7 +65,7 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
                         response.messages.map { message ->
                             message.copy(
                                 imageResource = if (message.imageResource?.isNotBlank() == true) {
-                                    "$baseTenantUrl/resource/${message.imageResource}/small"
+                                    "$baseTenantUrl/resource/${message.imageResource}/medium"
                                 } else {
                                     message.imageResource
                                 }
@@ -200,7 +200,8 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
         _uiState.value = uiState.value.copy(
             isLoading = state,
             pageTitle = uiState.value.pageTitle,
-            pageKey = uiState.value.pageKey
+            pageKey = uiState.value.pageKey,
+            promptValue = ""
         )
     }
     //endregion

@@ -79,7 +79,7 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
 
                     _uiState.value = currentState.copy(
                         isLoading = false,
-                        currentPrompt = response.prompt,
+                        currentPrompt = response.prompt ?: Prompt(),
                         messageStack = finalMessageStack,
                         pageTitle = if (response.title.isNullOrBlank()) currentState.pageTitle else "",
                         toolbarActions = response.toolbarActions
@@ -138,7 +138,7 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
 
         if (clickedState != null) {
             _uiState.value = currentState.copy(
-                currentPrompt = clickedState.prompt,
+                currentPrompt = clickedState.prompt ?: Prompt(),
                 messageStack = truncatedMessages
             )
         }

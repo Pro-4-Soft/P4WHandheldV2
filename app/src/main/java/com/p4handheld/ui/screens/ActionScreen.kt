@@ -129,7 +129,6 @@ fun ActionScreen(
     onNavigateBack: () -> Unit,
     hasUnreadMessages: Boolean = false,
     isTrackingLocation: Boolean = false,
-    onMessageClick: () -> Unit = {},
     onNavigateToLogin: () -> Unit,
 ) {
     val viewModel: ActionViewModel = viewModel()
@@ -154,6 +153,7 @@ fun ActionScreen(
             onNavigateToLogin()
         }
     }
+
 
     // Initialize action on first composition with debug logging
     LaunchedEffect(initialPageKey) {
@@ -344,9 +344,7 @@ fun ActionScreen(
         uiState = uiState,
         hasUnreadMessages = hasUnreadMessages,
         isTrackingLocation = isTrackingLocation,
-        onMessageClick = onMessageClick,
         showFullImage = showFullImage,
-        onShowFullImage = { imageUrl -> showFullImage = imageUrl },
         onHideFullImage = { showFullImage = null }
     )
 }
@@ -358,12 +356,9 @@ fun ActionScreenWrapper(
     uiState: ActionUiState,
     hasUnreadMessages: Boolean = false,
     isTrackingLocation: Boolean = false,
-    onMessageClick: () -> Unit = {},
     showFullImage: String? = null,
-    onShowFullImage: (String) -> Unit = {},
     onHideFullImage: () -> Unit = {}
 ) {
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -413,7 +408,6 @@ fun ActionScreenWrapper(
 
         promptInputComponent()
     }
-
     // Full image dialog
     showFullImage?.let { imageUrl ->
         Dialog(onDismissRequest = onHideFullImage) {
@@ -1123,7 +1117,6 @@ fun PhotoPromptScreen(
 
     var captureAttempted by remember { mutableStateOf(false) }
     var errorMsg by remember { mutableStateOf<String?>(null) }
-    var isCapturing by remember { mutableStateOf(false) }
 
     // Create temporary file for full-resolution capture
     val photoFile = remember {
@@ -1141,7 +1134,6 @@ fun PhotoPromptScreen(
     val previewLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
-        isCapturing = false
         if (success && photoFile.exists()) {
             try {
                 val options = BitmapFactory.Options().apply {
@@ -1179,7 +1171,6 @@ fun PhotoPromptScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) {
-            isCapturing = true
             previewLauncher.launch(photoUri)
             errorMsg = null
         } else {
@@ -1191,7 +1182,6 @@ fun PhotoPromptScreen(
     fun launchCameraWithPermission() {
         val permissionStatus = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
         if (permissionStatus == PackageManager.PERMISSION_GRANTED) {
-            isCapturing = true
             previewLauncher.launch(photoUri)
         } else {
             permissionLauncher.launch(Manifest.permission.CAMERA)

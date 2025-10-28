@@ -329,7 +329,7 @@ fun ActionScreen(
                         }
                     },
                     onImageClick = { imageUrl ->
-                        // Convert /small to /original for full image
+                        // Convert /medium to /original for full image
                         val originalImageUrl = imageUrl.replace("/medium", "/original")
                         showFullImage = originalImageUrl
                     }

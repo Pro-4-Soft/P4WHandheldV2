@@ -58,6 +58,19 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
                 val result = apiService.processAction(currentPageKey, processRequest, taskId)
                 if (result.isSuccessful && result.body != null) {
                     val response = result.body
+
+                    if (response.prompt.promptType == PromptType.NOT_SELECTED) {
+                        updateUiStateWithErrorMessage("Action cannot be processed because prompt type is not selected. ")
+                        setLoading(false)
+                        return@launch
+                    }
+
+                    if (response.prompt.promptType != PromptType.GO_TO_NEW_PAGE && response.prompt.actionName.isNullOrBlank()) {
+                        updateUiStateWithErrorMessage("Action cannot be processed because action name is missed. ")
+                        setLoading(false)
+                        return@launch
+                    }
+
                     // If we just sent an image (Photo/Sign), append a separate image message.
                     val newMessages = if (promptValue?.startsWith("data:image") == true) {
                         addTakenPictureToMessageStack(response.messages, promptValue)
@@ -79,7 +92,7 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
 
                     _uiState.value = currentState.copy(
                         isLoading = false,
-                        currentPrompt = response.prompt ?: Prompt(),
+                        currentPrompt = response.prompt,
                         messageStack = finalMessageStack,
                         pageTitle = if (response.title.isNullOrBlank()) currentState.pageTitle else "",
                         toolbarActions = response.toolbarActions
@@ -92,7 +105,7 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
                     updateUiStateWithErrorMessage(result.errorMessage ?: "Process failed")
                 }
             } catch (e: Exception) {
-                updateUiStateWithErrorMessage("Error: ${e.message}")
+                updateUiStateWithErrorMessage("${e.message}")
             } finally {
                 setLoading(false)
             }

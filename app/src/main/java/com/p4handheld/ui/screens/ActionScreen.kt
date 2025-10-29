@@ -814,7 +814,7 @@ fun PromptInputArea(
                 OutlinedTextField(
                     value = promptValue,
                     onValueChange = {},
-                    label = { Text(prompt.promptPlaceholder.ifBlank { "Select date" }) },
+                    label = { Text(prompt.promptPlaceholder?.ifBlank { "Select date" } ?: "") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 8.dp)
@@ -839,7 +839,7 @@ fun PromptInputArea(
                         val digitsOnly = newVal.filter { it.isDigit() }
                         onPromptValueChange(digitsOnly)
                     },
-                    label = { Text(prompt.promptPlaceholder.ifBlank { "Enter number" }) },
+                    label = { Text(prompt.promptPlaceholder?.ifBlank { "Enter number" }.toString()) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 8.dp)
@@ -874,7 +874,7 @@ fun PromptInputArea(
                         OutlinedTextField(
                             value = promptValue,
                             onValueChange = onPromptValueChange,
-                            label = { Text(prompt.promptPlaceholder.ifBlank { "Enter scan data manually" }) },
+                            label = { Text(prompt.promptPlaceholder?.ifBlank { "Enter scan data manually" } ?: "") },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 8.dp)
@@ -916,7 +916,7 @@ fun PromptInputArea(
                                     contentDescription = null,
                                     modifier = Modifier.padding(end = 8.dp)
                                 )
-                                Text(prompt.promptPlaceholder)
+                                Text(prompt.promptPlaceholder ?: "")
                             }
                         }
                     }
@@ -935,7 +935,7 @@ fun PromptInputArea(
                                 verticalAlignment = Alignment.Bottom
                             ) {
                                 Text(
-                                    text = prompt.promptPlaceholder,
+                                    text = prompt.promptPlaceholder ?: "",
                                     modifier = Modifier.align(Alignment.CenterVertically)
                                 )
                             }
@@ -952,7 +952,7 @@ fun PromptInputArea(
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     Text(
-                        text = prompt.promptPlaceholder,
+                        text = prompt.promptPlaceholder ?: "",
                         modifier = Modifier.align(Alignment.CenterVertically)
                     )
                     Button(
@@ -1013,10 +1013,10 @@ fun PromptInputArea(
                 if (showPicker) {
                     AlertDialog(
                         onDismissRequest = { showPicker = false },
-                        title = { Text(text = prompt.promptPlaceholder.ifBlank { "Select an option" }) },
+                        title = { Text(text = prompt.promptPlaceholder?.ifBlank { "Select an option" } ?: "") },
                         text = {
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                prompt.items.forEach { item ->
+                                prompt.items?.forEach { item ->
                                     Button(
                                         onClick = {
                                             onSendPrompt(item.value)
@@ -1039,7 +1039,7 @@ fun PromptInputArea(
                 OutlinedTextField(
                     value = "",
                     onValueChange = {},
-                    label = { Text(prompt.promptPlaceholder.ifBlank { "Select option" }) },
+                    label = { Text(prompt.promptPlaceholder?.ifBlank { "Select option" } ?: "") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 8.dp)
@@ -1059,7 +1059,7 @@ fun PromptInputArea(
                     verticalAlignment = Alignment.Bottom,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Text(text = prompt.promptPlaceholder, fontSize = 18.sp, modifier = Modifier.padding(16.dp))
+                    Text(text = prompt.promptPlaceholder ?: "", fontSize = 18.sp, modifier = Modifier.padding(16.dp))
                 }
             }
 
@@ -1072,7 +1072,7 @@ fun PromptInputArea(
                 OutlinedTextField(
                     value = promptValue,
                     onValueChange = onPromptValueChange,
-                    label = { Text(prompt.promptPlaceholder) },
+                    label = { Text(prompt.promptPlaceholder ?: "") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 8.dp)

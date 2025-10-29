@@ -1,7 +1,6 @@
 package com.p4handheld.data.api
 
 import android.content.Context
-import com.google.gson.Gson
 import com.p4handheld.GlobalConstants
 import com.p4handheld.GlobalConstants.AppPreferences.TENANT_PREFS
 import com.p4handheld.data.models.LoginRequest
@@ -19,6 +18,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -36,6 +38,13 @@ object ApiClient {
 
     // Guards API calls to avoid overlapping user-initiated network operations
     private val userRequestMutex = Mutex()
+
+    // JSON configuration for Kotlinx Serialization
+    private val json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+        encodeDefaults = true
+    }
 
     // Helper function to handle API exceptions with Crashlytics reporting
     private fun handleApiException(e: Exception): ApiResponse<Nothing> {
@@ -80,12 +89,7 @@ object ApiClient {
             withContext(Dispatchers.IO) {
                 userRequestMutex.withLock {
                     try {
-                        val bodyJson = JSONObject().apply {
-                            put("Username", loginRequest.username)
-                            put("Password", loginRequest.password)
-                            put("HandheldNotificationToken", loginRequest.handheldNotificationToken)
-                        }.toString()
-
+                        val bodyJson = json.encodeToString(loginRequest)
                         val requestBody = bodyJson.toRequestBody("application/json".toMediaType())
                         val request = Request.Builder()
                             .url("${getBaseUrl()}/api/Auth/Login?source=LoginHandheld")
@@ -95,10 +99,17 @@ object ApiClient {
                         client.newCall(request).execute().use { response ->
                             val responseBody = response.body?.string().orEmpty()
                             if (response.isSuccessful) {
+                                // For successful login, responseBody is the token
                                 authToken = responseBody
-                                ApiResponse(true, LoginResponse(true, "Good", responseBody), response.code)
+                                ApiResponse(true, LoginResponse(true, "Login successful", responseBody), response.code)
                             } else {
-                                ApiResponse(false, null, response.code, responseBody)
+                                // For failed login, try to parse error response
+                                try {
+                                    val errorResponse = json.decodeFromString<LoginResponse>(responseBody)
+                                    ApiResponse(false, errorResponse, response.code, errorResponse.message)
+                                } catch (e: Exception) {
+                                    ApiResponse(false, null, response.code, responseBody)
+                                }
                             }
                         }
                     } catch (e: Exception) {
@@ -171,11 +182,14 @@ object ApiClient {
             withContext(Dispatchers.IO) {
                 userRequestMutex.withLock {
                     try {
-                        val jsonBody = JSONObject().apply {
-                            put("toUserId", toUserId)
-                            put("Message", message)
-                        }.toString()
+                        //                        @Serializable
+                        data class SendMessageRequest(
+                            val toUserId: String,
+                            @SerialName("Message") val message: String
+                        )
 
+                        val sendMessageRequest = SendMessageRequest(toUserId, message)
+                        val jsonBody = json.encodeToString(sendMessageRequest)
                         val requestBody = jsonBody.toRequestBody("application/json".toMediaType())
                         val request = Request.Builder()
                             .url("${getBaseUrl()}/api/UserMessageApi/SendMessage")
@@ -185,7 +199,7 @@ object ApiClient {
                         client.newCall(request).execute().use { response ->
                             val body = response.body?.string().orEmpty()
                             if (response.isSuccessful) {
-                                ApiResponse(true, Gson().fromJson(body, MessageResponse::class.java), response.code)
+                                ApiResponse(true, json.decodeFromString<MessageResponse>(body), response.code)
                             } else {
                                 ApiResponse(false, null, response.code, body)
                             }
@@ -208,7 +222,7 @@ object ApiClient {
                         client.newCall(request).execute().use { response ->
                             val body = response.body?.string().orEmpty()
                             if (response.isSuccessful) {
-                                val userContext = Gson().fromJson(body, UserContextResponse::class.java)
+                                val userContext = json.decodeFromString<UserContextResponse>(body)
                                 val handheldMenu = userContext.menu.firstOrNull { it.id == "Handheld" }?.children.orEmpty()
                                 val result = userContext.copy(menu = handheldMenu)
                                 ApiResponse(true, result, response.code)
@@ -230,7 +244,7 @@ object ApiClient {
             withContext(Dispatchers.IO) {
                 userRequestMutex.withLock {
                     try {
-                        val jsonBody = Gson().toJson(processRequest)
+                        val jsonBody = json.encodeToString(processRequest)
                         val requestBody = jsonBody.toRequestBody("application/json".toMediaType())
                         val pageKeyUnderscore = pageKey.replace('.', '_')
                         val url = buildString {
@@ -243,7 +257,7 @@ object ApiClient {
                         client.newCall(request).execute().use { response ->
                             val body = response.body?.string().orEmpty()
                             if (response.isSuccessful)
-                                ApiResponse(true, Gson().fromJson(body, PromptResponse::class.java), response.code)
+                                ApiResponse(true, json.decodeFromString<PromptResponse>(body), response.code)
                             else
                                 ApiResponse(false, null, response.code, body)
                         }
@@ -282,7 +296,7 @@ object ApiClient {
                         client.newCall(request).execute().use { response ->
                             val body = response.body?.string().orEmpty()
                             if (response.isSuccessful)
-                                ApiResponse(true, Gson().fromJson(body, Array<UserContact>::class.java).toList(), response.code)
+                                ApiResponse(true, json.decodeFromString<List<UserContact>>(body), response.code)
                             else
                                 ApiResponse(false, null, response.code, body)
                         }
@@ -312,7 +326,7 @@ object ApiClient {
                         client.newCall(request).execute().use { response ->
                             val body = response.body?.string().orEmpty()
                             if (response.isSuccessful)
-                                ApiResponse(true, Gson().fromJson(body, Array<UserChatMessage>::class.java).toList(), response.code)
+                                ApiResponse(true, json.decodeFromString<List<UserChatMessage>>(body), response.code)
                             else
                                 ApiResponse(false, null, response.code, body)
                         }
@@ -327,15 +341,14 @@ object ApiClient {
                 userRequestMutex.withLock {
                     try {
                         val url = "${getBaseUrl()}/api/Lang/GetTokens"
-                        val json = Gson().toJson(translationRequest)
-                        val requestBody = json.toRequestBody("application/json".toMediaType())
+                        val jsonBody = json.encodeToString(translationRequest)
+                        val requestBody = jsonBody.toRequestBody("application/json".toMediaType())
                         val request = Request.Builder().url(url).post(requestBody).build()
 
                         client.newCall(request).execute().use { response ->
                             val body = response.body?.string().orEmpty()
                             if (response.isSuccessful) {
-                                val translationResponse = Gson().fromJson(body, TranslationResponse::class.java)
-                                ApiResponse(true, translationResponse, response.code)
+                                ApiResponse(true, json.decodeFromString<TranslationResponse>(body), response.code)
                             } else {
                                 ApiResponse(false, null, response.code, body)
                             }

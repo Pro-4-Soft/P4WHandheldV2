@@ -3,8 +3,6 @@ package com.p4handheld.data.repository
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.p4handheld.GlobalConstants
 import com.p4handheld.GlobalConstants.AppPreferences.TENANT_PREFS
 import com.p4handheld.data.api.ApiClient
@@ -19,12 +17,21 @@ import com.p4handheld.firebase.FIREBASE_PREFS_NAME
 import com.p4handheld.utils.CrashlyticsHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 class AuthRepository(context: Context) {
     private val authSharedPreferences: SharedPreferences = context.getSharedPreferences(GlobalConstants.AppPreferences.AUTH_PREFS, Context.MODE_PRIVATE)
     private val firebaseSharedPreferences: SharedPreferences = context.getSharedPreferences(FIREBASE_PREFS_NAME, Context.MODE_PRIVATE)
     private val tenantSharedPreferences: SharedPreferences = context.getSharedPreferences(TENANT_PREFS, Context.MODE_PRIVATE)
     private val apiService: ApiService
+
+    // JSON configuration for Kotlinx Serialization
+    private val json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+        encodeDefaults = true
+    }
 
     init {
         ApiClient.initialize(context.applicationContext)
@@ -80,7 +87,7 @@ class AuthRepository(context: Context) {
 
     private fun storeUserContextData(userContextResponse: UserContextResponse) {
         authSharedPreferences.edit {
-            putString("menu_json", Gson().toJson(userContextResponse.menu))
+            putString("menu_json", json.encodeToString(userContextResponse.menu))
                 .putBoolean("track_geo_location", userContextResponse.trackGeoLocation)
                 .putString("user_scan_type", userContextResponse.userScanType.toString())
                 .putString("userId", userContextResponse.userId)
@@ -100,8 +107,7 @@ class AuthRepository(context: Context) {
 
         return if (menuJson != null) {
             try {
-                val listType = object : TypeToken<List<MenuItem>>() {}.type
-                val menuItems: List<MenuItem> = Gson().fromJson(menuJson, listType)
+                val menuItems: List<MenuItem> = json.decodeFromString(menuJson)
 
                 val userScanType = authSharedPreferences.getString("user_scan_type", null)
                 UserContextResponse(
@@ -121,11 +127,11 @@ class AuthRepository(context: Context) {
 
     fun shouldTrackLocation(): Boolean = authSharedPreferences.getBoolean("track_geo_location", false)
 
-    fun getStateParamsForPage(pageKey: String): Any? {
+    fun getStateParamsForPage(pageKey: String): String? {
         return getStoredUserContextData()
             ?.menu
             ?.firstOrNull { it.state == pageKey }
-            ?.stateParams
+            ?.stateParams.toString()
     }
 
     fun hasValidToken(): Boolean {

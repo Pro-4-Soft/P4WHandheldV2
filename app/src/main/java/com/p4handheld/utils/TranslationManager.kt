@@ -5,8 +5,9 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import androidx.core.content.edit
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
 import com.p4handheld.GlobalConstants
 import com.p4handheld.R
 import com.p4handheld.data.api.ApiClient
@@ -37,7 +38,11 @@ class TranslationManager private constructor(
     }
 
     private val prefs: SharedPreferences = appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-    private val gson = Gson()
+    private val json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+        encodeDefaults = true
+    }
     private var cachedTranslations: CachedTranslations? = null
 
     init {
@@ -97,8 +102,7 @@ class TranslationManager private constructor(
     private fun loadCachedTranslations() {
         prefs.getString(KEY_CACHED_TRANSLATIONS, null)?.let {
             try {
-                val type = object : TypeToken<CachedTranslations>() {}.type
-                cachedTranslations = gson.fromJson(it, type)
+                cachedTranslations = json.decodeFromString<CachedTranslations>(it)
             } catch (e: Exception) {
                 Log.e(TAG, "Error reading cached translations", e)
             }
@@ -107,7 +111,7 @@ class TranslationManager private constructor(
 
     private fun cacheTranslations(data: CachedTranslations) {
         try {
-            prefs.edit { putString(KEY_CACHED_TRANSLATIONS, gson.toJson(data)) }
+            prefs.edit { putString(KEY_CACHED_TRANSLATIONS, json.encodeToString(data)) }
         } catch (e: Exception) {
             Log.e(TAG, "Error saving translations", e)
         }

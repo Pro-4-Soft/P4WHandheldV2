@@ -10,6 +10,7 @@ import com.p4handheld.data.models.TranslationResponse
 import com.p4handheld.data.models.UserChatMessage
 import com.p4handheld.data.models.UserContact
 import com.p4handheld.data.models.UserContextResponse
+import kotlinx.serialization.Serializable
 
 interface ApiService {
     suspend fun login(loginRequest: LoginRequest): ApiResponse<LoginResponse>
@@ -31,10 +32,11 @@ interface ApiService {
     suspend fun getAssignedTaskCount(userId: String): ApiResponse<Int>
 
     suspend fun getTranslations(translationRequest: TranslationRequest): ApiResponse<TranslationResponse>
-    
+
     suspend fun preflightCheck(): ApiResponse<Unit>
 }
 
+@Serializable
 data class ApiResponse<T>(
     val isSuccessful: Boolean,
     val body: T? = null,

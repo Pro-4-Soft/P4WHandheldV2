@@ -46,13 +46,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.gson.Gson
-import com.google.gson.JsonSyntaxException
 import com.p4handheld.GlobalConstants
 import com.p4handheld.data.models.UserContact
 import com.p4handheld.ui.components.TopBarWithIcons
 import com.p4handheld.ui.screens.viewmodels.ContactsViewModel
 import com.p4handheld.utils.formatDateTime
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,10 +60,16 @@ fun ContactsScreen(
     onOpenChat: (contactId: String, contactName: String) -> Unit,
     hasUnreadMessages: Boolean = false,
     isTrackingLocation: Boolean = false,
-    onMessageClick: () -> Unit = {},
     openMainMenu: () -> Unit = {}
 ) {
     val viewModel: ContactsViewModel = viewModel()
+    // JSON configuration for Kotlinx Serialization
+    val json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+        encodeDefaults = true
+    }
+
     val uiState by viewModel.uiState.collectAsState()
 
     BackHandler() {
@@ -81,11 +87,11 @@ fun ContactsScreen(
                 if (eventType != "USER_CHAT_MESSAGE") return
                 val payload = intent.getStringExtra("payload") ?: return
                 try {
-                    val json = Gson()
-                    val msg = json.fromJson(payload, com.p4handheld.data.models.UserChatMessage::class.java)
+                    val msg = json.decodeFromString<com.p4handheld.data.models.UserChatMessage>(payload)
                     // Increment unread count for sender contact
                     viewModel.incrementUnread(msg.fromUserId)
-                } catch (_: JsonSyntaxException) {
+                } catch (e: SerializationException) {
+                    e.printStackTrace()
                 }
             }
         }

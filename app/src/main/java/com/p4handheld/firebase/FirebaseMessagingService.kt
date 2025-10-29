@@ -6,8 +6,10 @@ import android.media.MediaPlayer
 import android.util.Log
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import com.google.gson.Gson
-import com.google.gson.JsonSyntaxException
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.SerializationException
 import com.p4handheld.GlobalConstants
 import com.p4handheld.R
 import com.p4handheld.data.ChatStateManager
@@ -24,6 +26,13 @@ class FirebaseMessagingService : FirebaseMessagingService() {
 
     companion object {
         private const val TAG = "FCMService"
+    }
+    
+    // JSON configuration for Kotlinx Serialization
+    private val json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+        encodeDefaults = true
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
@@ -108,9 +117,8 @@ class FirebaseMessagingService : FirebaseMessagingService() {
             return null
         }
         return try {
-            val gson = Gson()
-            gson.fromJson(payloadStr, UserChatMessage::class.java)
-        } catch (ex: JsonSyntaxException) {
+            json.decodeFromString<UserChatMessage>(payloadStr)
+        } catch (ex: SerializationException) {
             ex.printStackTrace()
             null
         }
@@ -174,8 +182,8 @@ class FirebaseMessagingService : FirebaseMessagingService() {
             putExtra("title", message.title)
             putExtra("body", message.body)
             message.userChatMessage?.let {
-                val json = Gson().toJson(it)
-                putExtra("payload", json)
+                val jsonString = json.encodeToString(it)
+                putExtra("payload", jsonString)
             }
         }
         sendBroadcast(intent)

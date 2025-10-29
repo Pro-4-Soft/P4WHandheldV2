@@ -1,65 +1,72 @@
 package com.p4handheld.data.models
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
+@Serializable
 data class LoginRequest(
-    @SerializedName("Username")
+    @SerialName("Username")
     val username: String,
-    @SerializedName("Password")
+    @SerialName("Password")
     val password: String,
-    @SerializedName("HandheldNotificationToken")
+    @SerialName("HandheldNotificationToken")
     val handheldNotificationToken: String? = null
 )
 
+@Serializable
 data class LoginResponse(
-    @SerializedName("success")
+    @SerialName("success")
     val success: Boolean,
-    @SerializedName("message")
+    @SerialName("message")
     val message: String? = null,
-    @SerializedName("token")
+    @SerialName("token")
     val token: String? = null
 )
 
+@Serializable
 data class UserContextResponse(
-    @SerializedName("Menu")
+    @SerialName("Menu")
     val menu: List<MenuItem>,
 
-    @SerializedName("TrackGeoLocation")
+    @SerialName("TrackGeoLocation")
     val trackGeoLocation: Boolean,
 
-    @SerializedName("UserScanType")
+    @SerialName("UserScanType")
     val userScanType: ScanType,
 
-    @SerializedName("UserId")
+    @SerialName("UserId")
     val userId: String,
 
-    @SerializedName("LanguageId")
+    @SerialName("LanguageId")
     val languageId: String
 )
 
+@Serializable
 enum class ScanType() {
-    @SerializedName("ZebraDataWedge")
+    @SerialName("ZebraDataWedge")
     ZEBRA_DATA_WEDGE,
 
-    @SerializedName("Camera")
+    @SerialName("Camera")
     CAMERA,
 
-    @SerializedName("LineFeed")
+    @SerialName("LineFeed")
     LINE_FEED;
 }
 
+@Serializable
 data class MenuItem(
-    @SerializedName("Id")
+    @SerialName("Id")
     val id: String? = null,
-    @SerializedName("Label")
+    @SerialName("Label")
     val label: String,
-    @SerializedName("State")
+    @SerialName("State")
     val state: String? = null,
-    @SerializedName("StateParams")
-    val stateParams: Any? = null,
-    @SerializedName("Icon")
+    @SerialName("StateParams")
+    val stateParams: JsonElement? = null, // Changed from Any? to String? for serialization
+    @SerialName("Icon")
     val icon: String? = null,
-    @SerializedName("Children")
+    @SerialName("Children")
     val children: List<MenuItem> = emptyList(),
 )
 
@@ -69,98 +76,102 @@ data class ApiError(
 ) : Throwable(message)
 
 // Action View Models
+@Serializable
 enum class PromptType {
-    @SerializedName("Text")
+    @SerialName("Text")
     TEXT,
 
-    @SerializedName("Picker")
+    @SerialName("Picker")
     PICKER,
 
-    @SerializedName("Scan")
+    @SerialName("Scan")
     SCAN,
 
-    @SerializedName("GoToNewPage")
+    @SerialName("GoToNewPage")
     GO_TO_NEW_PAGE,
 
-    @SerializedName("Photo")
+    @SerialName("Photo")
     PHOTO,
 
-    @SerializedName("Sign")
+    @SerialName("Sign")
     SIGN,
 
-    @SerializedName("Date")
+    @SerialName("Date")
     DATE,
 
-    @SerializedName("Confirm")
+    @SerialName("Confirm")
     CONFIRM,
 
-    @SerializedName("Number")
+    @SerialName("Number")
     NUMBER,
 
     NOT_SELECTED
 }
 
+@Serializable
 data class PromptResponse(
-    @SerializedName("Prompt")
+    @SerialName("Prompt")
     val prompt: Prompt,
-    @SerializedName("Messages")
+    @SerialName("Messages")
     val messages: List<Message> = emptyList(),
-    @SerializedName("ToolbarActions")
+    @SerialName("ToolbarActions")
     val toolbarActions: List<ToolbarAction> = emptyList(),
-    @SerializedName("CommitAllMessages")
+    @SerialName("CommitAllMessages")
     val commitAllMessages: Boolean = false,
-    @SerializedName("CleanLastMessages")
+    @SerialName("CleanLastMessages")
     val cleanLastMessages: Int = 0,
-    @SerializedName("Title")
+    @SerialName("Title")
     val title: String? = null
 )
 
+@Serializable
 data class ToolbarAction(
-    @SerializedName("\$id")
+    @SerialName("\$id")
     val id: String? = null,
-    @SerializedName("Action")
+    @SerialName("Action")
     val action: String,
-    @SerializedName("Label")
+    @SerialName("Label")
     val label: String
 )
 
+@Serializable
 data class Message(
-    @SerializedName("Id")
+    @SerialName("Id")
     val id: String = "",
 
-    @SerializedName("Title")
+    @SerialName("Title")
     val title: String = "",
 
-    @SerializedName("Subtitle")
+    @SerialName("Subtitle")
     val subtitle: String? = "",
 
-    @SerializedName("Subtitle2")
+    @SerialName("Subtitle2")
     val subtitle2: String? = "",
 
-    @SerializedName("ImageResource")
+    @SerialName("ImageResource")
     val imageResource: String? = null,
 
     val showLargePicture: Boolean = false,
 
-    @SerializedName("Severity")
+    @SerialName("Severity")
     val severity: String = "",
 
-    @SerializedName("Localize")
+    @SerialName("Localize")
     val localize: Boolean = false,
 
-    @SerializedName("IsActionable")
+    @SerialName("IsActionable")
     val isActionable: Boolean = false,
 
-    @SerializedName("HandlerName")
+    @SerialName("HandlerName")
     val handlerName: String? = null,
 
-    @SerializedName("ActionName")
+    @SerialName("ActionName")
     val actionName: String? = null,
 
-    @SerializedName("PromptValue")
+    @SerialName("PromptValue")
     val promptValue: String? = null,
 
-    @SerializedName("TaskId")
+    @SerialName("TaskId")
     val taskId: String? = null,
 
     var isCommitted: Boolean = false,
@@ -168,71 +179,76 @@ data class Message(
 )
 
 
+@Serializable
 data class Prompt(
-    @SerializedName("Value")
-    val value: String = "",
-    @SerializedName("ActionName")
-    val actionName: String = "",
-    @SerializedName("PromptType")
-    val promptType: PromptType = PromptType.NOT_SELECTED,
-    @SerializedName("PromptPlaceholder")
-    val promptPlaceholder: String = "",
-    @SerializedName("Items")
-    val items: List<PromptItem> = emptyList(),
-    @SerializedName("DefaultValue")
-    val defaultValue: String = ""
+    @SerialName("Value")
+    val value: String? = "",
+    @SerialName("ActionName")
+    val actionName: String? = "",
+    @SerialName("PromptType")
+    val promptType: PromptType? = PromptType.NOT_SELECTED,
+    @SerialName("PromptPlaceholder")
+    val promptPlaceholder: String? = "",
+    @SerialName("Items")
+    val items: List<PromptItem>? = emptyList(),
+    @SerialName("DefaultValue")
+    val defaultValue: String? = ""
 )
 
+@Serializable
 data class PromptItem(
-    @SerializedName("Value")
+    @SerialName("Value")
     val value: String,
-    @SerializedName("Label")
+    @SerialName("Label")
     val label: String,
-    @SerializedName("Info1")
+    @SerialName("Info1")
     val info1: String? = null,
-    @SerializedName("Info2")
+    @SerialName("Info2")
     val info2: String? = null
 )
 
+@Serializable
 data class ProcessRequest(
-    @SerializedName("PromptValue")
+    @SerialName("PromptValue")
     val promptValue: String?,
-    @SerializedName("ActionFor")
+    @SerialName("ActionFor")
     val actionFor: String?,
-    @SerializedName("StateParams")
-    val stateParams: Any? = null
+    @SerialName("StateParams")
+    val stateParams: String? = null // Changed from Any? to String? for serialization
 )
 
 // ==================== USER MESSAGES / CHATS ====================
 
+@Serializable
 data class UserContact(
-    @SerializedName("Id")
+    @SerialName("Id")
     val id: String,
-    @SerializedName("LastSeen")
+    @SerialName("LastSeen")
     val lastSeen: String? = null,
-    @SerializedName("Username")
+    @SerialName("Username")
     val username: String,
-    @SerializedName("IsOnline")
+    @SerialName("IsOnline")
     val isOnline: Boolean = false,
-    @SerializedName("NewMessages")
+    @SerialName("NewMessages")
     val newMessages: Int = 0
 )
 
+@Serializable
 data class UserChatMessage(
-    @SerializedName("MessageId")
+    @SerialName("MessageId")
     val messageId: String,
-    @SerializedName("Timestamp")
+    @SerialName("Timestamp")
     val timestamp: String,
-    @SerializedName("FromUserId")
+    @SerialName("FromUserId")
     val fromUserId: String,
-    @SerializedName("FromUsername")
+    @SerialName("FromUsername")
     val fromUsername: String,
-    @SerializedName("ToUserId")
+    @SerialName("ToUserId")
     val toUserId: String,
-    @SerializedName("ToUsername")
+    @SerialName("ToUsername")
     val toUsername: String,
-    @SerializedName("IsNew")
+    @SerialName("IsNew")
     val isNew: Boolean,
-    @SerializedName("Message")
+    @SerialName("Message")
     val message: String
 )

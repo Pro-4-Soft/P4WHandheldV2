@@ -156,7 +156,7 @@ fun CameraScannerScreen(
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
-                    text = prompt.promptPlaceholder.ifBlank { "Point camera at barcode to scan" },
+                    text = prompt.promptPlaceholder?.ifBlank { "Point camera at barcode to scan" } ?: "",
                     color = Color.White,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,

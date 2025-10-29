@@ -60,8 +60,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.gson.Gson
-import com.google.gson.JsonSyntaxException
 import com.p4handheld.GlobalConstants
 import com.p4handheld.data.ChatStateManager
 import com.p4handheld.data.models.UserChatMessage
@@ -70,6 +68,8 @@ import com.p4handheld.ui.components.TopBarWithIcons
 import com.p4handheld.ui.screens.viewmodels.ChatViewModel
 import com.p4handheld.utils.formatChatTimestamp
 import kotlinx.coroutines.launch
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -86,6 +86,13 @@ fun ChatScreen(
     onNavigateToLogin: () -> Unit = {}
 ) {
     val viewModel: ChatViewModel = viewModel()
+    // JSON configuration for Kotlinx Serialization
+    val json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+        encodeDefaults = true
+    }
+
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
@@ -150,12 +157,13 @@ fun ChatScreen(
                 if (eventType != "USER_CHAT_MESSAGE") return
                 val payload = intent.getStringExtra("payload") ?: return
                 try {
-                    val msg = Gson().fromJson(payload, UserChatMessage::class.java)
+                    val msg = json.decodeFromString<UserChatMessage>(payload)
                     // Append only if the message involves this contact
                     if (msg.fromUserId == contactId || msg.toUserId == contactId) {
                         viewModel.appendIncomingMessage(msg)
                     }
-                } catch (_: JsonSyntaxException) {
+                } catch (e: SerializationException) {
+                    e.printStackTrace()
                 }
             }
         }

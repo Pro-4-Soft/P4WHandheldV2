@@ -1,7 +1,9 @@
 package com.p4handheld.data.models
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class P4WFirebaseNotification(
     val id: String = "",
     val title: String = "",
@@ -13,19 +15,21 @@ data class P4WFirebaseNotification(
     val taskAdded: Boolean
 )
 
+@Serializable
 enum class P4WEventType {
-    @SerializedName("UserChatMessage")
+    @SerialName("UserChatMessage")
     USER_CHAT_MESSAGE,
 
-    @SerializedName("ScreenRequested")
+    @SerialName("ScreenRequested")
     SCREEN_REQUESTED,
 
-    @SerializedName("TasksChanged")
+    @SerialName("TasksChanged")
     TASKS_CHANGED,
 
     UNKNOWN
 }
 
+@Serializable
 data class MessageResponse(
     val success: Boolean,
     val message: String? = null,

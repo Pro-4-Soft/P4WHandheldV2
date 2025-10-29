@@ -1,17 +1,21 @@
 package com.p4handheld.data.models
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class TranslationRequest(
-    @SerializedName("keys")
+    @SerialName("keys")
     val keys: List<String>
 )
 
+@Serializable
 data class TranslationResponse(
-    @SerializedName("translations")
+    @SerialName("translations")
     val translations: Map<String, String>
 )
 
+@Serializable
 data class CachedTranslations(
     val translations: Map<String, String>,
     val lastUpdated: Long = System.currentTimeMillis()

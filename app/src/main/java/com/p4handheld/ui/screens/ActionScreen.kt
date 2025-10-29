@@ -46,6 +46,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
@@ -59,6 +60,7 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -207,7 +209,7 @@ fun ActionScreen(
                     PromptType.DATE -> {
                         val trimmed = data.trim()
                         println("ActionScreen: Scan data received (DATE): $trimmed")
-                        viewModel.updatePromptValue(trimmed)
+                        viewModel.processAction(trimmed)
                     }
 
                     PromptType.NUMBER -> {
@@ -813,7 +815,7 @@ fun PromptInputArea(
 
                 OutlinedTextField(
                     value = promptValue,
-                    onValueChange = {},
+                    onValueChange = onPromptValueChange,
                     label = { Text(prompt.promptPlaceholder?.ifBlank { "Select date" } ?: "") },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -823,8 +825,25 @@ fun PromptInputArea(
                             indication = LocalIndication.current,
                             onClick = { showPicker = true }
                         ),
-                    readOnly = true,
-                    enabled = true
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Send
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onSend = {
+                            if (promptValue.isNotEmpty()) {
+                                keyboardController?.hide()
+                                onSendPrompt(promptValue)
+                            }
+                        }
+                    ),
+                    trailingIcon = {
+                        IconButton(onClick = { showPicker = true }) {
+                            Icon(
+                                imageVector = Icons.Default.CalendarToday,
+                                contentDescription = "Open date picker"
+                            )
+                        }
+                    }
                 )
             }
 
@@ -1035,7 +1054,6 @@ fun PromptInputArea(
                     )
                 }
 
-                // Re-open control similar to DATE read-only field
                 OutlinedTextField(
                     value = "",
                     onValueChange = {},

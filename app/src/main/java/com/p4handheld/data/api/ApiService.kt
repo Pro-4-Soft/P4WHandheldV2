@@ -2,7 +2,6 @@ package com.p4handheld.data.api
 
 import com.p4handheld.data.models.LoginRequest
 import com.p4handheld.data.models.LoginResponse
-import com.p4handheld.data.models.MessageResponse
 import com.p4handheld.data.models.ProcessRequest
 import com.p4handheld.data.models.PromptResponse
 import com.p4handheld.data.models.TranslationRequest
@@ -27,7 +26,7 @@ interface ApiService {
 
     suspend fun updateScreen(screenshotJpeg: ByteArray): ApiResponse<Unit>
 
-    suspend fun sendMessage(toUserId: String, message: String): ApiResponse<MessageResponse>
+    suspend fun sendMessage(toUserId: String, message: String): ApiResponse<Unit>
 
     suspend fun getAssignedTaskCount(userId: String): ApiResponse<Int>
 

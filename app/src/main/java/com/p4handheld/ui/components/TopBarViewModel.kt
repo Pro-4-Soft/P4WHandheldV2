@@ -38,6 +38,12 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
     private val firebaseManager = FirebaseManager.getInstance(application.applicationContext)
     private var registered = false
 
+
+    init {
+        updateLocationTrackingStatus()
+        updateMessageNotificationStatus()
+    }
+
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
@@ -48,6 +54,7 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
                         viewModelScope.launch {
                             try {
                                 val manager = firebaseManager
+                                var userId = authRepository.getUserId()
                                 val newCount = manager.refreshTasksCountFromServer()
                                 _uiState.value = _uiState.value.copy(taskCount = newCount)
                             } catch (_: Exception) {
@@ -70,8 +77,8 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
             refreshFromManagers()
             if (!hasFetchedTasksOnce) {
                 try {
-                    firebaseManager.ensureTasksCountInitialized()
-                    _uiState.value = _uiState.value.copy(taskCount = firebaseManager.getTasksCount())
+                    //firebaseManager.ensureTasksCountInitialized()
+                    //_uiState.value = _uiState.value.copy(taskCount = firebaseManager.getTasksCount())
                 } catch (_: Exception) {
                 }
                 hasFetchedTasksOnce = true
@@ -117,5 +124,17 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
             appCtx.unregisterReceiver(receiver)
             registered = false
         }
+    }
+
+    private fun updateMessageNotificationStatus() {
+        viewModelScope.launch {
+            val hasUnread = firebaseManager.hasUnreadMessages()
+            _uiState.value = _uiState.value.copy(hasUnreadMessages = hasUnread)
+        }
+    }
+
+    private fun updateLocationTrackingStatus() {
+        val isTracking = authRepository.shouldTrackLocation()
+        _uiState.value = _uiState.value.copy(isTrackingLocation = isTracking)
     }
 }

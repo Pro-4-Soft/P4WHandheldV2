@@ -342,8 +342,6 @@ fun ActionScreen(
         menuItemLabel = menuItemLabel,
         promptInputComponent = prompt,
         uiState = uiState,
-        hasUnreadMessages = hasUnreadMessages,
-        isTrackingLocation = isTrackingLocation,
         showFullImage = showFullImage,
         onHideFullImage = { showFullImage = null }
     )
@@ -354,8 +352,6 @@ fun ActionScreenWrapper(
     menuItemLabel: String,
     promptInputComponent: @Composable () -> Unit,
     uiState: ActionUiState,
-    hasUnreadMessages: Boolean = false,
-    isTrackingLocation: Boolean = false,
     showFullImage: String? = null,
     onHideFullImage: () -> Unit = {}
 ) {
@@ -367,10 +363,7 @@ fun ActionScreenWrapper(
             .navigationBarsPadding()
     ) {
         // Global TopBar with icons and username
-        TopBarWithIcons(
-            isTrackingLocation = isTrackingLocation,
-            hasUnreadMessages = hasUnreadMessages
-        )
+        TopBarWithIcons()
 
         //region Header with page title
         Surface(

@@ -169,10 +169,7 @@ fun MenuScreenContent(
     )
     {
         // Top bar with geolocation and message icons
-        TopBarWithIcons(
-            isTrackingLocation = uiState.isTrackingLocation,
-            hasUnreadMessages = uiState.hasUnreadMessages
-        )
+        TopBarWithIcons()
 
         //region Header with back button and breadcrumb
         Surface(
@@ -248,6 +245,7 @@ fun MenuScreenContent(
                     }
                     //endregion
                 }
+
                 uiState.currentMenuItems.isNotEmpty() -> {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(3),
@@ -268,6 +266,7 @@ fun MenuScreenContent(
                         }
                     }
                 }
+
                 else -> {
                     //region No menu items available Fallback content
                     Column(

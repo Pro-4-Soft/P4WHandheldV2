@@ -5,9 +5,9 @@ import com.p4handheld.GlobalConstants
 import com.p4handheld.GlobalConstants.AppPreferences.TENANT_PREFS
 import com.p4handheld.data.models.LoginRequest
 import com.p4handheld.data.models.LoginResponse
-import com.p4handheld.data.models.MessageResponse
 import com.p4handheld.data.models.ProcessRequest
 import com.p4handheld.data.models.PromptResponse
+import com.p4handheld.data.models.SendMessageRequest
 import com.p4handheld.data.models.TranslationRequest
 import com.p4handheld.data.models.TranslationResponse
 import com.p4handheld.data.models.UserChatMessage
@@ -18,7 +18,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -85,6 +84,7 @@ object ApiClient {
     }
 
     val apiService: ApiService = object : ApiService {
+
         override suspend fun login(loginRequest: LoginRequest): ApiResponse<LoginResponse> =
             withContext(Dispatchers.IO) {
                 userRequestMutex.withLock {
@@ -178,16 +178,10 @@ object ApiClient {
                 }
             }
 
-        override suspend fun sendMessage(toUserId: String, message: String): ApiResponse<MessageResponse> =
+        override suspend fun sendMessage(toUserId: String, message: String): ApiResponse<Unit> =
             withContext(Dispatchers.IO) {
                 userRequestMutex.withLock {
                     try {
-                        //                        @Serializable
-                        data class SendMessageRequest(
-                            val toUserId: String,
-                            @SerialName("Message") val message: String
-                        )
-
                         val sendMessageRequest = SendMessageRequest(toUserId, message)
                         val jsonBody = json.encodeToString(sendMessageRequest)
                         val requestBody = jsonBody.toRequestBody("application/json".toMediaType())
@@ -199,7 +193,7 @@ object ApiClient {
                         client.newCall(request).execute().use { response ->
                             val body = response.body?.string().orEmpty()
                             if (response.isSuccessful) {
-                                ApiResponse(true, json.decodeFromString<MessageResponse>(body), response.code)
+                                ApiResponse(true, null, response.code)
                             } else {
                                 ApiResponse(false, null, response.code, body)
                             }

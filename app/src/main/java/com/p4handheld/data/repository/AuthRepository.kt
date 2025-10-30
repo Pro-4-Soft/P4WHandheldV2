@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.p4handheld.GlobalConstants
+import com.p4handheld.GlobalConstants.AppPreferences.FIREBASE_PREFS_NAME
 import com.p4handheld.GlobalConstants.AppPreferences.TENANT_PREFS
 import com.p4handheld.data.api.ApiClient
 import com.p4handheld.data.api.ApiService
@@ -13,7 +14,6 @@ import com.p4handheld.data.models.MenuItem
 import com.p4handheld.data.models.ScanType
 import com.p4handheld.data.models.UserContextResponse
 import com.p4handheld.firebase.FIREBASE_KEY_FCM_TOKEN
-import com.p4handheld.firebase.FIREBASE_PREFS_NAME
 import com.p4handheld.utils.CrashlyticsHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -163,7 +163,7 @@ class AuthRepository(context: Context) {
 
                 try {
                     val firebaseManager = com.p4handheld.firebase.FirebaseManager.getInstance(context)
-                    firebaseManager.clearTokenOnLogout()
+                    firebaseManager.clearDataOnLogout()
                 } catch (e: Exception) {
                     CrashlyticsHelper.recordException(e, mapOf("operation" to "firebase_cleanup_on_logout"))
                 }
@@ -190,4 +190,5 @@ class AuthRepository(context: Context) {
     }
 
     fun getBaseTenantUrl(): String? = tenantSharedPreferences.getString("base_tenant_url", null)
+    fun getUserId(): String? = authSharedPreferences.getString("userId", null)
 }

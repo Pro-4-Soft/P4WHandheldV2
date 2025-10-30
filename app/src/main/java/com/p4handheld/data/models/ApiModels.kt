@@ -252,3 +252,9 @@ data class UserChatMessage(
     @SerialName("Message")
     val message: String
 )
+
+@Serializable
+data class SendMessageRequest(
+    val toUserId: String,
+    @SerialName("Message") val message: String
+)

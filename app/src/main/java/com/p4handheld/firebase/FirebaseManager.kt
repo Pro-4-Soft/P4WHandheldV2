@@ -61,28 +61,42 @@ class FirebaseManager(private val prefs: SharedPreferences) {
     @Volatile
     private var hasInitializedTaskCountOnce = false
 
-    suspend fun ensureTasksCountInitialized() {
-        if (hasInitializedTaskCountOnce) return
-        synchronized(this) {
-            if (hasInitializedTaskCountOnce) return
-            hasInitializedTaskCountOnce = true
-        }
-        try {
-            refreshTasksCountFromServer()
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to initialize tasks count", e)
-        }
-    }
 
     suspend fun refreshTasksCountFromServer(): Int = withContext(Dispatchers.IO) {
         val userId = prefs.getString("userId", null)
-        if (userId.isNullOrEmpty()) return@withContext getTasksCount()
-        val res = ApiClient.apiService.getAssignedTaskCount(userId)
+        val res = ApiClient.apiService.getAssignedTaskCount(userId.toString())
         if (res.isSuccessful && res.body != null) {
             setTasksCount(res.body)
             res.body
         } else {
             getTasksCount()
+        }
+    }
+    //endregion
+
+    //region Logout cleanup
+    fun clearDataOnLogout() {
+        try {
+            prefs.edit {
+                putString(FIREBASE_KEY_FCM_TOKEN, null)
+                putString("userId", null)
+                putBoolean("has_unread_messages", false)
+                putInt("tasks_count", 0)
+            }
+
+            hasInitializedTaskCountOnce = false
+
+            FirebaseMessaging.getInstance().deleteToken()
+                .addOnSuccessListener {
+                    Log.d(TAG, "FCM token deleted successfully on logout")
+                }
+                .addOnFailureListener { e ->
+                    Log.e(TAG, "Failed to delete FCM token on logout", e)
+                }
+
+            Log.d(TAG, "Firebase data cleared on logout")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during FCM cleanup on logout", e)
         }
     }
     //endregion

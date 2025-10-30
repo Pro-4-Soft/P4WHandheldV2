@@ -81,7 +81,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun sendMessage(toUserId: String, message: String, after: (() -> Unit)? = null) {
-        if (message.isBlank()) return
+        if (message.isBlank())
+            return
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isSending = true, errorMessage = null)
             val result = ApiClient.apiService.sendMessage(toUserId, message)

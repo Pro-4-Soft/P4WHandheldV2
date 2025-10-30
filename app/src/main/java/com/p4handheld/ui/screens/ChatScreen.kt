@@ -81,8 +81,6 @@ import java.util.Locale
 fun ChatScreen(
     contactId: String,
     contactName: String,
-    hasUnreadMessages: Boolean = false,
-    isTrackingLocation: Boolean = false,
     onNavigateToLogin: () -> Unit = {}
 ) {
     val viewModel: ChatViewModel = viewModel()
@@ -181,10 +179,7 @@ fun ChatScreen(
             .navigationBarsPadding()
             .statusBarsPadding(),
         topBar = {
-            TopBarWithIcons(
-                isTrackingLocation = isTrackingLocation,
-                hasUnreadMessages = hasUnreadMessages
-            )
+            TopBarWithIcons()
         }
     ) { padding ->
         Column(
@@ -326,8 +321,12 @@ fun ChatScreen(
                         onSend = {
                             if (messageText.isNotBlank() && !uiState.isSending) {
                                 val content = messageText
-                                viewModel.sendMessage(contactId, content) {
+                                viewModel.sendMessage(contactId, content)
+                                {
                                     messageText = ""
+                                    coroutineScope.launch {
+                                        listState.animateScrollToItem(Int.MAX_VALUE)
+                                    }
                                 }
                             }
                         }
@@ -351,6 +350,9 @@ fun ChatScreen(
                             val content = messageText
                             viewModel.sendMessage(contactId, content) {
                                 messageText = ""
+                                coroutineScope.launch {
+                                    listState.animateScrollToItem(Int.MAX_VALUE)
+                                }
                             }
                         }
                     },

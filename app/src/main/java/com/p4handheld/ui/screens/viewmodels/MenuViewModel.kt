@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.p4handheld.data.models.ApiError
 import com.p4handheld.data.models.MenuItem
 import com.p4handheld.data.repository.AuthRepository
-import com.p4handheld.firebase.FirebaseManager
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,22 +20,17 @@ data class MenuUiState(
     val breadcrumbStack: List<String> = emptyList(),
     val errorMessage: String? = null,
     val selectedMenuItem: MenuItem? = null,
-    val httpStatusCode: Int? = null,
-    val isTrackingLocation: Boolean = false,
-    val hasUnreadMessages: Boolean = false
+    val httpStatusCode: Int? = null
 )
 
 class MenuViewModel(application: Application) : AndroidViewModel(application) {
     private val authRepository = AuthRepository(application)
-    private val firebaseManager = FirebaseManager.getInstance(application)
     private val _uiState = MutableStateFlow(MenuUiState())
     val uiState: StateFlow<MenuUiState> = _uiState.asStateFlow()
     val unauthorizedEvent = MutableSharedFlow<Unit>()
 
     init {
         loadMenuData()
-        updateLocationTrackingStatus()
-        updateMessageNotificationStatus()
     }
 
     private fun loadMenuData() {
@@ -119,18 +113,6 @@ class MenuViewModel(application: Application) : AndroidViewModel(application) {
                 menuStack = currentState.menuStack.dropLast(1),
                 breadcrumbStack = currentState.breadcrumbStack.dropLast(1),
             )
-        }
-    }
-
-    private fun updateLocationTrackingStatus() {
-        val isTracking = authRepository.shouldTrackLocation()
-        _uiState.value = _uiState.value.copy(isTrackingLocation = isTracking)
-    }
-
-    private fun updateMessageNotificationStatus() {
-        viewModelScope.launch {
-            val hasUnread = firebaseManager.hasUnreadMessages()
-            _uiState.value = _uiState.value.copy(hasUnreadMessages = hasUnread)
         }
     }
 }

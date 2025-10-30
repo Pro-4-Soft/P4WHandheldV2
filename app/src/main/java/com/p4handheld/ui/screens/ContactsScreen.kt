@@ -58,8 +58,6 @@ import kotlinx.serialization.json.Json
 @Composable
 fun ContactsScreen(
     onOpenChat: (contactId: String, contactName: String) -> Unit,
-    hasUnreadMessages: Boolean = false,
-    isTrackingLocation: Boolean = false,
     openMainMenu: () -> Unit = {}
 ) {
     val viewModel: ContactsViewModel = viewModel()
@@ -106,10 +104,7 @@ fun ContactsScreen(
 
     Scaffold(
         topBar = {
-            TopBarWithIcons(
-                isTrackingLocation = isTrackingLocation,
-                hasUnreadMessages = hasUnreadMessages
-            )
+            TopBarWithIcons()
         },
         modifier = Modifier
             .navigationBarsPadding()
@@ -260,10 +255,7 @@ fun PreviewContactsScree2n() {
     MaterialTheme {
         Scaffold(
             topBar = {
-                TopBarWithIcons(
-                    isTrackingLocation = true,
-                    hasUnreadMessages = true
-                )
+                TopBarWithIcons()
             }
         ) { padding ->
             Column(

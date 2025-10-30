@@ -73,7 +73,6 @@ fun AppNavigation(
                 onOpenChat = { id, name ->
                     navController.navigate(Screen.Chat.createRoute(id, name))
                 },
-                isTrackingLocation = isTrackingLocation,
                 openMainMenu = {
                     navController.navigate(Screen.Menu.route) {
                         popUpTo(Screen.Contacts.route) { inclusive = true }
@@ -87,8 +86,6 @@ fun AppNavigation(
                 onOpenChat = { id, name ->
                     navController.navigate(Screen.Chat.createRoute(id, name))
                 },
-                hasUnreadMessages = false,
-                isTrackingLocation = isTrackingLocation,
                 openMainMenu = {
                     navController.navigate(Screen.Menu.route) {
                         popUpTo(Screen.Contacts.route) { inclusive = true }
@@ -106,8 +103,6 @@ fun AppNavigation(
             ChatScreen(
                 contactId = contactId,
                 contactName = contactName,
-                hasUnreadMessages = false,
-                isTrackingLocation = isTrackingLocation,
                 onNavigateToLogin = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Menu.route) { inclusive = true }

@@ -36,10 +36,7 @@ import com.p4handheld.services.LocationStatus
 import com.p4handheld.ui.compose.theme.HandheldP4WTheme
 
 @Composable
-fun TopBarWithIcons(
-    isTrackingLocation: Boolean = false,
-    hasUnreadMessages: Boolean = false
-) {
+fun TopBarWithIcons() {
     val vm: TopBarViewModel = viewModel()
     val topState = vm.uiState.collectAsState().value
     Surface(
@@ -55,7 +52,7 @@ fun TopBarWithIcons(
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            if (isTrackingLocation || topState.isTrackingLocation) {
+            if (topState.isTrackingLocation) {
                 // Location icon with status indicator
                 Box {
                     IconButton(
@@ -88,7 +85,7 @@ fun TopBarWithIcons(
                 )
 
                 // Unread messages indicator
-                if (hasUnreadMessages || topState.hasUnreadMessages) {
+                if (topState.hasUnreadMessages) {
                     Box(
                         modifier = Modifier
                             .size(8.dp)

@@ -28,10 +28,3 @@ enum class P4WEventType {
 
     UNKNOWN
 }
-
-@Serializable
-data class MessageResponse(
-    val success: Boolean,
-    val message: String? = null,
-    val messageId: String? = null
-)

@@ -34,6 +34,8 @@ interface ApiService {
     suspend fun getTranslations(translationRequest: TranslationRequest): ApiResponse<TranslationResponse>
 
     suspend fun preflightCheck(): ApiResponse<Unit>
+
+    suspend fun logout(): ApiResponse<Unit>
 }
 
 @Serializable

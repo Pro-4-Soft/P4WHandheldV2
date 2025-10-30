@@ -155,11 +155,38 @@ class AuthRepository(context: Context) {
         firebaseSharedPreferences.edit { putString("userId", null) }
     }
 
-    fun logout() {
-        authSharedPreferences.edit { clear() }
+    suspend fun logout(context: Context): Result<Boolean> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val logoutResult = apiService.logout()
+                authSharedPreferences.edit { clear() }
 
-        CrashlyticsHelper.clearUserInfo()
-        CrashlyticsHelper.log("User logged out")
+                try {
+                    val firebaseManager = com.p4handheld.firebase.FirebaseManager.getInstance(context)
+                    firebaseManager.clearTokenOnLogout()
+                } catch (e: Exception) {
+                    CrashlyticsHelper.recordException(e, mapOf("operation" to "firebase_cleanup_on_logout"))
+                }
+
+                CrashlyticsHelper.clearUserInfo()
+                CrashlyticsHelper.log("User logged out")
+
+                if (logoutResult.isSuccessful) {
+                    Result.success(true)
+                } else {
+                    CrashlyticsHelper.recordException(
+                        Exception("API logout failed: ${logoutResult.errorMessage}"),
+                        mapOf("operation" to "api_logout_failed", "error_code" to logoutResult.code.toString())
+                    )
+                    Result.success(true)
+                }
+            } catch (e: Exception) {
+                authSharedPreferences.edit { clear() }
+                CrashlyticsHelper.clearUserInfo()
+                CrashlyticsHelper.recordException(e, mapOf("operation" to "logout_exception"))
+                Result.failure(e)
+            }
+        }
     }
 
     fun getBaseTenantUrl(): String? = tenantSharedPreferences.getString("base_tenant_url", null)

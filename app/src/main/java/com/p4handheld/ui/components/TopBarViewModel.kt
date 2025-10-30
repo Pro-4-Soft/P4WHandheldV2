@@ -59,7 +59,6 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
                 GlobalConstants.Intents.LOCATION_STATUS_CHANGED -> {
                     val statusString = intent.getStringExtra("locationStatus")
                     val statusEnum = LocationStatus.valueOf(statusString ?: "DISABLED")
-
                     _uiState.value = _uiState.value.copy(locationStatus = statusEnum)
                 }
             }

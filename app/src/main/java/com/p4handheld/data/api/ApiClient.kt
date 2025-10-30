@@ -394,5 +394,37 @@ object ApiClient {
                     ApiResponse(false, null, 0, e.message ?: "Network error during preflight check")
                 }
             }
+
+        override suspend fun logout(): ApiResponse<Unit> =
+            withContext(Dispatchers.IO) {
+                userRequestMutex.withLock {
+                    try {
+                        val request = Request.Builder()
+                            .url("${getBaseUrl()}/api/Auth/Logout")
+                            .post("".toRequestBody("application/json".toMediaType()))
+                            .build()
+
+                        client.newCall(request).execute().use { response ->
+                            val responseBody = response.body?.string().orEmpty()
+                            if (response.isSuccessful) {
+                                // Clear the auth token after successful logout
+                                authToken = null
+                                ApiResponse(true, Unit, response.code)
+                            } else {
+                                ApiResponse(false, null, response.code, responseBody)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        CrashlyticsHelper.recordException(
+                            e, mapOf(
+                                "api_method" to "logout",
+                                "error_type" to e.javaClass.simpleName,
+                                "base_url" to (runCatching { getBaseUrl() }.getOrNull() ?: "unknown")
+                            )
+                        )
+                        ApiResponse(false, null, 0, e.message ?: "Network error during logout")
+                    }
+                }
+            }
     }
 }

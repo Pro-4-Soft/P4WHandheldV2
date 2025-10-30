@@ -16,12 +16,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,9 +44,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -60,7 +59,6 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -813,38 +811,24 @@ fun PromptInputArea(
                     }
                 }
 
-                OutlinedTextField(
-                    value = promptValue,
-                    onValueChange = onPromptValueChange,
-                    label = { Text(prompt.promptPlaceholder?.ifBlank { "Select date" } ?: "") },
+                Button(
+                    onClick = { showPicker = true },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 8.dp)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = LocalIndication.current,
-                            onClick = { showPicker = true }
-                        ),
-                    keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Send
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onSend = {
-                            if (promptValue.isNotEmpty()) {
-                                keyboardController?.hide()
-                                onSendPrompt(promptValue)
-                            }
-                        }
-                    ),
-                    trailingIcon = {
-                        IconButton(onClick = { showPicker = true }) {
-                            Icon(
-                                imageVector = Icons.Default.CalendarToday,
-                                contentDescription = "Open date picker"
-                            )
-                        }
-                    }
-                )
+                        .padding(horizontal = 4.dp),
+                    enabled = !isLoading,
+                    shape = RoundedCornerShape(5.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.DateRange,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(prompt.promptPlaceholder?.ifBlank { "Select date" } ?: "")
+                }
             }
 
             PromptType.NUMBER -> {
@@ -1054,21 +1038,24 @@ fun PromptInputArea(
                     )
                 }
 
-                OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
-                    label = { Text(prompt.promptPlaceholder?.ifBlank { "Select option" } ?: "") },
+                Button(
+                    onClick = { showPicker = true },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 4.dp, top = 0.dp, end = 4.dp, bottom = 8.dp)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = LocalIndication.current,
-                            onClick = { showPicker = true }
-                        ),
-                    readOnly = true,
-                    enabled = true
-                )
+                        .padding(horizontal = 4.dp),
+                    enabled = !isLoading,
+                    shape = RoundedCornerShape(5.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(prompt.promptPlaceholder?.ifBlank { "Select option" } ?: "")
+                }
             }
 
             PromptType.GO_TO_NEW_PAGE -> {

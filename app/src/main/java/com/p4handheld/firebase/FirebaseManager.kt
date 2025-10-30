@@ -5,12 +5,12 @@ import android.content.SharedPreferences
 import android.util.Log
 import androidx.core.content.edit
 import com.google.firebase.messaging.FirebaseMessaging
+import com.p4handheld.GlobalConstants.AppPreferences.FIREBASE_PREFS_NAME
 import com.p4handheld.data.api.ApiClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 private const val TAG = "FirebaseManager"
-const val FIREBASE_PREFS_NAME = "firebase_prefs"
 const val FIREBASE_KEY_FCM_TOKEN = "fcm_token"
 
 class FirebaseManager(private val prefs: SharedPreferences) {

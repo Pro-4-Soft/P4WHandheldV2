@@ -184,7 +184,7 @@ class ActionViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun updateUiStateWithErrorMessage(errorMessage: String) {
         val errorMessages = uiState.value.messageStack + Message(
-            title = "Error: $errorMessage",
+            title = errorMessage,
             severity = "Error"
         )
 

@@ -91,7 +91,15 @@ class MenuViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun logout() {
-        authRepository.logout()
+        viewModelScope.launch {
+            try {
+                authRepository.logout(getApplication())
+            } catch (e: Exception) {
+                // Log error but don't prevent logout
+                // User should still be logged out locally even if API call fails
+                println("MenuViewModel: Logout error: ${e.message}")
+            }
+        }
     }
 
     fun navigateToSubMenu(menuItem: MenuItem) {

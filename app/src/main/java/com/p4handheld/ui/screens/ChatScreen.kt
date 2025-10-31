@@ -63,7 +63,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.p4handheld.GlobalConstants
 import com.p4handheld.data.ChatStateManager
 import com.p4handheld.data.models.UserChatMessage
-import com.p4handheld.firebase.FirebaseManager
 import com.p4handheld.ui.components.TopBarWithIcons
 import com.p4handheld.ui.screens.viewmodels.ChatViewModel
 import com.p4handheld.utils.formatChatTimestamp
@@ -137,7 +136,6 @@ fun ChatScreen(
         viewModel.loadMessages(contactId)
         // Clear unread badge when opening a chat
         try {
-            FirebaseManager.getInstance(ctx).setHasUnreadMessages(false)
             val intent = Intent(GlobalConstants.Intents.FIREBASE_MESSAGE_RECEIVED)
             intent.setPackage(ctx.packageName)
             ctx.sendBroadcast(intent)
@@ -159,6 +157,10 @@ fun ChatScreen(
                     // Append only if the message involves this contact
                     if (msg.fromUserId == contactId || msg.toUserId == contactId) {
                         viewModel.appendIncomingMessage(msg)
+                        // Auto-scroll to bottom when new message is received
+                        coroutineScope.launch {
+                            listState.animateScrollToItem(Int.MAX_VALUE)
+                        }
                     }
                 } catch (e: SerializationException) {
                     e.printStackTrace()

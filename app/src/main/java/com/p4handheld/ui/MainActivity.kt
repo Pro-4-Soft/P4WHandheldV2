@@ -120,6 +120,9 @@ class MainActivity : ComponentActivity() {
         // Initialize translations
         initializeTranslations()
 
+        // Load user context on application start if user is logged in
+        loadUserContextOnStart()
+
         // Register screen request receiver
         if (!screenRequestReceiverRegistered) {
             ContextCompat.registerReceiver(
@@ -222,6 +225,27 @@ class MainActivity : ComponentActivity() {
                 TranslationManager.getInstance(this@MainActivity).loadTranslations()
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to initialize translations", e)
+            }
+        }
+    }
+
+    private fun loadUserContextOnStart() {
+        lifecycleScope.launch {
+            try {
+                val authRepository = AuthRepository(this@MainActivity)
+                if (authRepository.hasValidToken()) {
+                    Log.d("MainActivity", "Loading user context on application start")
+                    val result = authRepository.getUserContext()
+                    if (result.isSuccess) {
+                        Log.d("MainActivity", "User context loaded successfully on app start")
+                        // Data is automatically stored in AuthRepository.storeUserContextData()
+                        // TopBar will be updated via broadcast or direct preference reading
+                    } else {
+                        Log.w("MainActivity", "Failed to load user context on app start: ${result.exceptionOrNull()?.message}")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Error loading user context on app start", e)
             }
         }
     }

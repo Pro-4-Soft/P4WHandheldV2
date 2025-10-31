@@ -33,7 +33,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     fun loadMessages(contactId: String) {
         viewModelScope.launch {
             currentContactId = contactId
-            _uiState.value = ChatUiState(isLoading = true) // reset state
+            _uiState.value = ChatUiState(isLoading = true)
             val result = ApiClient.apiService.getMessages(contactId, skip = 0, take = pageSize)
             if (result.isSuccessful) {
                 _uiState.value = _uiState.value.copy(

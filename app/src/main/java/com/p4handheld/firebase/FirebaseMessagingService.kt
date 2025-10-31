@@ -6,10 +6,6 @@ import android.media.MediaPlayer
 import android.util.Log
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.SerializationException
 import com.p4handheld.GlobalConstants
 import com.p4handheld.R
 import com.p4handheld.data.ChatStateManager
@@ -17,9 +13,9 @@ import com.p4handheld.data.models.P4WEventType
 import com.p4handheld.data.models.P4WFirebaseNotification
 import com.p4handheld.data.models.UserChatMessage
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 @SuppressLint("MissingFirebaseInstanceTokenRefresh")
 class FirebaseMessagingService : FirebaseMessagingService() {
@@ -27,7 +23,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
     companion object {
         private const val TAG = "FCMService"
     }
-    
+
     // JSON configuration for Kotlinx Serialization
     private val json = Json {
         ignoreUnknownKeys = true
@@ -51,14 +47,6 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         if (!shouldSuppressNotification) {
             // Play internal sounds only, no system notifications
             playInternalSounds(p4wNotification)
-            try {
-                val manager = FirebaseManager.getInstance(applicationContext)
-                if (p4wNotification.eventType == P4WEventType.USER_CHAT_MESSAGE) {
-                    manager.setHasUnreadMessages(true)
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to update badge flags", e)
-            }
         }
 
         broadcastMessage(p4wNotification)
@@ -148,18 +136,6 @@ class FirebaseMessagingService : FirebaseMessagingService() {
                     val mediaPlayerTaskRemoved = MediaPlayer.create(this, R.raw.task_removed)
                     mediaPlayerTaskRemoved?.start()
                 }
-                // Also refresh tasks count and store in prefs so badge is accurate next time UI reads it
-                try {
-                    val manager = FirebaseManager.getInstance(applicationContext)
-                    // Fire and forget; this is in background context
-                    GlobalScope.launch(Dispatchers.IO) {
-                        try {
-                            manager.refreshTasksCountFromServer()
-                        } catch (_: Exception) {
-                        }
-                    }
-                } catch (_: Exception) {
-                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -181,6 +157,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
             putExtra("eventType", message.eventType.name)
             putExtra("title", message.title)
             putExtra("body", message.body)
+            putExtra("taskAdded", message.taskAdded)
             message.userChatMessage?.let {
                 val jsonString = json.encodeToString(it)
                 putExtra("payload", jsonString)

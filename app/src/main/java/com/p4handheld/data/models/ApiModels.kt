@@ -39,7 +39,13 @@ data class UserContextResponse(
     val userId: String,
 
     @SerialName("LanguageId")
-    val languageId: String
+    val languageId: String,
+
+    @SerialName("NewMessages")
+    val newMessages: Int = 0,
+
+    @SerialName("HasTasks")
+    val hasTasks: Boolean = false
 )
 
 @Serializable

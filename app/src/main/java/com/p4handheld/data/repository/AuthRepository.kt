@@ -92,9 +92,12 @@ class AuthRepository(context: Context) {
                 .putString("user_scan_type", userContextResponse.userScanType.toString())
                 .putString("userId", userContextResponse.userId)
                 .putString("languageId", userContextResponse.languageId)
+                .putBoolean("hasTasks", userContextResponse.hasTasks)
+                .putInt("newMessages", userContextResponse.newMessages)
         }
 
         firebaseSharedPreferences.edit { putString("userId", userContextResponse.userId) }
+        firebaseSharedPreferences.edit { putBoolean("has_unread_messages", userContextResponse.newMessages > 0) }
 
         CrashlyticsHelper.setUserId(userContextResponse.userId)
         CrashlyticsHelper.setCustomKey("track_geo_location", userContextResponse.trackGeoLocation)
@@ -116,6 +119,8 @@ class AuthRepository(context: Context) {
                     userScanType = if (userScanType.isNullOrBlank()) ScanType.ZEBRA_DATA_WEDGE else enumValueOf<ScanType>(userScanType),
                     userId = authSharedPreferences.getString("userId", "") ?: "",
                     languageId = authSharedPreferences.getString("languageId", "") ?: "",
+                    hasTasks = authSharedPreferences.getBoolean("hasTasks", false),
+                    newMessages = authSharedPreferences.getInt("newMessages", 0)
                 )
             } catch (_: Exception) {
                 null
@@ -150,6 +155,9 @@ class AuthRepository(context: Context) {
             putString("menu_json", null)
                 .putBoolean("track_geo_location", false)
                 .putString("user_scan_type", ScanType.ZEBRA_DATA_WEDGE.toString())
+                .putString("userId", null)
+                .putInt("newMessages", 0)
+                .putBoolean("hasTasks", false)
         }
         firebaseSharedPreferences.edit { putString("userId", null) }
     }
@@ -159,13 +167,6 @@ class AuthRepository(context: Context) {
             try {
                 val logoutResult = apiService.logout()
                 authSharedPreferences.edit { clear() }
-
-                try {
-                    val firebaseManager = com.p4handheld.firebase.FirebaseManager.getInstance(context)
-                    firebaseManager.clearDataOnLogout()
-                } catch (e: Exception) {
-                    CrashlyticsHelper.recordException(e, mapOf("operation" to "firebase_cleanup_on_logout"))
-                }
 
                 CrashlyticsHelper.clearUserInfo()
                 CrashlyticsHelper.log("User logged out")

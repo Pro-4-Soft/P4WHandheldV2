@@ -5,13 +5,13 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.p4handheld.GlobalConstants
 import com.p4handheld.data.api.ApiClient.apiService
 import com.p4handheld.data.repository.AuthRepository
-import com.p4handheld.firebase.FirebaseManager
 import com.p4handheld.services.LocationStatus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -36,14 +36,7 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
     val uiState: StateFlow<TopBarUiState> = _uiState.asStateFlow()
 
     private val authRepository = AuthRepository(application.applicationContext)
-    private val firebaseManager = FirebaseManager.getInstance(application.applicationContext)
     private var registered = false
-
-
-    init {
-        updateLocationTrackingStatus()
-        updateMessageNotificationStatus()
-    }
 
     init {
         viewModelScope.launch {
@@ -53,13 +46,9 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
                     var userId = authRepository.getUserId().toString()
                     val result = apiService.getAssignedTaskCount(userId)
                     _uiState.value = _uiState.value.copy(taskCount = result.body ?: 0)
-                    firebaseManager.setTasksCount(result.body ?: 0)
                 } catch (_: Exception) {
                 }
                 IsInitialized = true
-            } else {
-                // Ensure UI reflects current stored value even if already initialized in this process
-                _uiState.value = _uiState.value.copy(taskCount = firebaseManager.getTasksCount())
             }
             registerReceiver()
         }
@@ -72,14 +61,10 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
                     refreshFromStorage()
                     val eventType = intent.getStringExtra("eventType")
                     if (eventType == "TASKS_CHANGED") {
+                        val taskAdded = intent.getStringExtra("taskAdded").toBoolean()
+                        val newCount = if (taskAdded) _uiState.value.taskCount + 1 else _uiState.value.taskCount - 1
                         viewModelScope.launch {
-                            try {
-                                val manager = firebaseManager
-
-                                val newCount = manager.refreshTasksCountFromServer()
-                                _uiState.value = _uiState.value.copy(taskCount = newCount)
-                            } catch (_: Exception) {
-                            }
+                            _uiState.value = _uiState.value.copy(taskCount = newCount)
                         }
                     }
                 }
@@ -107,17 +92,39 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun refreshFromStorage() {
         val ctx = getApplication<Application>().applicationContext
-        val username = ctx
-            .getSharedPreferences(GlobalConstants.AppPreferences.AUTH_PREFS, Context.MODE_PRIVATE)
-            .getString("username", "") ?: ""
+        val authPrefs = ctx.getSharedPreferences(GlobalConstants.AppPreferences.AUTH_PREFS, Context.MODE_PRIVATE)
+        val firebasePrefs = ctx.getSharedPreferences(GlobalConstants.AppPreferences.FIREBASE_PREFS_NAME, Context.MODE_PRIVATE)
+
+        val username = authPrefs.getString("username", "") ?: ""
         val tracking = authRepository.shouldTrackLocation()
-        val hasUnread = firebaseManager.hasUnreadMessages()
+        val hasUnreadMessages = firebasePrefs.getBoolean("has_unread_messages", false)
+        val newMessages = authPrefs.getInt("newMessages", 0)
+        val hasTasks = authPrefs.getBoolean("hasTasks", false)
 
         _uiState.value = _uiState.value.copy(
             username = username,
             isTrackingLocation = tracking,
-            hasUnreadMessages = hasUnread
+            hasUnreadMessages = hasUnreadMessages || newMessages > 0
         )
+
+        // If user has tasks, fetch the actual count from server
+        if (hasTasks) {
+            viewModelScope.launch {
+                try {
+                    val userId = authRepository.getUserId()
+                    if (!userId.isNullOrEmpty()) {
+                        val result = apiService.getAssignedTaskCount(userId)
+                        if (result.isSuccessful && result.body != null) {
+                            _uiState.value = _uiState.value.copy(taskCount = result.body)
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("TopBarViewModel", "Failed to fetch task count", e)
+                }
+            }
+        } else {
+            _uiState.value = _uiState.value.copy(taskCount = 0)
+        }
     }
 
     override fun onCleared() {
@@ -127,17 +134,5 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
             appCtx.unregisterReceiver(receiver)
             registered = false
         }
-    }
-
-    private fun updateMessageNotificationStatus() {
-        viewModelScope.launch {
-            val hasUnread = firebaseManager.hasUnreadMessages()
-            _uiState.value = _uiState.value.copy(hasUnreadMessages = hasUnread)
-        }
-    }
-
-    private fun updateLocationTrackingStatus() {
-        val isTracking = authRepository.shouldTrackLocation()
-        _uiState.value = _uiState.value.copy(isTrackingLocation = isTracking)
     }
 }

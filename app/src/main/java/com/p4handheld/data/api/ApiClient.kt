@@ -395,7 +395,7 @@ object ApiClient {
                     try {
                         val request = Request.Builder()
                             .url("${getBaseUrl()}/api/Auth/Logout")
-                            .post("".toRequestBody("application/json".toMediaType()))
+                            .get()
                             .build()
 
                         client.newCall(request).execute().use { response ->

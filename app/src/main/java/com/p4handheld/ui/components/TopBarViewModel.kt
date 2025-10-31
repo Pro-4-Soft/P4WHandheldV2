@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.p4handheld.GlobalConstants
+import com.p4handheld.data.api.ApiClient.apiService
 import com.p4handheld.data.repository.AuthRepository
 import com.p4handheld.firebase.FirebaseManager
 import com.p4handheld.services.LocationStatus
@@ -28,7 +29,7 @@ data class TopBarUiState(
 class TopBarViewModel(application: Application) : AndroidViewModel(application) {
     companion object {
         @Volatile
-        private var hasFetchedTasksOnce: Boolean = false
+        private var IsInitialized: Boolean = false
     }
 
     private val _uiState = MutableStateFlow(TopBarUiState())
@@ -44,17 +45,37 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
         updateMessageNotificationStatus()
     }
 
+    init {
+        viewModelScope.launch {
+            refreshFromStorage()
+            if (!IsInitialized) {
+                try {
+                    var userId = authRepository.getUserId().toString()
+                    val result = apiService.getAssignedTaskCount(userId)
+                    _uiState.value = _uiState.value.copy(taskCount = result.body ?: 0)
+                    firebaseManager.setTasksCount(result.body ?: 0)
+                } catch (_: Exception) {
+                }
+                IsInitialized = true
+            } else {
+                // Ensure UI reflects current stored value even if already initialized in this process
+                _uiState.value = _uiState.value.copy(taskCount = firebaseManager.getTasksCount())
+            }
+            registerReceiver()
+        }
+    }
+
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
                 GlobalConstants.Intents.FIREBASE_MESSAGE_RECEIVED -> {
-                    refreshFromManagers()
+                    refreshFromStorage()
                     val eventType = intent.getStringExtra("eventType")
                     if (eventType == "TASKS_CHANGED") {
                         viewModelScope.launch {
                             try {
                                 val manager = firebaseManager
-                                var userId = authRepository.getUserId()
+
                                 val newCount = manager.refreshTasksCountFromServer()
                                 _uiState.value = _uiState.value.copy(taskCount = newCount)
                             } catch (_: Exception) {
@@ -72,24 +93,6 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    init {
-        viewModelScope.launch {
-            refreshFromManagers()
-            if (!hasFetchedTasksOnce) {
-                try {
-                    //firebaseManager.ensureTasksCountInitialized()
-                    //_uiState.value = _uiState.value.copy(taskCount = firebaseManager.getTasksCount())
-                } catch (_: Exception) {
-                }
-                hasFetchedTasksOnce = true
-            } else {
-                // Ensure UI reflects current stored value even if already initialized in this process
-                _uiState.value = _uiState.value.copy(taskCount = firebaseManager.getTasksCount())
-            }
-            registerReceiver()
-        }
-    }
-
     private fun registerReceiver() {
         if (!registered) {
             val appCtx = getApplication<Application>().applicationContext
@@ -102,7 +105,7 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    private fun refreshFromManagers() {
+    private fun refreshFromStorage() {
         val ctx = getApplication<Application>().applicationContext
         val username = ctx
             .getSharedPreferences(GlobalConstants.AppPreferences.AUTH_PREFS, Context.MODE_PRIVATE)

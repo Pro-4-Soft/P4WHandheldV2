@@ -39,13 +39,13 @@ class MenuViewModel(application: Application) : AndroidViewModel(application) {
 
             try {
                 // First try to get stored menu data
-                val storedMenu = authRepository.getStoredUserContextData()
+                val storedMenu = AuthRepository.menu
 
                 if (storedMenu != null) {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        menuItems = storedMenu.menu,
-                        currentMenuItems = storedMenu.menu,
+                        menuItems = storedMenu,
+                        currentMenuItems = storedMenu,
                     )
                 } else {
                     // If no stored data, try to fetch from API

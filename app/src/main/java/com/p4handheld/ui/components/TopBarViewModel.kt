@@ -80,13 +80,19 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun registerReceiver() {
         if (!registered) {
-            val appCtx = getApplication<Application>().applicationContext
-            val intentFilter = IntentFilter().apply {
-                addAction(GlobalConstants.Intents.FIREBASE_MESSAGE_RECEIVED)
-                addAction(GlobalConstants.Intents.LOCATION_STATUS_CHANGED)
+            try {
+                val appCtx = getApplication<Application>().applicationContext
+                val intentFilter = IntentFilter().apply {
+                    addAction(GlobalConstants.Intents.FIREBASE_MESSAGE_RECEIVED)
+                    addAction(GlobalConstants.Intents.LOCATION_STATUS_CHANGED)
+                }
+                ContextCompat.registerReceiver(appCtx, receiver, intentFilter, ContextCompat.RECEIVER_NOT_EXPORTED)
+                registered = true
+                Log.d("TopBarViewModel", "BroadcastReceiver registered successfully")
+            } catch (e: Exception) {
+                Log.e("TopBarViewModel", "Failed to register BroadcastReceiver", e)
+                registered = false
             }
-            ContextCompat.registerReceiver(appCtx, receiver, intentFilter, ContextCompat.RECEIVER_NOT_EXPORTED)
-            registered = true
         }
     }
 
@@ -127,12 +133,18 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        if (registered) {
-            val appCtx = getApplication<Application>().applicationContext
-            appCtx.unregisterReceiver(receiver)
-            registered = false
-        }
-    }
+//    override fun onCleared() {
+//        super.onCleared()
+//        if (registered) {
+//            try {
+//                val appCtx = getApplication<Application>().applicationContext
+//                appCtx.unregisterReceiver(receiver)
+//                Log.d("TopBarViewModel", "BroadcastReceiver unregistered successfully")
+//            } catch (e: Exception) {
+//                Log.e("TopBarViewModel", "Failed to unregister BroadcastReceiver", e)
+//            } finally {
+//                registered = false
+//            }
+//        }
+//    }
 }

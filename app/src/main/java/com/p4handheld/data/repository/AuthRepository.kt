@@ -3,7 +3,7 @@ package com.p4handheld.data.repository
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import com.p4handheld.GlobalConstants
+import com.p4handheld.GlobalConstants.AppPreferences.AUTH_PREFS
 import com.p4handheld.GlobalConstants.AppPreferences.FIREBASE_PREFS_NAME
 import com.p4handheld.GlobalConstants.AppPreferences.TENANT_PREFS
 import com.p4handheld.data.api.ApiClient
@@ -17,14 +17,23 @@ import com.p4handheld.firebase.FIREBASE_KEY_FCM_TOKEN
 import com.p4handheld.utils.CrashlyticsHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 class AuthRepository(context: Context) {
-    private val authSharedPreferences: SharedPreferences = context.getSharedPreferences(GlobalConstants.AppPreferences.AUTH_PREFS, Context.MODE_PRIVATE)
+    private val authSharedPreferences: SharedPreferences = context.getSharedPreferences(AUTH_PREFS, Context.MODE_PRIVATE)
     private val firebaseSharedPreferences: SharedPreferences = context.getSharedPreferences(FIREBASE_PREFS_NAME, Context.MODE_PRIVATE)
     private val tenantSharedPreferences: SharedPreferences = context.getSharedPreferences(TENANT_PREFS, Context.MODE_PRIVATE)
     private val apiService: ApiService
+
+    companion object {
+        var trackGeoLocation: Boolean = false
+        var userScanType: ScanType = ScanType.ZEBRA_DATA_WEDGE
+        var userId: String = ""
+        var languageId: String = ""
+        var hasTasks: Boolean = false
+        var newMessages: Int = 0
+        var menu: List<MenuItem>? = null
+    }
 
     // JSON configuration for Kotlinx Serialization
     private val json = Json {
@@ -41,7 +50,6 @@ class AuthRepository(context: Context) {
     suspend fun login(username: String, password: String): Result<Boolean> {
         return withContext(Dispatchers.IO) {
             try {
-                resetUserContextData()
                 val fcmToken = firebaseSharedPreferences.getString(FIREBASE_KEY_FCM_TOKEN, null)
                 val loginRequest = LoginRequest(username, password, fcmToken)
                 val response = apiService.login(loginRequest = loginRequest)
@@ -86,18 +94,13 @@ class AuthRepository(context: Context) {
     }
 
     private fun storeUserContextData(userContextResponse: UserContextResponse) {
-        authSharedPreferences.edit {
-            putString("menu_json", json.encodeToString(userContextResponse.menu))
-                .putBoolean("track_geo_location", userContextResponse.trackGeoLocation)
-                .putString("user_scan_type", userContextResponse.userScanType.toString())
-                .putString("userId", userContextResponse.userId)
-                .putString("languageId", userContextResponse.languageId)
-                .putBoolean("hasTasks", userContextResponse.hasTasks)
-                .putInt("newMessages", userContextResponse.newMessages)
-        }
-
-        firebaseSharedPreferences.edit { putString("userId", userContextResponse.userId) }
-        firebaseSharedPreferences.edit { putBoolean("has_unread_messages", userContextResponse.newMessages > 0) }
+        trackGeoLocation = userContextResponse.trackGeoLocation;
+        userScanType = userContextResponse.userScanType;
+        userId = userContextResponse.userId;
+        languageId = userContextResponse.languageId;
+        hasTasks = userContextResponse.hasTasks;
+        newMessages = userContextResponse.newMessages;
+        menu = userContextResponse.menu;
 
         CrashlyticsHelper.setUserId(userContextResponse.userId)
         CrashlyticsHelper.setCustomKey("track_geo_location", userContextResponse.trackGeoLocation)
@@ -105,36 +108,10 @@ class AuthRepository(context: Context) {
         CrashlyticsHelper.log("User context data updated")
     }
 
-    fun getStoredUserContextData(): UserContextResponse? {
-        val menuJson = authSharedPreferences.getString("menu_json", null)
-
-        return if (menuJson != null) {
-            try {
-                val menuItems: List<MenuItem> = json.decodeFromString(menuJson)
-
-                val userScanType = authSharedPreferences.getString("user_scan_type", null)
-                UserContextResponse(
-                    menu = menuItems,
-                    trackGeoLocation = authSharedPreferences.getBoolean("track_geo_location", false),
-                    userScanType = if (userScanType.isNullOrBlank()) ScanType.ZEBRA_DATA_WEDGE else enumValueOf<ScanType>(userScanType),
-                    userId = authSharedPreferences.getString("userId", "") ?: "",
-                    languageId = authSharedPreferences.getString("languageId", "") ?: "",
-                    hasTasks = authSharedPreferences.getBoolean("hasTasks", false),
-                    newMessages = authSharedPreferences.getInt("newMessages", 0)
-                )
-            } catch (_: Exception) {
-                null
-            }
-        } else {
-            null
-        }
-    }
-
-    fun shouldTrackLocation(): Boolean = authSharedPreferences.getBoolean("track_geo_location", false)
+    fun shouldTrackLocation(): Boolean = trackGeoLocation
 
     fun getStateParamsForPage(pageKey: String): String? {
-        return getStoredUserContextData()
-            ?.menu
+        return menu
             ?.firstOrNull { it.state == pageKey }
             ?.stateParams.toString()
     }
@@ -145,22 +122,7 @@ class AuthRepository(context: Context) {
         return !token.isNullOrEmpty() && isLoggedIn
     }
 
-    fun getEffectiveScanType(): ScanType {
-        val userScanType = authSharedPreferences.getString("user_scan_type", null)
-        return if (userScanType.isNullOrBlank()) ScanType.ZEBRA_DATA_WEDGE else enumValueOf<ScanType>(userScanType)
-    }
-
-    fun resetUserContextData() {
-        authSharedPreferences.edit {
-            putString("menu_json", null)
-                .putBoolean("track_geo_location", false)
-                .putString("user_scan_type", ScanType.ZEBRA_DATA_WEDGE.toString())
-                .putString("userId", null)
-                .putInt("newMessages", 0)
-                .putBoolean("hasTasks", false)
-        }
-        firebaseSharedPreferences.edit { putString("userId", null) }
-    }
+    fun getScanType(): ScanType = userScanType
 
     suspend fun logout(context: Context): Result<Boolean> {
         return withContext(Dispatchers.IO) {

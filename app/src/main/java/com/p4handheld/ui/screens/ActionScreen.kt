@@ -191,8 +191,7 @@ fun ActionScreen(
     LaunchedEffect(scanViewState?.dwOutputData) {
         scanViewState?.dwOutputData?.let { outputData ->
             val data = outputData.data
-            val effectiveScanType = authRepository.getEffectiveScanType()
-            if (data.isNotEmpty() && effectiveScanType != ScanType.CAMERA) {
+            if (data.isNotEmpty() && AuthRepository.userScanType != ScanType.CAMERA) {
                 when (uiState.currentPrompt.promptType) {
                     PromptType.SCAN -> {
                         println("ActionScreen: Scan data received (SCAN): $data")
@@ -252,7 +251,7 @@ fun ActionScreen(
 
     val prompt: @Composable () -> Unit = when {
         uiState.currentPrompt.promptType == PromptType.SCAN &&
-                authRepository.getEffectiveScanType() == ScanType.CAMERA &&
+                AuthRepository.userScanType == ScanType.CAMERA &&
                 showCameraScanner -> {
             {
                 CameraScannerScreen(
@@ -303,7 +302,7 @@ fun ActionScreen(
                         viewModel = viewModel,
                         onShowSignature = { showSignaturePad = true },
                         onShowCameraScanner = {
-                            if (authRepository.getEffectiveScanType() == ScanType.CAMERA) {
+                            if (AuthRepository.userScanType == ScanType.CAMERA) {
                                 showCameraScanner = true
                             }
                         },
@@ -324,7 +323,7 @@ fun ActionScreen(
                     viewModel = viewModel,
                     onShowSignature = { showSignaturePad = true },
                     onShowCameraScanner = {
-                        if (authRepository.getEffectiveScanType() == ScanType.CAMERA) {
+                        if (AuthRepository.userScanType == ScanType.CAMERA) {
                             showCameraScanner = true
                         }
                     },
@@ -856,9 +855,7 @@ fun PromptInputArea(
             }
 
             PromptType.SCAN -> {
-                val context = LocalContext.current
-                val authRepository = remember { AuthRepository(context) }
-                val effectiveScanType = remember { authRepository.getEffectiveScanType() }
+                val effectiveScanType = remember { AuthRepository.userScanType }
 
                 when (effectiveScanType) {
                     ScanType.LINE_FEED -> {

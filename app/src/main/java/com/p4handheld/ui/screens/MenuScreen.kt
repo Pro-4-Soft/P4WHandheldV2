@@ -337,6 +337,7 @@ fun MenuTileCard(
 ) {
     Card(
         modifier = Modifier
+            .padding(2.dp)
             .aspectRatio(1f)
             .clickable { onItemClick(menuItem) },
         shape = RoundedCornerShape(12.dp),
@@ -354,11 +355,15 @@ fun MenuTileCard(
             verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically),
         ) {
             // Icon container
-            Box(contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier.padding(horizontal = 3.dp),
+                contentAlignment = Alignment.Center
+            ) {
                 Text(
+                    modifier = Modifier.padding(horizontal = 3.dp),
                     text = getFontAwesomeIcon(menuItem.icon?.lowercase() ?: ""),
                     fontFamily = FontAwesome,
-                    fontSize = 32.sp,           // match your previous Icon size
+                    fontSize = 30.sp,           // match your previous Icon size
                     color = Color(0xFF475569)
                 )
 
@@ -389,8 +394,7 @@ fun MenuTileCard(
 @Composable
 fun AutoResizeMenuLabelText(
     text: String,
-    modifier: Modifier = Modifier,
-    initialFontSize: TextUnit = 19.sp,
+    initialFontSize: TextUnit = 18.sp,
 ) {
     var fontSize by remember { mutableStateOf(initialFontSize) }
     val maxLines = if (text.trim().contains(" ")) 2 else 1
@@ -402,10 +406,10 @@ fun AutoResizeMenuLabelText(
         color = MaterialTheme.colorScheme.primary,
         textAlign = TextAlign.Center,
         maxLines = maxLines,
-        modifier = modifier,
+        modifier = Modifier.padding(horizontal = 3.dp),
         onTextLayout = { textLayoutResult ->
             if (textLayoutResult.hasVisualOverflow) {
-                fontSize *= 0.9f
+                fontSize *= 0.8f
             }
         }
     )

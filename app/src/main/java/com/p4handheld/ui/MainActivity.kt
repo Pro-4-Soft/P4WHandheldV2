@@ -211,7 +211,6 @@ class MainActivity : ComponentActivity() {
 
         val authRepository = AuthRepository(this)
         val hasValidToken = authRepository.hasValidToken()
-        authRepository.resetUserContextData()//👈 reset just menu and user settings that might be updated from last usage
         return when {
             !isConfigured -> Screen.TenantSelect.route
             hasValidToken -> Screen.Menu.route

@@ -33,6 +33,9 @@ class AuthRepository(context: Context) {
         var hasTasks: Boolean = false
         var newMessages: Int = 0
         var menu: List<MenuItem>? = null
+        var username: String = ""
+        var isLoggedIn: Boolean = false
+        var token: String = ""
     }
 
     // JSON configuration for Kotlinx Serialization
@@ -55,11 +58,9 @@ class AuthRepository(context: Context) {
                 val response = apiService.login(loginRequest = loginRequest)
 
                 if (response.isSuccessful) {
-                    authSharedPreferences.edit {
-                        putBoolean("is_logged_in", true)
-                            .putString("username", username)
-                            .putString("token", response.body?.token)
-                    }
+                    isLoggedIn = true
+                    AuthRepository.username = username
+                    token = response.body?.token ?: ""
 
                     // Set user information in Crashlytics
                     CrashlyticsHelper.setUserInfo(username)
@@ -78,7 +79,7 @@ class AuthRepository(context: Context) {
     suspend fun getUserContext(): Result<UserContextResponse> {
         return withContext(Dispatchers.IO) {
             try {
-                val response = apiService.getCurrent()
+                val response = apiService.getCurrentUserContext()
 
                 if (response.isSuccessful && response.body != null) {
                     val userContextResponse = response.body
@@ -117,12 +118,8 @@ class AuthRepository(context: Context) {
     }
 
     fun hasValidToken(): Boolean {
-        val token = authSharedPreferences.getString("token", null)
-        val isLoggedIn = authSharedPreferences.getBoolean("is_logged_in", false)
-        return !token.isNullOrEmpty() && isLoggedIn
+        return token.isNotEmpty() && isLoggedIn
     }
-
-    fun getScanType(): ScanType = userScanType
 
     suspend fun logout(context: Context): Result<Boolean> {
         return withContext(Dispatchers.IO) {
@@ -152,5 +149,4 @@ class AuthRepository(context: Context) {
     }
 
     fun getBaseTenantUrl(): String? = tenantSharedPreferences.getString("base_tenant_url", null)
-    fun getUserId(): String? = authSharedPreferences.getString("userId", null)
 }

@@ -12,6 +12,7 @@ import com.p4handheld.data.ChatStateManager
 import com.p4handheld.data.models.P4WEventType
 import com.p4handheld.data.models.P4WFirebaseNotification
 import com.p4handheld.data.models.UserChatMessage
+import com.p4handheld.data.repository.AuthRepository
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
@@ -54,10 +55,9 @@ class FirebaseMessagingService : FirebaseMessagingService() {
 
     //region Private functions
     private fun ignoreNotification(p4wMessage: P4WFirebaseNotification): Boolean {
-        val authPrefs = applicationContext.getSharedPreferences(GlobalConstants.AppPreferences.AUTH_PREFS, MODE_PRIVATE)
-        val userId = authPrefs.getString("userId", "") ?: ""
-        val isLoggedIn = authPrefs.getBoolean("is_logged_in", false)
-        val hasToken = !authPrefs.getString("token", null).isNullOrEmpty()
+        val userId = AuthRepository.userId
+        val isLoggedIn = AuthRepository.isLoggedIn
+        val hasToken = AuthRepository.token.isNotEmpty()
 
         // If user is not logged in or doesn't have valid token, ignore all notifications
         if (!isLoggedIn || !hasToken) {

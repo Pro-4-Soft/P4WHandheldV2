@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
 interface ApiService {
     suspend fun login(loginRequest: LoginRequest): ApiResponse<LoginResponse>
 
-    suspend fun getCurrent(): ApiResponse<UserContextResponse>
+    suspend fun getCurrentUserContext(): ApiResponse<UserContextResponse>
 
     suspend fun processAction(pageKey: String, processRequest: ProcessRequest, taskId: String? = null): ApiResponse<PromptResponse>
 

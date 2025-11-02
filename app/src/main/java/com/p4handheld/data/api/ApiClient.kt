@@ -1,7 +1,6 @@
 package com.p4handheld.data.api
 
 import android.content.Context
-import com.p4handheld.GlobalConstants
 import com.p4handheld.GlobalConstants.AppPreferences.TENANT_PREFS
 import com.p4handheld.data.models.LoginRequest
 import com.p4handheld.data.models.LoginResponse
@@ -13,6 +12,7 @@ import com.p4handheld.data.models.TranslationResponse
 import com.p4handheld.data.models.UserChatMessage
 import com.p4handheld.data.models.UserContact
 import com.p4handheld.data.models.UserContextResponse
+import com.p4handheld.data.repository.AuthRepository
 import com.p4handheld.utils.CrashlyticsHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
@@ -73,9 +73,8 @@ object ApiClient {
             .writeTimeout(120, TimeUnit.SECONDS)
             .addInterceptor { chain ->
                 val requestBuilder = chain.request().newBuilder()
-                val authPrefs = appContext.getSharedPreferences(GlobalConstants.AppPreferences.AUTH_PREFS, Context.MODE_PRIVATE)
-                val token = authPrefs.getString("token", null) ?: authToken
-                token?.let {
+                val token = AuthRepository.token
+                token.let {
                     requestBuilder.addHeader("Authenticationtoken", it)
                 }
                 chain.proceed(requestBuilder.build())
@@ -204,7 +203,7 @@ object ApiClient {
                 }
             }
 
-        override suspend fun getCurrent(): ApiResponse<UserContextResponse> =
+        override suspend fun getCurrentUserContext(): ApiResponse<UserContextResponse> =
             withContext(Dispatchers.IO) {
                 userRequestMutex.withLock {
                     try {

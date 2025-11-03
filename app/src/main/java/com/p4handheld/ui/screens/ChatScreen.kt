@@ -135,13 +135,6 @@ fun ChatScreen(
         scrollIndexBeforeLoad = 0
 
         viewModel.loadMessages(contactId)
-        // Clear unread badge when opening a chat
-        try {
-            val intent = Intent(GlobalConstants.Intents.FIREBASE_MESSAGE_RECEIVED)
-            intent.setPackage(ctx.packageName)
-            ctx.sendBroadcast(intent)
-        } catch (_: Exception) {
-        }
     }
 
     // Listen for incoming FCM broadcasts and append messages to this chat if they match

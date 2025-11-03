@@ -1,8 +1,11 @@
 package com.p4handheld.ui.screens.viewmodels
 
 import android.app.Application
+import android.content.Context
+import android.content.Intent
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.p4handheld.GlobalConstants
 import com.p4handheld.data.api.ApiClient
 import com.p4handheld.data.models.UserContact
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -67,6 +70,22 @@ class ContactsViewModel(application: Application) : AndroidViewModel(application
                 current[idx] = c.copy(newMessages = 0)
                 _uiState.value = _uiState.value.copy(contacts = current)
             }
+        }
+    }
+
+    fun checkAndUpdateTopBarUnreadStatus(context: Context, contacts: List<UserContact>) {
+        try {
+            val hasAnyUnreadMessages = contacts.any { it.newMessages > 0 }
+
+            val intent = Intent(GlobalConstants.Intents.FIREBASE_MESSAGE_RECEIVED).apply {
+                putExtra("eventType", if (hasAnyUnreadMessages) "MESSAGES_UNREAD" else "MESSAGES_READ")
+                setPackage(context.packageName)
+            }
+            context.sendBroadcast(intent)
+
+            android.util.Log.d("ContactsScreen", "TopBar unread status updated: hasUnread=$hasAnyUnreadMessages")
+        } catch (e: Exception) {
+            android.util.Log.e("ContactsScreen", "Failed to update TopBar unread status", e)
         }
     }
 }

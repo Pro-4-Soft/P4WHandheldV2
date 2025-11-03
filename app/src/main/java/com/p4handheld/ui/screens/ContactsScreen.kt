@@ -82,15 +82,17 @@ fun ContactsScreen(
                 if (intent == null)
                     return
                 val eventType = intent.getStringExtra("eventType") ?: return
-                if (eventType != P4WEventType.USER_CHAT_MESSAGE.toString())
-                    return
-                val payload = intent.getStringExtra("payload") ?: return
-                try {
-                    val msg = json.decodeFromString<com.p4handheld.data.models.UserChatMessage>(payload)
-                    // Increment unread count for sender contact
-                    viewModel.incrementUnread(msg.fromUserId)
-                } catch (e: SerializationException) {
-                    e.printStackTrace()
+
+                when (eventType) {
+                    P4WEventType.USER_CHAT_MESSAGE.toString() -> {
+                        val payload = intent.getStringExtra("payload") ?: return
+                        try {
+                            val msg = json.decodeFromString<com.p4handheld.data.models.UserChatMessage>(payload)
+                            viewModel.incrementUnread(msg.fromUserId)
+                        } catch (e: SerializationException) {
+                            e.printStackTrace()
+                        }
+                    }
                 }
             }
         }
@@ -164,6 +166,9 @@ fun ContactsScreen(
                                     contact = contact,
                                     onClick = {
                                         viewModel.clearUnread(contact.id)
+                                        viewModel.checkAndUpdateTopBarUnreadStatus(ctx, uiState.contacts.map {
+                                            if (it.id == contact.id) it.copy(newMessages = 0) else it
+                                        })
                                         onOpenChat(contact.id, contact.username)
                                     }
                                 )

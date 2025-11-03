@@ -31,10 +31,10 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
     companion object {
         @Volatile
         private var IsInitialized: Boolean = false
+        private val _persistentUiState = MutableStateFlow(TopBarUiState())
     }
 
-    private val _uiState = MutableStateFlow(TopBarUiState())
-    val uiState: StateFlow<TopBarUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<TopBarUiState> = _persistentUiState.asStateFlow()
     private var registered = false
 
     init {
@@ -46,7 +46,7 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
                         val result = apiService.getAssignedTaskCount(AuthRepository.userId)
                         taskCount = result.body ?: 0
                     }
-                    _uiState.value = _uiState.value.copy(
+                    _persistentUiState.value = _persistentUiState.value.copy(
                         taskCount = taskCount,
                         hasUnreadMessages = AuthRepository.newMessages > 0,
                         isTrackingLocation = AuthRepository.trackGeoLocation,
@@ -55,8 +55,8 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
                 } catch (_: Exception) {
                 }
                 IsInitialized = true
-                registerReceiver()
             }
+            registerReceiver()
         }
     }
 
@@ -64,13 +64,19 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
                 GlobalConstants.Intents.FIREBASE_MESSAGE_RECEIVED -> {
-                    //refreshFromStorage()
                     val eventType = intent.getStringExtra("eventType")
-                    if (eventType == P4WEventType.TASKS_CHANGED.toString()) {
-                        val taskAdded = intent.getStringExtra("taskAdded").toBoolean()
-                        val newCount = if (taskAdded) _uiState.value.taskCount + 1 else _uiState.value.taskCount - 1
-                        viewModelScope.launch {
-                            _uiState.value = _uiState.value.copy(taskCount = newCount)
+                    when (eventType) {
+                        P4WEventType.TASKS_CHANGED.toString() -> {
+                            val taskAdded = intent.getBooleanExtra("taskAdded", false)
+                            val newCount = if (taskAdded) _persistentUiState.value.taskCount + 1 else maxOf(0, _persistentUiState.value.taskCount - 1)
+                            _persistentUiState.value = _persistentUiState.value.copy(taskCount = newCount)
+                            Log.d("TopBarViewModel", "Task count updated via broadcast: $newCount")
+                        }
+
+                        P4WEventType.USER_CHAT_MESSAGE.toString() -> {
+                            // Update unread messages indicator
+                            _persistentUiState.value = _persistentUiState.value.copy(hasUnreadMessages = true)
+                            Log.d("TopBarViewModel", "Unread messages updated via broadcast")
                         }
                     }
                 }
@@ -78,7 +84,8 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
                 GlobalConstants.Intents.LOCATION_STATUS_CHANGED -> {
                     val statusString = intent.getStringExtra("locationStatus")
                     val statusEnum = LocationStatus.valueOf(statusString ?: LocationStatus.DISABLED.toString())
-                    _uiState.value = _uiState.value.copy(locationStatus = statusEnum)
+                    _persistentUiState.value = _persistentUiState.value.copy(locationStatus = statusEnum)
+                    Log.d("TopBarViewModel", "Location status updated via broadcast: $statusEnum")
                 }
             }
         }
@@ -102,18 +109,18 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-//    override fun onCleared() {
-//        super.onCleared()
-//        if (registered) {
-//            try {
-//                val appCtx = getApplication<Application>().applicationContext
-//                appCtx.unregisterReceiver(receiver)
-//                Log.d("TopBarViewModel", "BroadcastReceiver unregistered successfully")
-//            } catch (e: Exception) {
-//                Log.e("TopBarViewModel", "Failed to unregister BroadcastReceiver", e)
-//            } finally {
-//                registered = false
-//            }
-//        }
-//    }
+    override fun onCleared() {
+        super.onCleared()
+        if (registered) {
+            try {
+                val appCtx = getApplication<Application>().applicationContext
+                appCtx.unregisterReceiver(receiver)
+                Log.d("TopBarViewModel", "BroadcastReceiver unregistered successfully")
+            } catch (e: Exception) {
+                Log.e("TopBarViewModel", "Failed to unregister BroadcastReceiver", e)
+            } finally {
+                registered = false
+            }
+        }
+    }
 }

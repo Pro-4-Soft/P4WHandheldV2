@@ -62,6 +62,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.p4handheld.GlobalConstants
 import com.p4handheld.data.ChatStateManager
+import com.p4handheld.data.models.P4WEventType
 import com.p4handheld.data.models.UserChatMessage
 import com.p4handheld.ui.components.TopBarWithIcons
 import com.p4handheld.ui.screens.viewmodels.ChatViewModel
@@ -150,7 +151,7 @@ fun ChatScreen(
             override fun onReceive(context: Context?, intent: Intent?) {
                 if (intent == null) return
                 val eventType = intent.getStringExtra("eventType") ?: return
-                if (eventType != "USER_CHAT_MESSAGE") return
+                if (eventType != P4WEventType.USER_CHAT_MESSAGE.toString()) return
                 val payload = intent.getStringExtra("payload") ?: return
                 try {
                     val msg = json.decodeFromString<UserChatMessage>(payload)

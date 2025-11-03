@@ -12,6 +12,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
+import androidx.core.app.NotificationCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.p4handheld.GlobalConstants
@@ -64,6 +65,8 @@ class LocationService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "LocationService started")
 
+        startForeground(NOTIFICATION_ID, createNotification())
+
         startLocationUpdates()
 
         return START_STICKY
@@ -82,16 +85,30 @@ class LocationService : Service() {
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 "Location Service",
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_MIN
             ).apply {
                 description = "Background location tracking"
                 setShowBadge(false)
+                setSound(null, null) // Remove sound
+                enableVibration(false) // Remove vibration
+                enableLights(false) // Remove LED lights
             }
 
             val notificationManager = getSystemService(NotificationManager::class.java)
             notificationManager.createNotificationChannel(channel)
         }
     }
+
+    private fun createNotification() = NotificationCompat.Builder(this, CHANNEL_ID)
+        .setContentTitle("")
+        .setContentText("")
+        .setSmallIcon(android.R.drawable.stat_notify_sync)
+        .setPriority(NotificationCompat.PRIORITY_MIN)
+        .setOngoing(true)
+        .setAutoCancel(false)
+        .setShowWhen(false)
+        .setVisibility(NotificationCompat.VISIBILITY_SECRET)
+        .build()
 
     private fun startLocationUpdates() {
         locationUpdateRunnable = object : Runnable {

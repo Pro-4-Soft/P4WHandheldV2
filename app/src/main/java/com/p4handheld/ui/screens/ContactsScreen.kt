@@ -41,12 +41,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.p4handheld.GlobalConstants
+import com.p4handheld.data.models.P4WEventType
 import com.p4handheld.data.models.UserContact
 import com.p4handheld.ui.components.TopBarWithIcons
 import com.p4handheld.ui.screens.viewmodels.ContactsViewModel
@@ -61,7 +61,6 @@ fun ContactsScreen(
     openMainMenu: () -> Unit = {}
 ) {
     val viewModel: ContactsViewModel = viewModel()
-    // JSON configuration for Kotlinx Serialization
     val json = Json {
         ignoreUnknownKeys = true
         isLenient = true
@@ -70,7 +69,7 @@ fun ContactsScreen(
 
     val uiState by viewModel.uiState.collectAsState()
 
-    BackHandler() {
+    BackHandler {
         openMainMenu();
     }
 
@@ -80,9 +79,11 @@ fun ContactsScreen(
         val filter = IntentFilter(GlobalConstants.Intents.FIREBASE_MESSAGE_RECEIVED)
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
-                if (intent == null) return
+                if (intent == null)
+                    return
                 val eventType = intent.getStringExtra("eventType") ?: return
-                if (eventType != "USER_CHAT_MESSAGE") return
+                if (eventType != P4WEventType.USER_CHAT_MESSAGE.toString())
+                    return
                 val payload = intent.getStringExtra("payload") ?: return
                 try {
                     val msg = json.decodeFromString<com.p4handheld.data.models.UserChatMessage>(payload)
@@ -220,65 +221,6 @@ private fun ContactRow(contact: UserContact, onClick: () -> Unit) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(text = contact.newMessages.toString(), color = Color.White, fontWeight = FontWeight.Bold)
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true)
-@Composable
-fun PreviewContactsScree2n() {
-    val contacts = listOf(
-        UserContact(
-            id = "1",
-            lastSeen = "10 min ago",
-            username = "Alice",
-            isOnline = true,
-            newMessages = 2
-        ),
-        UserContact(
-            id = "2",
-            lastSeen = "just now",
-            username = "Bob",
-            isOnline = true,
-            newMessages = 0
-        ),
-        UserContact(
-            id = "3",
-            lastSeen = "yesterday",
-            username = "Charlie",
-            isOnline = false,
-            newMessages = 5
-        )
-    )
-    MaterialTheme {
-        Scaffold(
-            topBar = {
-                TopBarWithIcons()
-            }
-        ) { padding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-            ) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
-                ) {
-
-                    LazyColumn {
-                        items(contacts) { contact ->
-                            ContactRow(
-                                contact = contact,
-                                onClick = { }
-                            )
-                            HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
-                        }
-                    }
-                }
-
             }
         }
     }

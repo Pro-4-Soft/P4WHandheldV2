@@ -18,9 +18,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -60,10 +62,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.p4handheld.GlobalConstants
+import com.p4handheld.GlobalConstants.AppPreferences.TENANT_PREFS
 import com.p4handheld.data.ChatStateManager
 import com.p4handheld.data.models.P4WEventType
 import com.p4handheld.data.models.UserChatMessage
+import com.p4handheld.data.repository.AuthRepository
 import com.p4handheld.ui.components.TopBarWithIcons
 import com.p4handheld.ui.screens.viewmodels.ChatViewModel
 import com.p4handheld.utils.formatChatTimestamp
@@ -219,10 +225,7 @@ fun ChatScreen(
                         }
                     } else {
                         val context = LocalContext.current
-                        val currentUsername = remember {
-                            context.getSharedPreferences(GlobalConstants.AppPreferences.AUTH_PREFS, Context.MODE_PRIVATE)
-                                .getString("username", null)
-                        }
+                        val currentUsername = AuthRepository.username
 
                         // Pre-compute chat items with date headers in composable scope
                         val chatItems = remember(uiState.messages) { buildChatItemsWithDates(uiState.messages) }
@@ -263,7 +266,7 @@ fun ChatScreen(
                                     is ChatItem.MessageItem -> {
                                         val message = item.message
                                         val isMine = currentUsername != null && message.fromUsername == currentUsername
-                                        MessageBubble(message = message, isMine = isMine)
+                                        MessageBubble(message = message, isMine = isMine, context = context)
                                         Spacer(modifier = Modifier.size(8.dp))
                                     }
                                 }
@@ -367,35 +370,88 @@ fun ChatScreen(
 }
 
 @Composable
-private fun MessageBubble(message: UserChatMessage, isMine: Boolean) {
+private fun MessageBubble(message: UserChatMessage, isMine: Boolean, context: Context) {
     val containerColor = if (isMine) Color(0xFFDCFCE7) else Color(0xFFF1F5F9)
     val textColor = Color(0xFF111827)
 
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = if (isMine) Arrangement.End else Arrangement.Start
+    val baseUrl = remember {
+        context.getSharedPreferences(TENANT_PREFS, Context.MODE_PRIVATE)
+            .getString("base_tenant_url", "")
+    }
+
+    val userImageUrl = "$baseUrl/resource/user/${message.fromUserId}/small"
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp),
+        horizontalArrangement = if (isMine) Arrangement.End else Arrangement.Start,
+        verticalAlignment = Alignment.Top
+    ) {
+        if (!isMine) {
+            // Contact's avatar on the left
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(userImageUrl)
+                    .addHeader("AuthenticationToken", AuthRepository.token)
+                    .crossfade(true)
+                    .listener(
+                        onStart = { println("Loading image: $userImageUrl with token") },
+                        onSuccess = { _, _ -> println("Image loaded successfully: $userImageUrl") },
+                        onError = { _, error -> println("Image load error: ${error.throwable.message} for URL: $userImageUrl") }
+                    )
+                    .build(),
+                contentDescription = "User avatar",
+                modifier = Modifier
+                    .size(32.dp)
+                    .background(Color.Gray.copy(alpha = 0.3f), CircleShape)
+                    .padding(2.dp),
+                error = androidx.compose.ui.res.painterResource(android.R.drawable.ic_menu_gallery),
+                placeholder = androidx.compose.ui.res.painterResource(android.R.drawable.ic_menu_gallery)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+
+        Column(
+            modifier = Modifier.wrapContentWidth(),
+            horizontalAlignment = if (isMine) Alignment.End else Alignment.Start
         ) {
-            Column(horizontalAlignment = if (isMine) Alignment.End else Alignment.Start) {
-                Text(
-                    text = message.fromUsername,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Color.Gray
-                )
-                Box(
-                    modifier = Modifier
-                        .background(containerColor, shape = RoundedCornerShape(12.dp))
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
-                ) {
-                    Text(text = message.message, color = textColor)
-                }
-                Spacer(modifier = Modifier.size(2.dp))
-                Text(
-                    text = formatChatTimestamp(message.timestamp),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.Gray
-                )
+            Box(
+                modifier = Modifier
+                    .background(containerColor, shape = RoundedCornerShape(12.dp))
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
+                Text(text = message.message, color = textColor)
             }
+            Spacer(modifier = Modifier.size(2.dp))
+            Text(
+                text = formatChatTimestamp(message.timestamp),
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.Gray
+            )
+        }
+
+        if (isMine) {
+            // User's avatar on the right
+            Spacer(modifier = Modifier.width(8.dp))
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(userImageUrl)
+                    .addHeader("AuthenticationToken", AuthRepository.token)
+                    .crossfade(true)
+                    .listener(
+                        onStart = { println("Loading image: $userImageUrl with token") },
+                        onSuccess = { _, _ -> println("Image loaded successfully: $userImageUrl") },
+                        onError = { _, error -> println("Image load error: ${error.throwable.message} for URL: $userImageUrl") }
+                    )
+                    .build(),
+                contentDescription = "User avatar",
+                modifier = Modifier
+                    .size(32.dp)
+                    .background(Color.Gray.copy(alpha = 0.3f), CircleShape)
+                    .padding(2.dp),
+                error = androidx.compose.ui.res.painterResource(android.R.drawable.ic_menu_gallery),
+                placeholder = androidx.compose.ui.res.painterResource(android.R.drawable.ic_menu_gallery)
+            )
         }
     }
 }
@@ -438,6 +494,7 @@ fun MessageBubblePreview() {
             .padding(16.dp)
     ) {
         Column {
+            val context = LocalContext.current
             MessageBubble(
                 message = UserChatMessage(
                     fromUsername = "Alice",
@@ -449,12 +506,13 @@ fun MessageBubblePreview() {
                     toUsername = "hh",
                     isNew = true
                 ),
-                isMine = false
+                isMine = false,
+                context = context
             )
             MessageBubble(
                 message = UserChatMessage(
                     fromUsername = "Me",
-                    message = "I’m good, thanks! What about you?",
+                    message = "I'm good, thanks! What about you?",
                     timestamp = "10:33 AM",
                     messageId = "2",
                     fromUserId = "3",
@@ -462,7 +520,8 @@ fun MessageBubblePreview() {
                     toUsername = "hh",
                     isNew = true
                 ),
-                isMine = true
+                isMine = true,
+                context = context
             )
         }
     }

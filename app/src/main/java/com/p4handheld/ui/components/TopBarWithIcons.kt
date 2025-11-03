@@ -25,13 +25,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.p4handheld.GlobalConstants
+import com.p4handheld.data.repository.AuthRepository
 import com.p4handheld.services.LocationStatus
 import com.p4handheld.ui.compose.theme.HandheldP4WTheme
 
@@ -132,12 +131,8 @@ fun TopBarWithIcons() {
             }
             //endregion
 
-            val context = LocalContext.current
             val username = remember(topState.username) {
-                topState.username.ifBlank {
-                    context.getSharedPreferences(GlobalConstants.AppPreferences.AUTH_PREFS, android.content.Context.MODE_PRIVATE)
-                        .getString("username", "") ?: ""
-                }
+                topState.username.ifBlank { AuthRepository.username }
             }
             Text(
                 text = username,
@@ -237,9 +232,7 @@ fun TopBarWithIconsPreview() {
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                val context = LocalContext.current
-                val sharedPreferences = context.getSharedPreferences(GlobalConstants.AppPreferences.AUTH_PREFS, android.content.Context.MODE_PRIVATE)
-                val username = sharedPreferences.getString("username", "") ?: ""
+                val username = AuthRepository.username
                 Text(
                     text = username,
                     style = MaterialTheme.typography.bodyMedium,

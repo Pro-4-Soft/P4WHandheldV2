@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
@@ -196,13 +198,13 @@ fun ChatScreen(
                     .fillMaxWidth()
                     .weight(1f),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
-                shape = RectangleShape // removes rounded corners
+                shape = RectangleShape
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.primary)
-                        .padding(4.dp), // adjust padding as needed
+                        .padding(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
@@ -265,7 +267,7 @@ fun ChatScreen(
 
                                     is ChatItem.MessageItem -> {
                                         val message = item.message
-                                        val isMine = currentUsername != null && message.fromUsername == currentUsername
+                                        val isMine = message.fromUsername == currentUsername
                                         MessageBubble(message = message, isMine = isMine, context = context)
                                         Spacer(modifier = Modifier.size(8.dp))
                                     }
@@ -403,8 +405,9 @@ private fun MessageBubble(message: UserChatMessage, isMine: Boolean, context: Co
                 contentDescription = "User avatar",
                 modifier = Modifier
                     .size(32.dp)
-                    .background(Color.Gray.copy(alpha = 0.3f), CircleShape)
-                    .padding(2.dp),
+                    .clip(CircleShape)
+                    .border(1.dp, Color.DarkGray, CircleShape)
+                    .background(Color.Gray.copy(alpha = 0.3f), CircleShape),
                 error = androidx.compose.ui.res.painterResource(android.R.drawable.ic_menu_gallery),
                 placeholder = androidx.compose.ui.res.painterResource(android.R.drawable.ic_menu_gallery)
             )
@@ -447,8 +450,9 @@ private fun MessageBubble(message: UserChatMessage, isMine: Boolean, context: Co
                 contentDescription = "User avatar",
                 modifier = Modifier
                     .size(32.dp)
-                    .background(Color.Gray.copy(alpha = 0.3f), CircleShape)
-                    .padding(2.dp),
+                    .clip(CircleShape)
+                    .border(1.dp, Color.DarkGray, CircleShape)
+                    .background(Color.Gray.copy(alpha = 0.3f), CircleShape),
                 error = androidx.compose.ui.res.painterResource(android.R.drawable.ic_menu_gallery),
                 placeholder = androidx.compose.ui.res.painterResource(android.R.drawable.ic_menu_gallery)
             )
@@ -465,7 +469,7 @@ private sealed class ChatItem {
 private fun buildChatItemsWithDates(messages: List<UserChatMessage>): List<ChatItem> {
     if (messages.isEmpty()) return emptyList()
     val items = mutableListOf<ChatItem>()
-    val formatter = DateTimeFormatter.ofPattern("d MMM", Locale.getDefault())
+    val formatter = DateTimeFormatter.ofPattern("d MMM YYYY", Locale.getDefault())
     var lastDate: LocalDate? = null
     for (msg in messages) {
         val date = try {

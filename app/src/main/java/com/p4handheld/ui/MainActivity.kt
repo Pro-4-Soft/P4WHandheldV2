@@ -44,6 +44,7 @@ import com.p4handheld.ui.compose.theme.HandheldP4WTheme
 import com.p4handheld.ui.navigation.AppNavigation
 import com.p4handheld.ui.navigation.Screen
 import com.p4handheld.ui.screens.viewmodels.MainViewModel
+import com.p4handheld.utils.CrashlyticsHelper
 import com.p4handheld.utils.PermissionChecker
 import com.p4handheld.utils.TranslationManager
 import com.p4handheld.utils.Translations
@@ -108,8 +109,8 @@ class MainActivity : ComponentActivity() {
         // Query DataWedge status to initialize the profile and settings.
         viewModel.getStatus()
 
-        // Start location service
-        LocationService.startService(this)
+        // Start location service only if user is logged in and location tracking is enabled
+        startLocationServiceIfNeeded()
 
         val firebaseManager = FirebaseManager.Companion.getInstance(application)
         firebaseManager.initialize()
@@ -239,6 +240,9 @@ class MainActivity : ComponentActivity() {
                         Log.d("MainActivity", "User context loaded successfully on app start")
                         // Data is automatically stored in AuthRepository.storeUserContextData()
                         // TopBar will be updated via broadcast or direct preference reading
+                        
+                        // Start location service after user context is loaded
+                        startLocationServiceIfNeeded()
                     } else {
                         Log.w("MainActivity", "Failed to load user context on app start: ${result.exceptionOrNull()?.message}")
                     }
@@ -246,6 +250,26 @@ class MainActivity : ComponentActivity() {
             } catch (e: Exception) {
                 Log.e("MainActivity", "Error loading user context on app start", e)
             }
+        }
+    }
+
+    private fun startLocationServiceIfNeeded() {
+        try {
+            val authRepository = AuthRepository(this)
+            
+            // Only start if user is logged in and location tracking is enabled
+            if (authRepository.hasValidToken() && authRepository.shouldTrackLocation()) {
+                Log.d("MainActivity", "Starting location service - user logged in and tracking enabled")
+                LocationService.startService(this)
+            } else {
+                Log.d("MainActivity", "Skipping location service - user not logged in or tracking disabled")
+            }
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Error checking location service requirements", e)
+            CrashlyticsHelper.recordException(
+                e,
+                mapOf("operation" to "startLocationServiceIfNeeded")
+            )
         }
     }
 }

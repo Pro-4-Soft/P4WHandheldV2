@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.location.Location
 import android.location.LocationManager
 import android.os.Build
@@ -35,8 +36,21 @@ class LocationService : Service() {
         private const val NOTIFICATION_ID = 101
 
         fun startService(context: Context) {
-            val intent = Intent(context, LocationService::class.java)
-            context.startForegroundService(intent)
+            try {
+                val intent = Intent(context, LocationService::class.java)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intent)
+                } else {
+                    context.startService(intent)
+                }
+                Log.d(TAG, "LocationService start requested")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to start LocationService", e)
+                CrashlyticsHelper.recordException(
+                    e,
+                    mapOf("operation" to "startLocationService", "android_version" to Build.VERSION.SDK_INT.toString())
+                )
+            }
         }
 
         fun stopService(context: Context) {
@@ -63,11 +77,37 @@ class LocationService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "LocationService started")
+        Log.d(TAG, "LocationService onStartCommand called")
 
-        startForeground(NOTIFICATION_ID, createNotification())
-
-        startLocationUpdates()
+        try {
+            // Start foreground with proper service type for Android 14+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(
+                    NOTIFICATION_ID, 
+                    createNotification(),
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+                )
+            } else {
+                startForeground(NOTIFICATION_ID, createNotification())
+            }
+            
+            Log.d(TAG, "LocationService started as foreground service")
+            startLocationUpdates()
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to start foreground service", e)
+            CrashlyticsHelper.recordException(
+                e,
+                mapOf(
+                    "operation" to "startForegroundService",
+                    "android_version" to Build.VERSION.SDK_INT.toString(),
+                    "service_type" to "LocationService"
+                )
+            )
+            // If we can't start as foreground, stop the service
+            stopSelf()
+            return START_NOT_STICKY
+        }
 
         return START_STICKY
     }

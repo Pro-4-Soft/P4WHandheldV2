@@ -127,8 +127,6 @@ fun ActionScreen(
     menuItemLabel: String,
     initialPageKey: String,
     onNavigateBack: () -> Unit,
-    hasUnreadMessages: Boolean = false,
-    isTrackingLocation: Boolean = false,
     onNavigateToLogin: () -> Unit,
 ) {
     val viewModel: ActionViewModel = viewModel()
@@ -141,7 +139,6 @@ fun ActionScreen(
     var showFullImage by remember { mutableStateOf<String?>(null) }
 
     val context = LocalContext.current
-    val authRepository = remember { AuthRepository(context) }
 
     BackHandler(enabled = !uiState.isLoading) {
         onNavigateBack()
@@ -764,7 +761,7 @@ fun PromptInputArea(
     ) {
         when (prompt.promptType) {
             PromptType.DATE -> {
-                var showPicker by remember { mutableStateOf(true) }
+                var showPicker by remember(prompt.actionName, prompt.promptType, prompt.promptPlaceholder) { mutableStateOf(true) }
                 val dateState = rememberDatePickerState()
 
                 // Helper to format selected millis to yyyy-MM-dd
@@ -1001,7 +998,7 @@ fun PromptInputArea(
             }
 
             PromptType.PICKER -> {
-                var showPicker by remember { mutableStateOf(true) }
+                var showPicker by remember(prompt.actionName, prompt.promptType, prompt.promptPlaceholder) { mutableStateOf(true) }
 
                 if (showPicker) {
                     AlertDialog(

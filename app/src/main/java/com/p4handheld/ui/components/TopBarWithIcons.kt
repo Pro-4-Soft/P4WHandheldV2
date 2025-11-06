@@ -25,13 +25,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.p4handheld.data.repository.AuthRepository
 import com.p4handheld.services.LocationStatus
-import com.p4handheld.ui.compose.theme.HandheldP4WTheme
 
 @Composable
 fun TopBarWithIcons() {
@@ -124,88 +122,6 @@ fun TopBarWithIcons() {
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color(0xFF374151)
             )
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun TopBarWithIconsPreview() {
-    HandheldP4WTheme {
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color.White,
-            shadowElevation = 1.dp
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                Box {
-                    IconButton(
-                        onClick = { },
-                        modifier = Modifier.size(24.dp),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.LocationOn,
-                            contentDescription = "Location tracking active",
-                            tint = Color(0xFF10B981),
-                            modifier = Modifier.size(14.dp)
-                        )
-                    }
-                }
-
-                //region active tasks Rectangular badge
-                Box(
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(4.dp))
-                        .padding(horizontal = 6.dp, vertical = 1.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-
-                    Row(
-                        modifier = Modifier,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Assignment,
-                            contentDescription = "Messages",
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Text(
-                            text = "2 Tasks",
-                            color = Color.White,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            lineHeight = 10.sp
-                        )
-                    }
-                }
-                //endregion
-
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Message,
-                    contentDescription = "Messages",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(14.dp)
-                )
-                //endregion
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                val username = AuthRepository.username
-                Text(
-                    text = username,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF374151)
-                )
-            }
         }
     }
 }

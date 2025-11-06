@@ -1,13 +1,10 @@
 package com.p4handheld.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.p4handheld.data.repository.AuthRepository
 import com.p4handheld.ui.screens.ActionScreen
 import com.p4handheld.ui.screens.ChatScreen
 import com.p4handheld.ui.screens.ContactsScreen
@@ -20,10 +17,6 @@ fun AppNavigation(
     navController: NavHostController = rememberNavController(),
     startDestination: String = Screen.TenantSelect.route
 ) {
-    val context = LocalContext.current
-    val authRepository = remember { AuthRepository(context) }
-    val isTrackingLocation = remember { authRepository.shouldTrackLocation() }
-
     NavHost(
         navController = navController,
         startDestination = startDestination
@@ -129,8 +122,6 @@ fun AppNavigation(
                     } else
                         navController.popBackStack()
                 },
-                hasUnreadMessages = false,
-                isTrackingLocation = isTrackingLocation,
                 onNavigateToLogin = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Menu.route) { inclusive = true }

@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
@@ -74,27 +73,13 @@ fun TopBarWithIcons() {
                 }
             }
 
-            // Messages icon with unread indicator
-            Box {
+            if (topState.hasUnreadMessages) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Message,
                     contentDescription = "Messages",
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(14.dp)
                 )
-
-                // Unread messages indicator
-                if (topState.hasUnreadMessages) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .background(Color.Red, CircleShape)
-                            .align(Alignment.TopEnd),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        // Small red dot to indicate unread messages
-                    }
-                }
             }
 
             Spacer(modifier = Modifier.weight(1f))
@@ -204,30 +189,12 @@ fun TopBarWithIconsPreview() {
                 }
                 //endregion
 
-                //region Messages icon with unread indicator
-                Box {
-                    IconButton(
-                        onClick = { },
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Assignment,
-                            contentDescription = "Messages",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(14.dp)
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .background(Color.Red, CircleShape)
-                            .align(Alignment.TopEnd),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        // Small red dot to indicate unread messages
-                    }
-                }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Message,
+                    contentDescription = "Messages",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(14.dp)
+                )
                 //endregion
 
                 Spacer(modifier = Modifier.weight(1f))

@@ -2,8 +2,6 @@ package com.p4handheld.data.repository
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.core.content.edit
-import com.p4handheld.GlobalConstants.AppPreferences.AUTH_PREFS
 import com.p4handheld.GlobalConstants.AppPreferences.FIREBASE_PREFS_NAME
 import com.p4handheld.GlobalConstants.AppPreferences.TENANT_PREFS
 import com.p4handheld.data.api.ApiClient
@@ -14,13 +12,13 @@ import com.p4handheld.data.models.MenuItem
 import com.p4handheld.data.models.ScanType
 import com.p4handheld.data.models.UserContextResponse
 import com.p4handheld.firebase.FIREBASE_KEY_FCM_TOKEN
+import com.p4handheld.ui.components.TopBarViewModel
 import com.p4handheld.utils.CrashlyticsHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
 class AuthRepository(context: Context) {
-    private val authSharedPreferences: SharedPreferences = context.getSharedPreferences(AUTH_PREFS, Context.MODE_PRIVATE)
     private val firebaseSharedPreferences: SharedPreferences = context.getSharedPreferences(FIREBASE_PREFS_NAME, Context.MODE_PRIVATE)
     private val tenantSharedPreferences: SharedPreferences = context.getSharedPreferences(TENANT_PREFS, Context.MODE_PRIVATE)
     private val apiService: ApiService
@@ -102,6 +100,7 @@ class AuthRepository(context: Context) {
         hasTasks = userContextResponse.hasTasks;
         newMessages = userContextResponse.newMessages;
         menu = userContextResponse.menu;
+        TopBarViewModel.IsInitialized = false;
 
         CrashlyticsHelper.setUserId(userContextResponse.userId)
         CrashlyticsHelper.setCustomKey("track_geo_location", userContextResponse.trackGeoLocation)
@@ -121,12 +120,9 @@ class AuthRepository(context: Context) {
         return token.isNotEmpty() && isLoggedIn
     }
 
-    suspend fun logout(context: Context): Result<Boolean> {
+    suspend fun logout(): Result<Boolean> {
         return withContext(Dispatchers.IO) {
             try {
-                // Always perform local cleanup first to ensure user is logged out locally
-                authSharedPreferences.edit { clear() }
-                
                 // Reset companion object values
                 isLoggedIn = false
                 token = ""
@@ -136,13 +132,13 @@ class AuthRepository(context: Context) {
                 hasTasks = false
                 newMessages = 0
                 menu = null
-                
-                CrashlyticsHelper.clearUserInfo()
+
+                TopBarViewModel.IsInitialized = false;
                 CrashlyticsHelper.log("User logged out")
 
                 // Try API logout - but don't prevent local logout if it fails
                 val logoutResult = apiService.logout()
-                if (logoutResult.isSuccessful) {
+                if (logoutResult.isSuccessful || logoutResult.code == 401) {
                     Result.success(true)
                 } else {
                     CrashlyticsHelper.recordException(
@@ -153,8 +149,6 @@ class AuthRepository(context: Context) {
                     Result.failure(ApiError("Server logout failed: ${logoutResult.errorMessage}", logoutResult.code))
                 }
             } catch (e: Exception) {
-                // Ensure local cleanup is done even if there was an exception
-                authSharedPreferences.edit { clear() }
                 isLoggedIn = false
                 token = ""
                 userId = ""
@@ -163,7 +157,8 @@ class AuthRepository(context: Context) {
                 hasTasks = false
                 newMessages = 0
                 menu = null
-                
+                TopBarViewModel.IsInitialized = false;
+
                 CrashlyticsHelper.clearUserInfo()
                 CrashlyticsHelper.recordException(e, mapOf("operation" to "logout_exception"))
                 Result.failure(e)

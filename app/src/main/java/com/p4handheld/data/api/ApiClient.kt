@@ -120,7 +120,7 @@ object ApiClient {
             withContext(Dispatchers.IO) {
                 userRequestMutex.withLock {
                     try {
-                        val url = "${getBaseUrl()}/hh/lookup/GetMyTask"
+                        val url = "${getBaseUrl()}/hh/lookup/GetMyTasks"
                         val request = Request.Builder().url(url).get().build();
                         client.newCall(request).execute().use { response ->
                             if (response.isSuccessful) {

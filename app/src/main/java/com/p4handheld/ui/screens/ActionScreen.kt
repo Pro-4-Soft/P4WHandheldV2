@@ -197,7 +197,7 @@ fun ActionScreen(
 
                     PromptType.TEXT -> {
                         println("ActionScreen: Scan data received (TEXT): $data")
-                        viewModel.updatePromptValue(data)
+                        viewModel.processAction(data)
                     }
 
                     PromptType.DATE -> {
@@ -209,7 +209,7 @@ fun ActionScreen(
                     PromptType.NUMBER -> {
                         val digitsOnly = data.filter { it.isDigit() }
                         println("ActionScreen: Scan data received (NUMBER): $digitsOnly")
-                        viewModel.updatePromptValue(digitsOnly)
+                        viewModel.processAction(digitsOnly)
                     }
 
                     else -> {

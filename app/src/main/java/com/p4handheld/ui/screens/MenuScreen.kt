@@ -14,14 +14,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
@@ -371,24 +369,6 @@ fun MenuTileCard(
                     fontSize = 30.sp,           // match your previous Icon size
                     color = Color(0xFF475569)
                 )
-
-                if (menuItem.children.isNotEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .offset(x = 12.dp, y = (-12).dp)
-                            .size(16.dp)
-                            .background(Color(0xFF10B981), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = menuItem.children.size.toString(),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            modifier = Modifier.offset(x = 0.dp, y = (-4).dp)
-                        )
-                    }
-                }
             }
 
             AutoResizeMenuLabelText(text = menuItem.label)

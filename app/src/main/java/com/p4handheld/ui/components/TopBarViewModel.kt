@@ -30,7 +30,7 @@ data class TopBarUiState(
 class TopBarViewModel(application: Application) : AndroidViewModel(application) {
     companion object {
         @Volatile
-        private var IsInitialized: Boolean = false
+        var IsInitialized: Boolean = false
         val PersistentUiState = MutableStateFlow(TopBarUiState())
     }
 

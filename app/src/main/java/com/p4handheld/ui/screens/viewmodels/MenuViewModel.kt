@@ -89,14 +89,11 @@ class MenuViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
-                val logoutResult = authRepository.logout(getApplication())
+                val logoutResult = authRepository.logout()
                 if (logoutResult.isSuccess) {
                     logoutSuccessEvent.emit(Unit)
                 } else {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = "Logout failed: ${logoutResult.exceptionOrNull()?.message ?: "Unknown error"}"
-                    )
+                    println("MenuViewModel: Logout error")
                 }
             } catch (e: Exception) {
                 // Show error message for exceptions

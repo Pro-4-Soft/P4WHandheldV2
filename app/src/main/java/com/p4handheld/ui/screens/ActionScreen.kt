@@ -351,52 +351,67 @@ fun ActionScreenWrapper(
     showFullImage: String? = null,
     onHideFullImage: () -> Unit = {}
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF1F5F9))
-            .statusBarsPadding()
-            .navigationBarsPadding()
-    ) {
-        // Global TopBar with icons and username
-        TopBarWithIcons()
-
-        //region Header with page title
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color.White,
-            shadowElevation = 2.dp
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFF1F5F9))
+                .statusBarsPadding()
+                .navigationBarsPadding()
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = uiState.pageTitle ?: menuItemLabel,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .weight(1f)
-                        .offset((20).dp),
-                    textAlign = TextAlign.Center
-                )
+            // Global TopBar with icons and username
+            TopBarWithIcons()
 
-                Box(
-                    modifier = Modifier.size(24.dp),
-                    contentAlignment = Alignment.Center
+            //region Header with page title
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = Color.White,
+                shadowElevation = 2.dp
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (uiState.isLoading) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    Text(
+                        text = uiState.pageTitle ?: menuItemLabel,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .weight(1f)
+                            .offset((20).dp),
+                        textAlign = TextAlign.Center
+                    )
+
+                    Box(
+                        modifier = Modifier.size(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (uiState.isLoading) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                        }
                     }
                 }
             }
-        }
-        //endregion
+            //endregion
 
-        promptInputComponent()
+            promptInputComponent()
+        }
+
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.LightGray.copy(alpha = 0.5f))
+                    .statusBarsPadding()
+                    .navigationBarsPadding(),
+                contentAlignment = Alignment.Center
+            ) {
+            }
+        }
     }
+
     // Full image dialog
     showFullImage?.let { imageUrl ->
         Dialog(onDismissRequest = onHideFullImage) {

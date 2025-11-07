@@ -95,6 +95,12 @@ fun MenuScreen(
         }
     }
 
+    LaunchedEffect(viewModel.logoutSuccessEvent) {
+        viewModel.logoutSuccessEvent.collect {
+            onNavigateToLogin()
+        }
+    }
+
     MenuScreenContent(
         uiState = uiState,
         selectedMenuItem = selectedMenuItem,
@@ -129,7 +135,6 @@ fun MenuScreen(
                     onClick = {
                         showLogoutDialog = false
                         viewModel.logout()
-                        onNavigateToLogin()
                     }
                 ) {
                     Text("Yes", fontSize = 20.sp, color = MaterialTheme.colorScheme.error)

@@ -240,6 +240,12 @@ data class UserContact(
 )
 
 @Serializable
+data class UserTask(
+    @SerialName("Id")
+    val id: String
+)
+
+@Serializable
 data class UserChatMessage(
     @SerialName("MessageId")
     val messageId: String,

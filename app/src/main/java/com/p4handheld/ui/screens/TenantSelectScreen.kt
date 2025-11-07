@@ -161,7 +161,7 @@ fun TenantSelectScreenContent(
             ) {
                 Text(
                     text = "Tenant Configuration",
-                    fontSize = 24.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )

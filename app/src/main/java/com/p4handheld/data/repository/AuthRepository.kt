@@ -124,12 +124,24 @@ class AuthRepository(context: Context) {
     suspend fun logout(context: Context): Result<Boolean> {
         return withContext(Dispatchers.IO) {
             try {
-                val logoutResult = apiService.logout()
+                // Always perform local cleanup first to ensure user is logged out locally
                 authSharedPreferences.edit { clear() }
-
+                
+                // Reset companion object values
+                isLoggedIn = false
+                token = ""
+                userId = ""
+                username = ""
+                trackGeoLocation = false
+                hasTasks = false
+                newMessages = 0
+                menu = null
+                
                 CrashlyticsHelper.clearUserInfo()
                 CrashlyticsHelper.log("User logged out")
 
+                // Try API logout - but don't prevent local logout if it fails
+                val logoutResult = apiService.logout()
                 if (logoutResult.isSuccessful) {
                     Result.success(true)
                 } else {
@@ -137,10 +149,21 @@ class AuthRepository(context: Context) {
                         Exception("API logout failed: ${logoutResult.errorMessage}"),
                         mapOf("operation" to "api_logout_failed", "error_code" to logoutResult.code.toString())
                     )
-                    Result.success(true)
+                    // Return failure since API logout failed, even though local cleanup succeeded
+                    Result.failure(ApiError("Server logout failed: ${logoutResult.errorMessage}", logoutResult.code))
                 }
             } catch (e: Exception) {
+                // Ensure local cleanup is done even if there was an exception
                 authSharedPreferences.edit { clear() }
+                isLoggedIn = false
+                token = ""
+                userId = ""
+                username = ""
+                trackGeoLocation = false
+                hasTasks = false
+                newMessages = 0
+                menu = null
+                
                 CrashlyticsHelper.clearUserInfo()
                 CrashlyticsHelper.recordException(e, mapOf("operation" to "logout_exception"))
                 Result.failure(e)

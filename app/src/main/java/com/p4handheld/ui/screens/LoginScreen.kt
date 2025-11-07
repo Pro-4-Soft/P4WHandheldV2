@@ -4,28 +4,26 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -125,6 +123,7 @@ fun LoginScreenContent(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .padding(16.dp, 8.dp)
+            .statusBarsPadding()
             .navigationBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -136,10 +135,25 @@ fun LoginScreenContent(
                 containerColor = MaterialTheme.colorScheme.background
             ),
         ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Box(
+                modifier = Modifier.fillMaxWidth()
             ) {
+                // Left button
+                IconButton(
+                    onClick = { onTenantConfigClick() },
+                    enabled = !uiState.isLoading,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .size(24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = Translations[R.string.tenant_button],
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                // Centered image
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(logoUrl)
@@ -149,164 +163,141 @@ fun LoginScreenContent(
                     contentDescription = Translations[R.string.app_logo_description],
                     modifier = Modifier
                         .size(140.dp)
-                        .padding(4.dp)
+                        .align(Alignment.Center)
                 )
-            }
-        }
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceBright
-            ),
-            border = CardDefaults.outlinedCardBorder()
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
 
+                // Right text
                 Text(
-                    text = Translations[R.string.login_title],
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    text = "v$versionName",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.align(Alignment.TopEnd)
                 )
-
-                OutlinedTextField(
-                    value = username,
-                    onValueChange = {
-                        onUsernameChange(it)
-                    },
-                    label = { Text(Translations[R.string.username_label]) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    enabled = !uiState.isLoading,
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        imeAction = ImeAction.Next
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onNext = { passwordFocusRequester.requestFocus() }
-                    )
-                )
-
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { onPasswordChange(it) },
-                    label = { Text(Translations[R.string.password_label]) },
+            }
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceBright
+                ),
+                border = CardDefaults.outlinedCardBorder()
+            ) {
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .focusRequester(passwordFocusRequester),
-                    singleLine = true,
-                    visualTransformation = PasswordVisualTransformation(),
-                    enabled = !uiState.isLoading,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Password,
-                        imeAction = ImeAction.Send // uncommented and included
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onSend = {
-                            if (password.isNotEmpty() && username.isNotEmpty()) {
-                                onLoginClick()
-                            }
-                        }
-                    )
-                )
-
-                // Error message
-                uiState.errorMessage?.let { errorMessage ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceBright
-                        )
-                    ) {
-                        Text(
-                            text = errorMessage,
-                            color = MaterialTheme.colorScheme.error,
-                            maxLines = 3,
-                            overflow = TextOverflow.Ellipsis,
-                            fontSize = 14.sp,
-                        )
-                    }
-                }
-
-                Button(
-                    onClick = onLoginClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    enabled = !uiState.isLoading,
-                    shape = RoundedCornerShape(8.dp)
+                        .padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    if (uiState.isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = MaterialTheme.colorScheme.onPrimary
+
+                    Text(
+                        text = Translations[R.string.login_title],
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    OutlinedTextField(
+                        value = username,
+                        onValueChange = {
+                            onUsernameChange(it)
+                        },
+                        label = { Text(Translations[R.string.username_label]) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        enabled = !uiState.isLoading,
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { passwordFocusRequester.requestFocus() }
                         )
-                    } else {
-                        Text(Translations[R.string.login_button], fontSize = 16.sp)
+                    )
+
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { onPasswordChange(it) },
+                        label = { Text(Translations[R.string.password_label]) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(passwordFocusRequester),
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
+                        enabled = !uiState.isLoading,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Send // uncommented and included
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onSend = {
+                                if (password.isNotEmpty() && username.isNotEmpty()) {
+                                    onLoginClick()
+                                }
+                            }
+                        )
+                    )
+
+                    // Error message
+                    uiState.errorMessage?.let { errorMessage ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceBright
+                            )
+                        ) {
+                            Text(
+                                text = errorMessage,
+                                color = MaterialTheme.colorScheme.error,
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis,
+                                fontSize = 10.sp,
+                            )
+                        }
+                    }
+
+                    Button(
+                        onClick = onLoginClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        enabled = !uiState.isLoading,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        if (uiState.isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        } else {
+                            Text(Translations[R.string.login_button], fontSize = 16.sp)
+                        }
                     }
                 }
             }
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                buildAnnotatedString {
-                    append(Translations[R.string.powered_by] + " ")
-                }, fontSize = 10.sp
-            )
-            Text(
-                buildAnnotatedString {
-                    val currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
-                    append(Translations.format(R.string.copyright_text, currentYear))
-                },
-                fontSize = 10.sp,
-                color = Color(0xFF3553D0)
-            )
-        }
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.BottomEnd
-        ) {
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.Center
             ) {
-                Button(
-                    onClick = { onTenantConfigClick() },
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = MaterialTheme.colorScheme.onSurface
-                    ),
-                    enabled = !uiState.isLoading
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = Translations[R.string.tenant_button],
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = Translations[R.string.tenant_button],
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-
                 Text(
-                    text = "v$versionName",
-                    style = MaterialTheme.typography.bodyMedium
+                    buildAnnotatedString {
+                        append(Translations[R.string.powered_by] + " ")
+                    }, fontSize = 10.sp
                 )
+                Text(
+                    buildAnnotatedString {
+                        val currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+                        append(Translations.format(R.string.copyright_text, currentYear))
+                    },
+                    fontSize = 10.sp,
+                    color = Color(0xFF3553D0)
+                )
+            }
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.BottomEnd
+            ) {
+
+
             }
         }
     }

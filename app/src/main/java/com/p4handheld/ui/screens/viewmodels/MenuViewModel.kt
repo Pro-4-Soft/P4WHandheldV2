@@ -28,6 +28,7 @@ class MenuViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(MenuUiState())
     val uiState: StateFlow<MenuUiState> = _uiState.asStateFlow()
     val unauthorizedEvent = MutableSharedFlow<Unit>()
+    val logoutSuccessEvent = MutableSharedFlow<Unit>()
 
     init {
         loadMenuData()
@@ -86,11 +87,23 @@ class MenuViewModel(application: Application) : AndroidViewModel(application) {
 
     fun logout() {
         viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
             try {
-                authRepository.logout(getApplication())
+                val logoutResult = authRepository.logout(getApplication())
+                if (logoutResult.isSuccess) {
+                    logoutSuccessEvent.emit(Unit)
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "Logout failed: ${logoutResult.exceptionOrNull()?.message ?: "Unknown error"}"
+                    )
+                }
             } catch (e: Exception) {
-                // Log error but don't prevent logout
-                // User should still be logged out locally even if API call fails
+                // Show error message for exceptions
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Logout error: ${e.message}"
+                )
                 println("MenuViewModel: Logout error: ${e.message}")
             }
         }

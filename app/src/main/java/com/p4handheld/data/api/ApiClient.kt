@@ -12,6 +12,7 @@ import com.p4handheld.data.models.TranslationResponse
 import com.p4handheld.data.models.UserChatMessage
 import com.p4handheld.data.models.UserContact
 import com.p4handheld.data.models.UserContextResponse
+import com.p4handheld.data.models.UserTask
 import com.p4handheld.data.repository.AuthRepository
 import com.p4handheld.utils.CrashlyticsHelper
 import kotlinx.coroutines.Dispatchers
@@ -25,9 +26,6 @@ import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONArray
-import org.json.JSONObject
-import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 
 object ApiClient {
@@ -122,28 +120,14 @@ object ApiClient {
             withContext(Dispatchers.IO) {
                 userRequestMutex.withLock {
                     try {
-                        val filter = URLEncoder.encode("UserId eq $userId", "UTF-8")
-                        val select = URLEncoder.encode("UserTaskNumber", "UTF-8")
-                        val url = "${getBaseUrl()}/odata/UserTask?\$filter=$filter&\$select=$select"
-
-                        client.newCall(Request.Builder().url(url).get().build()).execute().use { response ->
-                            val responseBody = response.body?.string().orEmpty()
+                        val url = "${getBaseUrl()}/hh/lookup/GetMyTask"
+                        val request = Request.Builder().url(url).get().build();
+                        client.newCall(request).execute().use { response ->
                             if (response.isSuccessful) {
-                                val count = try {
-                                    val obj = JSONObject(responseBody)
-                                    val arr = obj.optJSONArray("value") ?: JSONArray()
-                                    arr.length()
-                                } catch (_: Exception) {
-                                    try {
-                                        JSONArray(responseBody).length()
-                                    } catch (_: Exception) {
-                                        0
-                                    }
-                                }
-                                ApiResponse(true, count, response.code)
-                            } else {
-                                ApiResponse(false, null, response.code, responseBody)
-                            }
+                                val body = response.body?.string().orEmpty()
+                                ApiResponse(true, json.decodeFromString<List<UserTask>>(body).size, response.code)
+                            } else
+                                ApiResponse(false, null, response.code, response.body?.string())
                         }
                     } catch (e: Exception) {
                         ApiResponse(false, null, 0, e.message)

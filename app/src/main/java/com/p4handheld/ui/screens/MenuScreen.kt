@@ -298,34 +298,29 @@ fun MenuScreenContent(
         }
         //endregion
 
-        //region Action buttons at bottom (Messages + Logout)
+        //region Action buttons at bottom (Logout)
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
             contentAlignment = Alignment.BottomEnd
         ) {
-
             if (uiState.selectedMenuItem == null || (selectedMenuItem?.children?.size ?: 0) > 0) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                // Logout button
+                FloatingActionButton(
+                    onClick = {
+                        if (!uiState.isLoading) {
+                            logout()
+                        }
+                    },
+                    containerColor = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.alpha(if (uiState.isLoading) 0.5f else 1f)
                 ) {
-                    // Logout button
-                    FloatingActionButton(
-                        onClick = {
-                            if (!uiState.isLoading) {
-                                logout()
-                            }
-                        },
-                        containerColor = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.alpha(if (uiState.isLoading) 0.5f else 1f)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                            contentDescription = "Logout",
-                            tint = Color.White
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                        contentDescription = "Logout",
+                        tint = Color.White
+                    )
                 }
             }
         }

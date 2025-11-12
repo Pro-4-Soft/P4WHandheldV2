@@ -17,6 +17,8 @@ import com.p4handheld.utils.CrashlyticsHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class AuthRepository(context: Context) {
     private val firebaseSharedPreferences: SharedPreferences = context.getSharedPreferences(FIREBASE_PREFS_NAME, Context.MODE_PRIVATE)
@@ -34,6 +36,7 @@ class AuthRepository(context: Context) {
         var username: String = ""
         var isLoggedIn: Boolean = false
         var token: String = ""
+        var sessionTime: String = ""
     }
 
     // JSON configuration for Kotlinx Serialization
@@ -100,6 +103,7 @@ class AuthRepository(context: Context) {
         hasTasks = userContextResponse.hasTasks;
         newMessages = userContextResponse.newMessages;
         menu = userContextResponse.menu;
+        sessionTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
         TopBarViewModel.IsInitialized = false;
 
         CrashlyticsHelper.setUserId(userContextResponse.userId)
@@ -123,17 +127,6 @@ class AuthRepository(context: Context) {
     suspend fun logout(): Result<Boolean> {
         return withContext(Dispatchers.IO) {
             try {
-                // Reset companion object values
-                isLoggedIn = false
-                token = ""
-                userId = ""
-                username = ""
-                trackGeoLocation = false
-                hasTasks = false
-                newMessages = 0
-                menu = null
-
-                TopBarViewModel.IsInitialized = false;
                 CrashlyticsHelper.log("User logged out")
 
                 // Try API logout - but don't prevent local logout if it fails
@@ -149,6 +142,11 @@ class AuthRepository(context: Context) {
                     Result.failure(ApiError("Server logout failed: ${logoutResult.errorMessage}", logoutResult.code))
                 }
             } catch (e: Exception) {
+                CrashlyticsHelper.clearUserInfo()
+                CrashlyticsHelper.recordException(e, mapOf("operation" to "logout_exception"))
+                Result.failure(e)
+            } finally {
+                // Reset companion object values
                 isLoggedIn = false
                 token = ""
                 userId = ""
@@ -157,11 +155,8 @@ class AuthRepository(context: Context) {
                 hasTasks = false
                 newMessages = 0
                 menu = null
+                sessionTime = ""
                 TopBarViewModel.IsInitialized = false;
-
-                CrashlyticsHelper.clearUserInfo()
-                CrashlyticsHelper.recordException(e, mapOf("operation" to "logout_exception"))
-                Result.failure(e)
             }
         }
     }

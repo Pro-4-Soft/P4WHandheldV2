@@ -65,6 +65,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.p4handheld.GlobalConstants
 import com.p4handheld.GlobalConstants.AppPreferences.TENANT_PREFS
@@ -104,6 +105,9 @@ fun ChatScreen(
     val coroutineScope = rememberCoroutineScope()
     val ctx = LocalContext.current
 
+    // Cache control for chat screen - enable caching while on screen
+    var isChatActive by remember { mutableStateOf(true) }
+
     var hasInitiallyScrolled by remember { mutableStateOf(false) }
     var previousMessageCount by remember { mutableIntStateOf(0) }
     var scrollIndexBeforeLoad by remember { mutableIntStateOf(0) }
@@ -111,8 +115,10 @@ fun ChatScreen(
     // Register this chat screen as active for the contact
     DisposableEffect(contactId) {
         ChatStateManager.setActiveChatContact(contactId)
+        isChatActive = true
         onDispose {
             ChatStateManager.clearActiveChatContact()
+            isChatActive = false
         }
     }
 
@@ -268,7 +274,7 @@ fun ChatScreen(
                                     is ChatItem.MessageItem -> {
                                         val message = item.message
                                         val isMine = message.fromUsername == currentUsername
-                                        MessageBubble(message = message, isMine = isMine, context = context)
+                                        MessageBubble(message = message, isMine = isMine, context = context, enableCaching = isChatActive)
                                         Spacer(modifier = Modifier.size(8.dp))
                                     }
                                 }
@@ -372,7 +378,7 @@ fun ChatScreen(
 }
 
 @Composable
-private fun MessageBubble(message: UserChatMessage, isMine: Boolean, context: Context) {
+private fun MessageBubble(message: UserChatMessage, isMine: Boolean, context: Context, enableCaching: Boolean = true) {
     val containerColor = if (isMine) Color(0xFFDCFCE7) else Color(0xFFF1F5F9)
     val textColor = Color(0xFF111827)
 
@@ -393,8 +399,10 @@ private fun MessageBubble(message: UserChatMessage, isMine: Boolean, context: Co
             // Contact's avatar on the left
             AsyncImage(
                 model = ImageRequest.Builder(context)
-                    .data(userImageUrl)
+                    .data("${userImageUrl}?v=${AuthRepository.sessionTime}")
                     .addHeader("AuthenticationToken", AuthRepository.token)
+                    .memoryCachePolicy(if (enableCaching) CachePolicy.ENABLED else CachePolicy.DISABLED)
+                    .diskCachePolicy(if (enableCaching) CachePolicy.ENABLED else CachePolicy.DISABLED)
                     .crossfade(true)
                     .listener(
                         onStart = { println("Loading image: $userImageUrl with token") },
@@ -438,8 +446,10 @@ private fun MessageBubble(message: UserChatMessage, isMine: Boolean, context: Co
             Spacer(modifier = Modifier.width(8.dp))
             AsyncImage(
                 model = ImageRequest.Builder(context)
-                    .data(userImageUrl)
+                    .data("${userImageUrl}?v=${AuthRepository.sessionTime}")
                     .addHeader("AuthenticationToken", AuthRepository.token)
+                    .memoryCachePolicy(if (enableCaching) CachePolicy.ENABLED else CachePolicy.DISABLED)
+                    .diskCachePolicy(if (enableCaching) CachePolicy.ENABLED else CachePolicy.DISABLED)
                     .crossfade(true)
                     .listener(
                         onStart = { println("Loading image: $userImageUrl with token") },

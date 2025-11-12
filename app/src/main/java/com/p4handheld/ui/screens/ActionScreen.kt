@@ -119,9 +119,7 @@ import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.time.Instant
-import java.time.LocalDateTime
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -431,7 +429,7 @@ fun ActionScreenWrapper(
                         .padding(12.dp)
                 ) {
                     Image(
-                        painter = rememberAsyncImagePainter(model = "${imageUrl}?v=${LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))}"),
+                        painter = rememberAsyncImagePainter(model = "${imageUrl}?v=${AuthRepository.sessionTime}"),
                         contentDescription = "Full size image",
                         contentScale = ContentScale.Fit,
                         modifier = Modifier
@@ -707,7 +705,7 @@ fun MessageCard(
                     Spacer(modifier = Modifier.width(12.dp))
                 } else {
                     Image(
-                        painter = rememberAsyncImagePainter(model = "${message.imageResource}?v=${LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))}"),
+                        painter = rememberAsyncImagePainter(model = "${message.imageResource}?v=${AuthRepository.sessionTime}"),
                         contentDescription = null,
                         contentScale = ContentScale.Fit,
                         modifier = Modifier

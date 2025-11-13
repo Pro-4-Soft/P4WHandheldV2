@@ -226,7 +226,7 @@ fun TenantSelectScreenContent(
                             text = errorMessage,
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             modifier = Modifier.padding(12.dp),
-                            fontSize = 14.sp
+                            fontSize = 10.sp
                         )
                     }
                 }

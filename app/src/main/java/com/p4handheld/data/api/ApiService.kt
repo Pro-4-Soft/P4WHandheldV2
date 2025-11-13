@@ -5,7 +5,6 @@ import com.p4handheld.data.models.LoginResponse
 import com.p4handheld.data.models.ProcessRequest
 import com.p4handheld.data.models.PromptResponse
 import com.p4handheld.data.models.TranslationRequest
-import com.p4handheld.data.models.TranslationResponse
 import com.p4handheld.data.models.UserChatMessage
 import com.p4handheld.data.models.UserContact
 import com.p4handheld.data.models.UserContextResponse
@@ -30,7 +29,7 @@ interface ApiService {
 
     suspend fun getAssignedTaskCount(userId: String): ApiResponse<Int>
 
-    suspend fun getTranslations(translationRequest: TranslationRequest): ApiResponse<TranslationResponse>
+    suspend fun getTranslations(translationRequest: TranslationRequest): ApiResponse<Map<String, String>>
 
     suspend fun preflightCheck(): ApiResponse<Unit>
 

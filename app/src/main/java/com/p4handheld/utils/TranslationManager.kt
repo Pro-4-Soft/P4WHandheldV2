@@ -5,9 +5,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import androidx.core.content.edit
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.decodeFromString
 import com.p4handheld.GlobalConstants
 import com.p4handheld.R
 import com.p4handheld.data.api.ApiClient
@@ -15,6 +12,8 @@ import com.p4handheld.data.models.CachedTranslations
 import com.p4handheld.data.models.TranslationRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 class TranslationManager private constructor(
     private val appContext: Context
@@ -84,7 +83,7 @@ class TranslationManager private constructor(
 
             if (response.isSuccessful && response.body != null) {
                 val newTranslations = CachedTranslations(
-                    translations = response.body.translations,
+                    translations = response.body,
                     lastUpdated = System.currentTimeMillis()
                 )
                 cacheTranslations(newTranslations)
@@ -157,7 +156,7 @@ class TranslationManager private constructor(
             val stringClass = R.string::class.java
             val fields = stringClass.declaredFields
             val packageName = appContext.packageName
-            
+
             val excludedPrefixes = listOf(
                 "com.google.",
                 "firebase_",

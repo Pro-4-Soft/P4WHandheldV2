@@ -176,7 +176,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            // Handle scanned output data - this is now handled in the Compose UI
             scanViewState.dwOutputData?.let { dwOutputData ->
                 // The Compose UI will automatically update when this state changes
             }
@@ -185,11 +184,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        // Unregister broadcast receivers and notifications.
         DWCommunicationWrapper.unregisterReceivers()
         viewModel.unregisterNotifications()
 
-        // Stop location service
         LocationService.stopService(this)
         if (screenRequestReceiverRegistered) {
             try {
@@ -238,10 +235,6 @@ class MainActivity : ComponentActivity() {
                     val result = authRepository.getUserContext()
                     if (result.isSuccess) {
                         Log.d("MainActivity", "User context loaded successfully on app start")
-                        // Data is automatically stored in AuthRepository.storeUserContextData()
-                        // TopBar will be updated via broadcast or direct preference reading
-                        
-                        // Start location service after user context is loaded
                         startLocationServiceIfNeeded()
                     } else {
                         Log.w("MainActivity", "Failed to load user context on app start: ${result.exceptionOrNull()?.message}")
@@ -256,7 +249,6 @@ class MainActivity : ComponentActivity() {
     private fun startLocationServiceIfNeeded() {
         try {
             val authRepository = AuthRepository(this)
-            
             // Only start if user is logged in and location tracking is enabled
             if (authRepository.hasValidToken() && authRepository.shouldTrackLocation()) {
                 Log.d("MainActivity", "Starting location service - user logged in and tracking enabled")

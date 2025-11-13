@@ -241,7 +241,7 @@ fun MenuScreenContent(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Loading menu...",
+                            text = "Loading...",
                             fontSize = 16.sp,
                             color = MaterialTheme.colorScheme.onSurface
                         )

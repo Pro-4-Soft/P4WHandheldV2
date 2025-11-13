@@ -8,7 +8,6 @@ import com.p4handheld.data.models.ProcessRequest
 import com.p4handheld.data.models.PromptResponse
 import com.p4handheld.data.models.SendMessageRequest
 import com.p4handheld.data.models.TranslationRequest
-import com.p4handheld.data.models.TranslationResponse
 import com.p4handheld.data.models.UserChatMessage
 import com.p4handheld.data.models.UserContact
 import com.p4handheld.data.models.UserContextResponse
@@ -313,19 +312,19 @@ object ApiClient {
                 }
             }
 
-        override suspend fun getTranslations(translationRequest: TranslationRequest): ApiResponse<TranslationResponse> =
+        override suspend fun getTranslations(translationRequest: TranslationRequest): ApiResponse<Map<String, String>> =
             withContext(Dispatchers.IO) {
                 userRequestMutex.withLock {
                     try {
                         val url = "${getBaseUrl()}/api/Lang/GetTokens"
-                        val jsonBody = json.encodeToString(translationRequest)
+                        val jsonBody = json.encodeToString(translationRequest.keys)
                         val requestBody = jsonBody.toRequestBody("application/json".toMediaType())
                         val request = Request.Builder().url(url).post(requestBody).build()
 
                         client.newCall(request).execute().use { response ->
                             val body = response.body?.string().orEmpty()
                             if (response.isSuccessful) {
-                                ApiResponse(true, json.decodeFromString<TranslationResponse>(body), response.code)
+                                ApiResponse(true, json.decodeFromString<Map<String, String>>(body), response.code)
                             } else {
                                 ApiResponse(false, null, response.code, body)
                             }

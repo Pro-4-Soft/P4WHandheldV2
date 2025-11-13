@@ -27,9 +27,7 @@ class ConfigurationManager {
     // Sends a broadcast intent to the DataWedge API in a thread-safe manner.
     private fun sendBroadcast(intent: Intent) {
         synchronized(dwIntentCallLock) {
-            Log.d(TAG, "sendBroadcast [start]")
             App.getInstance().sendBroadcast(intent)
-            Log.d(TAG, "sendBroadcast [end]")
         }
     }
 

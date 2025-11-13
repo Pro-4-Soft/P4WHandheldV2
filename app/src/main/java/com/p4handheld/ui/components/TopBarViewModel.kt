@@ -14,6 +14,7 @@ import com.p4handheld.data.api.ApiClient.apiService
 import com.p4handheld.data.models.P4WEventType
 import com.p4handheld.data.repository.AuthRepository
 import com.p4handheld.services.LocationStatus
+import com.p4handheld.utils.PermissionChecker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -46,10 +47,16 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
                         val result = apiService.getAssignedTaskCount(AuthRepository.userId)
                         taskCount = result.body ?: 0
                     }
+                    val locationStatus = when {
+                        !AuthRepository.trackGeoLocation -> LocationStatus.DISABLED
+                        !PermissionChecker.hasLocationPermissions(getApplication()) -> LocationStatus.DISABLED
+                        else -> LocationStatus.AVAILABLE
+                    }
                     PersistentUiState.value = PersistentUiState.value.copy(
                         taskCount = taskCount,
                         hasUnreadMessages = AuthRepository.newMessages > 0,
                         isTrackingLocation = AuthRepository.trackGeoLocation,
+                        locationStatus = locationStatus,
                         username = AuthRepository.username
                     )
                 } catch (_: Exception) {

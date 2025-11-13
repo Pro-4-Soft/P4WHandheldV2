@@ -1,6 +1,5 @@
 package com.p4handheld.ui
 
-import android.Manifest
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -9,7 +8,6 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -33,7 +31,6 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.p4handheld.GlobalConstants
 import com.p4handheld.GlobalConstants.AppPreferences.TENANT_PREFS
-import com.p4handheld.R
 import com.p4handheld.data.api.ApiClient
 import com.p4handheld.data.models.P4WEventType
 import com.p4handheld.data.repository.AuthRepository
@@ -44,10 +41,8 @@ import com.p4handheld.ui.compose.theme.HandheldP4WTheme
 import com.p4handheld.ui.navigation.AppNavigation
 import com.p4handheld.ui.navigation.Screen
 import com.p4handheld.ui.screens.viewmodels.MainViewModel
-import com.p4handheld.utils.CrashlyticsHelper
 import com.p4handheld.utils.PermissionChecker
 import com.p4handheld.utils.TranslationManager
-import com.p4handheld.utils.Translations
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
@@ -109,9 +104,6 @@ class MainActivity : ComponentActivity() {
         // Query DataWedge status to initialize the profile and settings.
         viewModel.getStatus()
 
-        // Start location service only if user is logged in and location tracking is enabled
-        startLocationServiceIfNeeded()
-
         val firebaseManager = FirebaseManager.Companion.getInstance(application)
         firebaseManager.initialize()
 
@@ -120,9 +112,6 @@ class MainActivity : ComponentActivity() {
 
         // Initialize translations
         initializeTranslations()
-
-        // Load user context on application start if user is logged in
-        loadUserContextOnStart()
 
         // Register screen request receiver
         if (!screenRequestReceiverRegistered) {
@@ -144,12 +133,6 @@ class MainActivity : ComponentActivity() {
             scanViewState.dwProfileCreate?.let { dwProfileCreate ->
                 if (dwProfileCreate.isProfileCreated) {
                     viewModel.setConfig()
-                } else {
-                    Toast.makeText(
-                        this,
-                        getString(R.string.profile_creation_failed),
-                        Toast.LENGTH_LONG
-                    ).show()
                 }
             }
 
@@ -167,12 +150,6 @@ class MainActivity : ComponentActivity() {
                         viewModel.createProfile()
                         isProfileCreated = true
                     }
-                } else {
-                    Toast.makeText(
-                        this,
-                        getString(R.string.datawedge_is, dwStatus.statusString),
-                        Toast.LENGTH_LONG
-                    ).show()
                 }
             }
 
@@ -225,45 +202,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-    private fun loadUserContextOnStart() {
-        lifecycleScope.launch {
-            try {
-                val authRepository = AuthRepository(this@MainActivity)
-                if (authRepository.hasValidToken()) {
-                    Log.d("MainActivity", "Loading user context on application start")
-                    val result = authRepository.getUserContext()
-                    if (result.isSuccess) {
-                        Log.d("MainActivity", "User context loaded successfully on app start")
-                        startLocationServiceIfNeeded()
-                    } else {
-                        Log.w("MainActivity", "Failed to load user context on app start: ${result.exceptionOrNull()?.message}")
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("MainActivity", "Error loading user context on app start", e)
-            }
-        }
-    }
-
-    private fun startLocationServiceIfNeeded() {
-        try {
-            val authRepository = AuthRepository(this)
-            // Only start if user is logged in and location tracking is enabled
-            if (authRepository.hasValidToken() && authRepository.shouldTrackLocation()) {
-                Log.d("MainActivity", "Starting location service - user logged in and tracking enabled")
-                LocationService.startService(this)
-            } else {
-                Log.d("MainActivity", "Skipping location service - user not logged in or tracking disabled")
-            }
-        } catch (e: Exception) {
-            Log.e("MainActivity", "Error checking location service requirements", e)
-            CrashlyticsHelper.recordException(
-                e,
-                mapOf("operation" to "startLocationServiceIfNeeded")
-            )
-        }
-    }
 }
 
 //region Screenshot helpers
@@ -295,7 +233,6 @@ fun MainActivityContent(
     val scanViewState by viewModel.scanViewStatus.observeAsState()
     val navController = rememberNavController()
 
-    // Handle side effects based on scan view state changes
     DisposableEffect(scanViewState) {
         scanViewState?.dwProfileCreate?.let { dwProfileCreate ->
             if (dwProfileCreate.isProfileCreated) {
@@ -323,16 +260,9 @@ fun MainActivityContent(
         )
     }
 
-
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
-            // Location permissions granted
-            Toast.makeText(navController.context, Translations[navController.context, R.string.location_permission_granted], Toast.LENGTH_LONG).show()
-            Log.d("MainActivity", Translations[navController.context, R.string.location_permission_granted])
-        }
-    }
+    ) { permissions -> }
 
     // Request location permissions when needed (after user context is available)
     LaunchedEffect(Unit) {

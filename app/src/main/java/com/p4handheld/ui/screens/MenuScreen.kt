@@ -361,7 +361,7 @@ fun MenuTileCard(
                     modifier = Modifier.padding(horizontal = 3.dp),
                     text = getFontAwesomeIcon(menuItem.icon?.lowercase() ?: ""),
                     fontFamily = FontAwesome,
-                    fontSize = 30.sp,           // match your previous Icon size
+                    fontSize = 30.sp,
                     color = Color(0xFF475569)
                 )
             }

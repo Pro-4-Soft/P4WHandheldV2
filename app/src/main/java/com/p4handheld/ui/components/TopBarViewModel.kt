@@ -103,10 +103,19 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
                     PersistentUiState.value = PersistentUiState.value.copy(locationStatus = statusEnum)
                     Log.d("TopBarViewModel", "Location status updated via broadcast: $statusEnum")
                 }
+
+                "PERMISSION_CHANGED" -> {
+                    val locationStatus = when {
+                        !AuthRepository.trackGeoLocation -> LocationStatus.DISABLED
+                        !PermissionChecker.hasLocationPermissions(getApplication()) -> LocationStatus.DISABLED
+                        else -> LocationStatus.AVAILABLE
+                    }
+                    PersistentUiState.value = PersistentUiState.value.copy(locationStatus = locationStatus)
+                }
             }
         }
     }
-
+ 
     private fun registerReceiver() {
         if (!registered) {
             try {
@@ -114,6 +123,7 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
                 val intentFilter = IntentFilter().apply {
                     addAction(GlobalConstants.Intents.FIREBASE_MESSAGE_RECEIVED)
                     addAction(GlobalConstants.Intents.LOCATION_STATUS_CHANGED)
+                    addAction("PERMISSION_CHANGED")
                 }
                 ContextCompat.registerReceiver(appCtx, receiver, intentFilter, ContextCompat.RECEIVER_NOT_EXPORTED)
                 registered = true

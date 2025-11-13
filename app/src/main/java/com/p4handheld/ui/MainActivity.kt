@@ -54,6 +54,9 @@ class MainActivity : ComponentActivity() {
     // Flags to track profile creation and initial configuration progression.
     private var isProfileCreated = false
     private var initialConfigInProgression = false
+    
+    // Track permission state to detect changes
+    private var lastLocationPermissionState = false
 
     private var screenRequestReceiverRegistered = false
     private val screenRequestReceiver = object : BroadcastReceiver() {
@@ -112,6 +115,9 @@ class MainActivity : ComponentActivity() {
 
         // Initialize translations
         initializeTranslations()
+
+        // Initialize permission state tracking
+        lastLocationPermissionState = PermissionChecker.hasLocationPermissions(this)
 
         // Register screen request receiver
         if (!screenRequestReceiverRegistered) {
@@ -178,6 +184,9 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         if (!initialConfigInProgression)
             viewModel.setConfig()
+            
+        // Check for permission changes when app resumes
+        checkPermissionChanges()
     }
 
     private fun getStartDestination(): String {
@@ -200,6 +209,25 @@ class MainActivity : ComponentActivity() {
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to initialize translations", e)
             }
+        }
+    }
+
+    fun checkPermissionChanges() {
+        val currentLocationPermissionState = PermissionChecker.hasLocationPermissions(this)
+        
+        if (currentLocationPermissionState != lastLocationPermissionState) {
+            Log.d("MainActivity", "Location permission changed: $lastLocationPermissionState -> $currentLocationPermissionState")
+            
+            // Send broadcast to notify TopBarViewModel about permission change
+            val intent = Intent("PERMISSION_CHANGED").apply {
+                putExtra("permissionType", "location")
+                putExtra("granted", currentLocationPermissionState)
+                setPackage(packageName)
+            }
+            sendBroadcast(intent)
+            
+            // Update the tracked state
+            lastLocationPermissionState = currentLocationPermissionState
         }
     }
 }
@@ -262,7 +290,10 @@ fun MainActivityContent(
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions -> }
+    ) { permissions -> 
+        // Trigger permission change check after user responds to permission request
+        (navController.context as? MainActivity)?.checkPermissionChanges()
+    }
 
     // Request location permissions when needed (after user context is available)
     LaunchedEffect(Unit) {

@@ -237,21 +237,13 @@ fun LoginScreenContent(
 
                     // Error message
                     uiState.errorMessage?.let { errorMessage ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceBright
-                            )
-                        ) {
-                            Text(
-                                text = errorMessage,
-                                color = MaterialTheme.colorScheme.error,
-                                maxLines = 3,
-                                overflow = TextOverflow.Ellipsis,
-                                fontSize = 10.sp,
-                            )
-                        }
+                        Text(
+                            text = errorMessage,
+                            color = MaterialTheme.colorScheme.error,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis,
+                            fontSize = 10.sp,
+                        )
                     }
 
                     Button(

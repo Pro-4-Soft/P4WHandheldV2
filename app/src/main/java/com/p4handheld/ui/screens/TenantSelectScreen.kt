@@ -217,18 +217,12 @@ fun TenantSelectScreenContent(
 
                 //region Error message
                 uiState.errorMessage?.let { errorMessage ->
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer
-                        )
-                    ) {
-                        Text(
-                            text = errorMessage,
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                            modifier = Modifier.padding(12.dp),
-                            fontSize = 10.sp
-                        )
-                    }
+                    Text(
+                        text = errorMessage,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(4.dp),
+                        fontSize = 12.sp
+                    )
                 }
                 //endregion
 

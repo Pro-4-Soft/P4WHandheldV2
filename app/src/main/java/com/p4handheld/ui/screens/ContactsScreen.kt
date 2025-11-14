@@ -89,9 +89,25 @@ fun ContactsScreen(
                         try {
                             val msg = json.decodeFromString<com.p4handheld.data.models.UserChatMessage>(payload)
                             viewModel.incrementUnread(msg.fromUserId)
+                            // Check all contacts and update TopBar
+                            viewModel.checkAndUpdateTopBarUnreadStatus(uiState.contacts)
                         } catch (e: SerializationException) {
                             e.printStackTrace()
                         }
+                    }
+
+                    "CHECK_ALL_MESSAGES_READ" -> {
+                        val contactId = intent.getStringExtra("contactId")
+                        // Clear unread for opened contact
+                        if (contactId != null) {
+                            viewModel.clearUnread(contactId)
+                        }
+                        // Reload contacts list if there are any unread messages to get fresh data
+                        if (uiState.contacts.any { it.newMessages > 0 }) {
+                            viewModel.refresh()
+                        }
+                        // Check all contacts and update TopBar
+                        viewModel.checkAndUpdateTopBarUnreadStatus(uiState.contacts)
                     }
                 }
             }
@@ -166,7 +182,7 @@ fun ContactsScreen(
                                     contact = contact,
                                     onClick = {
                                         viewModel.clearUnread(contact.id)
-                                        viewModel.checkAndUpdateTopBarUnreadStatus(ctx, uiState.contacts.map {
+                                        viewModel.checkAndUpdateTopBarUnreadStatus(uiState.contacts.map {
                                             if (it.id == contact.id) it.copy(newMessages = 0) else it
                                         })
                                         onOpenChat(contact.id, contact.username)

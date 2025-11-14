@@ -149,6 +149,14 @@ fun ChatScreen(
         scrollIndexBeforeLoad = 0
 
         viewModel.loadMessages(contactId)
+        
+        // Trigger comprehensive check to update ContactsScreen when opening chat
+        val intent = Intent(GlobalConstants.Intents.FIREBASE_MESSAGE_RECEIVED).apply {
+            putExtra("eventType", "CHECK_ALL_MESSAGES_READ")
+            putExtra("contactId", contactId)
+            setPackage(ctx.packageName)
+        }
+        ctx.sendBroadcast(intent)
     }
 
     // Listen for incoming FCM broadcasts and append messages to this chat if they match

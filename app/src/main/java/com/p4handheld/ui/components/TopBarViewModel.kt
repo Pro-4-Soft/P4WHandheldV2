@@ -82,17 +82,6 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
 
                         P4WEventType.USER_CHAT_MESSAGE.toString() -> {
                             PersistentUiState.value = PersistentUiState.value.copy(hasUnreadMessages = true)
-                            Log.d("TopBarViewModel", "Unread messages updated via broadcast")
-                        }
-
-                        "MESSAGES_READ" -> {
-                            PersistentUiState.value = PersistentUiState.value.copy(hasUnreadMessages = false)
-                            Log.d("TopBarViewModel", "All messages marked as read via broadcast")
-                        }
-
-                        "MESSAGES_UNREAD" -> {
-                            PersistentUiState.value = PersistentUiState.value.copy(hasUnreadMessages = true)
-                            Log.d("TopBarViewModel", "Unread messages detected via broadcast")
                         }
                     }
                 }
@@ -115,7 +104,7 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
             }
         }
     }
- 
+
     private fun registerReceiver() {
         if (!registered) {
             try {

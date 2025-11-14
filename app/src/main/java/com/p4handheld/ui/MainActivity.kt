@@ -33,7 +33,6 @@ import com.p4handheld.GlobalConstants
 import com.p4handheld.GlobalConstants.AppPreferences.TENANT_PREFS
 import com.p4handheld.data.api.ApiClient
 import com.p4handheld.data.models.P4WEventType
-import com.p4handheld.data.repository.AuthRepository
 import com.p4handheld.firebase.FirebaseManager
 import com.p4handheld.scanner.DWCommunicationWrapper
 import com.p4handheld.services.LocationService
@@ -54,7 +53,7 @@ class MainActivity : ComponentActivity() {
     // Flags to track profile creation and initial configuration progression.
     private var isProfileCreated = false
     private var initialConfigInProgression = false
-    
+
     // Track permission state to detect changes
     private var lastLocationPermissionState = false
 
@@ -184,7 +183,7 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         if (!initialConfigInProgression)
             viewModel.setConfig()
-            
+
         // Check for permission changes when app resumes
         checkPermissionChanges()
     }
@@ -193,11 +192,8 @@ class MainActivity : ComponentActivity() {
         val sharedPreferences = getSharedPreferences(TENANT_PREFS, MODE_PRIVATE)
         val isConfigured = sharedPreferences.getBoolean("is_configured", false)
 
-        val authRepository = AuthRepository(this)
-        val hasValidToken = authRepository.hasValidToken()
         return when {
             !isConfigured -> Screen.TenantSelect.route
-            hasValidToken -> Screen.Menu.route
             else -> Screen.Login.route
         }
     }
@@ -214,10 +210,10 @@ class MainActivity : ComponentActivity() {
 
     fun checkPermissionChanges() {
         val currentLocationPermissionState = PermissionChecker.hasLocationPermissions(this)
-        
+
         if (currentLocationPermissionState != lastLocationPermissionState) {
             Log.d("MainActivity", "Location permission changed: $lastLocationPermissionState -> $currentLocationPermissionState")
-            
+
             // Send broadcast to notify TopBarViewModel about permission change
             val intent = Intent("PERMISSION_CHANGED").apply {
                 putExtra("permissionType", "location")
@@ -225,7 +221,7 @@ class MainActivity : ComponentActivity() {
                 setPackage(packageName)
             }
             sendBroadcast(intent)
-            
+
             // Update the tracked state
             lastLocationPermissionState = currentLocationPermissionState
         }
@@ -290,7 +286,7 @@ fun MainActivityContent(
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions -> 
+    ) { permissions ->
         // Trigger permission change check after user responds to permission request
         (navController.context as? MainActivity)?.checkPermissionChanges()
     }

@@ -35,6 +35,7 @@ class ContactsViewModel(application: Application) : AndroidViewModel(application
                     isLoading = false,
                     contacts = result.body ?: emptyList()
                 )
+                checkAndUpdateTopBarUnreadStatus(_uiState.value.contacts)
             } else {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
@@ -52,6 +53,7 @@ class ContactsViewModel(application: Application) : AndroidViewModel(application
             val c = current[idx]
             current[idx] = c.copy(newMessages = c.newMessages + 1)
             _uiState.value = _uiState.value.copy(contacts = current)
+            TopBarViewModel.PersistentUiState.value = TopBarViewModel.PersistentUiState.value.copy(hasUnreadMessages = true)
         } else {
             // Contact list might be outdated; try a refresh
             refresh()

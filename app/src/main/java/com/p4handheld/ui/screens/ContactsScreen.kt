@@ -79,14 +79,9 @@ fun ContactsScreen(
     }
 
     // Check if TopBar has unread messages when ContactsScreen becomes visible
-    // and send CHECK_ALL_MESSAGES_READ to update unread quantities
     LaunchedEffect(Unit) {
         if (topBarState.hasUnreadMessages) {
-            val intent = Intent(GlobalConstants.Intents.FIREBASE_MESSAGE_RECEIVED).apply {
-                putExtra("eventType", "CHECK_ALL_MESSAGES_READ")
-                setPackage(ctx.packageName)
-            }
-            ctx.sendBroadcast(intent)
+            viewModel.refresh()
         }
     }
 
@@ -105,8 +100,6 @@ fun ContactsScreen(
                         try {
                             val msg = json.decodeFromString<com.p4handheld.data.models.UserChatMessage>(payload)
                             viewModel.incrementUnread(msg.fromUserId)
-                            // Check all contacts and update TopBar
-                            viewModel.checkAndUpdateTopBarUnreadStatus(uiState.contacts)
                         } catch (e: SerializationException) {
                             e.printStackTrace()
                         }
@@ -118,8 +111,6 @@ fun ContactsScreen(
                         if (contactId != null) {
                             viewModel.clearUnread(contactId)
                         }
-                        viewModel.refresh()
-                        viewModel.checkAndUpdateTopBarUnreadStatus(uiState.contacts)
                     }
                 }
             }

@@ -149,7 +149,7 @@ fun ChatScreen(
         scrollIndexBeforeLoad = 0
 
         viewModel.loadMessages(contactId)
-        
+
         // Trigger comprehensive check to update ContactsScreen when opening chat
         val intent = Intent(GlobalConstants.Intents.FIREBASE_MESSAGE_RECEIVED).apply {
             putExtra("eventType", "CHECK_ALL_MESSAGES_READ")
@@ -175,7 +175,11 @@ fun ChatScreen(
                         viewModel.appendIncomingMessage(msg)
                         // Auto-scroll to bottom when new message is received
                         coroutineScope.launch {
-                            listState.animateScrollToItem(Int.MAX_VALUE)
+                            kotlinx.coroutines.delay(50)
+                            val messageCount = uiState.messages.size
+                            if (messageCount > 0) {
+                                listState.animateScrollToItem(messageCount - 1)
+                            }
                         }
                     }
                 } catch (e: SerializationException) {
@@ -296,7 +300,8 @@ fun ChatScreen(
             LaunchedEffect(contactId, uiState.isLoading, hasInitiallyScrolled) {
                 if (!uiState.isLoading && uiState.messages.isNotEmpty() && !hasInitiallyScrolled) {
                     coroutineScope.launch {
-                        listState.scrollToItem(uiState.messages.size - 1)
+                        val lastIndex = (uiState.messages.size - 1).coerceAtLeast(0)
+                        listState.scrollToItem(lastIndex)
                         hasInitiallyScrolled = true
                     }
                 }
@@ -307,10 +312,13 @@ fun ChatScreen(
                 if (!uiState.isLoadingMore && previousMessageCount > 0 && uiState.messages.size > previousMessageCount) {
                     // Calculate how many new messages were added at the top and adjust scroll position to maintain visual continuity
                     val newMessagesAdded = uiState.messages.size - previousMessageCount
-                    val newScrollIndex = scrollIndexBeforeLoad + newMessagesAdded
+                    val newScrollIndex = (scrollIndexBeforeLoad + newMessagesAdded).coerceAtLeast(0)
 
                     coroutineScope.launch {
-                        listState.scrollToItem(newScrollIndex)
+                        val safeIndex = newScrollIndex.coerceAtMost(uiState.messages.size - 1)
+                        if (safeIndex >= 0) {
+                            listState.scrollToItem(safeIndex)
+                        }
                     }
 
                     // Reset tracking variables
@@ -340,7 +348,11 @@ fun ChatScreen(
                                 {
                                     messageText = ""
                                     coroutineScope.launch {
-                                        listState.animateScrollToItem(Int.MAX_VALUE)
+                                        kotlinx.coroutines.delay(50)
+                                        val messageCount = uiState.messages.size
+                                        if (messageCount > 0) {
+                                            listState.animateScrollToItem(messageCount - 1)
+                                        }
                                     }
                                 }
                             }
@@ -366,7 +378,11 @@ fun ChatScreen(
                             viewModel.sendMessage(contactId, content) {
                                 messageText = ""
                                 coroutineScope.launch {
-                                    listState.animateScrollToItem(Int.MAX_VALUE)
+                                    kotlinx.coroutines.delay(50)
+                                    val messageCount = uiState.messages.size
+                                    if (messageCount > 0) {
+                                        listState.animateScrollToItem(messageCount - 1)
+                                    }
                                 }
                             }
                         }

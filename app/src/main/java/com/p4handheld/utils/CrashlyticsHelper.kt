@@ -43,15 +43,6 @@ object CrashlyticsHelper {
         }
     }
 
-    fun recordException(throwable: Throwable) {
-        try {
-            FirebaseCrashlytics.getInstance().recordException(throwable)
-            Log.d(TAG, "Exception recorded to Crashlytics: ${throwable.message}")
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to record exception", e)
-        }
-    }
-
     fun recordException(throwable: Throwable, context: Map<String, String>) {
         try {
             context.forEach { (key, value) ->
@@ -86,26 +77,5 @@ object CrashlyticsHelper {
         } catch (e: Exception) {
             Log.e(TAG, "Failed to clear user info", e)
         }
-    }
-
-    fun testCrash() {
-        Log.w(TAG, "Test crash triggered!")
-        throw RuntimeException("Test crash for Firebase Crashlytics")
-    }
-
-    fun testNonFatalException() {
-        try {
-            throw RuntimeException("Test non-fatal exception for Firebase Crashlytics")
-        } catch (e: Exception) {
-            recordException(e)
-            Log.w(TAG, "Test non-fatal exception recorded")
-        }
-    }
-
-    fun testCrashlyticsLogging() {
-        setCustomKey("test_event", "crashlytics_logging_test")
-        setCustomKey("test_timestamp", System.currentTimeMillis().toString())
-        log("Crashlytics logging test executed successfully")
-        Log.i(TAG, "Crashlytics logging test completed")
     }
 }

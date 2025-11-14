@@ -87,7 +87,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         val data = remoteMessage.data
         val notification = remoteMessage.notification
         return P4WFirebaseNotification(
-            id = data["messageId"] ?: remoteMessage.messageId ?: generateMessageId(),
+            id = data["messageId"] ?: remoteMessage.messageId ?: "msg_${System.currentTimeMillis()}_${(1000..9999).random()}",
             title = notification?.title ?: data["title"] ?: "",
             body = notification?.body ?: data["body"] ?: "",
             userChatMessage = parseUserChatMessage(data["payload"]),
@@ -123,7 +123,12 @@ class FirebaseMessagingService : FirebaseMessagingService() {
     private fun playInternalSounds(message: P4WFirebaseNotification) {
         if (message.eventType == P4WEventType.USER_CHAT_MESSAGE) {
             // Only play sound for user messages, no system notification
-            playMessageSound()
+            try {
+                val mediaPlayer = MediaPlayer.create(this, R.raw.new_message)
+                mediaPlayer?.start()
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to play message sound", e)
+            }
         }
         if (message.eventType == P4WEventType.TASKS_CHANGED) {
             try {
@@ -137,15 +142,6 @@ class FirebaseMessagingService : FirebaseMessagingService() {
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-        }
-    }
-
-    private fun playMessageSound() {
-        try {
-            val mediaPlayer = MediaPlayer.create(this, R.raw.new_message)
-            mediaPlayer?.start()
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to play message sound", e)
         }
     }
 
@@ -165,8 +161,5 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         sendBroadcast(intent)
     }
 
-    private fun generateMessageId(): String {
-        return "msg_${System.currentTimeMillis()}_${(1000..9999).random()}"
-    }
     //endregion
 }

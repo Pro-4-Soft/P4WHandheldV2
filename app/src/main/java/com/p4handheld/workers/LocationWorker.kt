@@ -76,7 +76,6 @@ class LocationWorker(
         }
     }
 
-
     //we do call for permission above (hasLocationPermissions)
     // ↑ ☻ so we can suppress warning of linter
     @Suppress("MissingPermission")

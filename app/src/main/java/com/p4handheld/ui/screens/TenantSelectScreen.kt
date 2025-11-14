@@ -218,7 +218,7 @@ fun TenantSelectScreenContent(
                 //region Error message
                 uiState.errorMessage?.let { errorMessage ->
                     Text(
-                        text = errorMessage,
+                        text = errorMessage.take(50) + "...",
                         color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.padding(4.dp),
                         fontSize = 12.sp

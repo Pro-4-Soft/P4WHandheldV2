@@ -23,10 +23,10 @@ class ContactsViewModel(application: Application) : AndroidViewModel(application
     val uiState: StateFlow<ContactsUiState> = _uiState.asStateFlow()
 
     init {
-        refresh()
+        refreshContactList()
     }
 
-    fun refresh() {
+    fun refreshContactList() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             val result = ApiClient.apiService.getContacts()
@@ -56,20 +56,7 @@ class ContactsViewModel(application: Application) : AndroidViewModel(application
             TopBarViewModel.PersistentUiState.value = TopBarViewModel.PersistentUiState.value.copy(hasUnreadMessages = true)
         } else {
             // Contact list might be outdated; try a refresh
-            refresh()
-        }
-    }
-
-    // Clear unread counter for a specific contact (e.g., when opening their chat)
-    fun clearUnread(contactId: String) {
-        val current = _uiState.value.contacts.toMutableList()
-        val idx = current.indexOfFirst { it.id == contactId }
-        if (idx >= 0) {
-            val c = current[idx]
-            if (c.newMessages != 0) {
-                current[idx] = c.copy(newMessages = 0)
-                _uiState.value = _uiState.value.copy(contacts = current)
-            }
+            refreshContactList()
         }
     }
 

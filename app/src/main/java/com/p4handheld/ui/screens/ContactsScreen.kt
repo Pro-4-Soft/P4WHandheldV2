@@ -78,11 +78,8 @@ fun ContactsScreen(
         openMainMenu();
     }
 
-    // Check if TopBar has unread messages when ContactsScreen becomes visible
     LaunchedEffect(Unit) {
-        if (topBarState.hasUnreadMessages) {
-            viewModel.refresh()
-        }
+        viewModel.refreshContactList()
     }
 
     // Listen for incoming chat message broadcasts to update unread badges in the list
@@ -102,14 +99,6 @@ fun ContactsScreen(
                             viewModel.incrementUnread(msg.fromUserId)
                         } catch (e: SerializationException) {
                             e.printStackTrace()
-                        }
-                    }
-
-                    "CHECK_ALL_MESSAGES_READ" -> {
-                        val contactId = intent.getStringExtra("contactId")
-                        // Clear unread for opened contact
-                        if (contactId != null) {
-                            viewModel.clearUnread(contactId)
                         }
                     }
                 }
@@ -184,7 +173,6 @@ fun ContactsScreen(
                                 ContactRow(
                                     contact = contact,
                                     onClick = {
-                                        viewModel.clearUnread(contact.id)
                                         viewModel.checkAndUpdateTopBarUnreadStatus(uiState.contacts.map {
                                             if (it.id == contact.id) it.copy(newMessages = 0) else it
                                         })

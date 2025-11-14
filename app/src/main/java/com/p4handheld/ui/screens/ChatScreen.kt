@@ -84,7 +84,6 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-//@SuppressLint("UnsafeImplicitIntentLaunch")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
@@ -149,14 +148,6 @@ fun ChatScreen(
         scrollIndexBeforeLoad = 0
 
         viewModel.loadMessages(contactId)
-
-        // Trigger comprehensive check to update ContactsScreen when opening chat
-        val intent = Intent(GlobalConstants.Intents.FIREBASE_MESSAGE_RECEIVED).apply {
-            putExtra("eventType", "CHECK_ALL_MESSAGES_READ")
-            putExtra("contactId", contactId)
-            setPackage(ctx.packageName)
-        }
-        ctx.sendBroadcast(intent)
     }
 
     // Listen for incoming FCM broadcasts and append messages to this chat if they match
@@ -178,7 +169,7 @@ fun ChatScreen(
                             kotlinx.coroutines.delay(50)
                             val messageCount = uiState.messages.size
                             if (messageCount > 0) {
-                                listState.animateScrollToItem(messageCount - 1)
+                                listState.animateScrollToItem(messageCount)
                             }
                         }
                     }
@@ -300,7 +291,7 @@ fun ChatScreen(
             LaunchedEffect(contactId, uiState.isLoading, hasInitiallyScrolled) {
                 if (!uiState.isLoading && uiState.messages.isNotEmpty() && !hasInitiallyScrolled) {
                     coroutineScope.launch {
-                        val lastIndex = (uiState.messages.size - 1).coerceAtLeast(0)
+                        val lastIndex = (uiState.messages.size).coerceAtLeast(0)
                         listState.scrollToItem(lastIndex)
                         hasInitiallyScrolled = true
                     }
@@ -315,7 +306,7 @@ fun ChatScreen(
                     val newScrollIndex = (scrollIndexBeforeLoad + newMessagesAdded).coerceAtLeast(0)
 
                     coroutineScope.launch {
-                        val safeIndex = newScrollIndex.coerceAtMost(uiState.messages.size - 1)
+                        val safeIndex = newScrollIndex.coerceAtMost(uiState.messages.size)
                         if (safeIndex >= 0) {
                             listState.scrollToItem(safeIndex)
                         }
@@ -351,7 +342,7 @@ fun ChatScreen(
                                         kotlinx.coroutines.delay(50)
                                         val messageCount = uiState.messages.size
                                         if (messageCount > 0) {
-                                            listState.animateScrollToItem(messageCount - 1)
+                                            listState.animateScrollToItem(messageCount)
                                         }
                                     }
                                 }
@@ -381,7 +372,7 @@ fun ChatScreen(
                                     kotlinx.coroutines.delay(50)
                                     val messageCount = uiState.messages.size
                                     if (messageCount > 0) {
-                                        listState.animateScrollToItem(messageCount - 1)
+                                        listState.animateScrollToItem(messageCount)
                                     }
                                 }
                             }

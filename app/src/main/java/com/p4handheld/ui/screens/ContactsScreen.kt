@@ -34,6 +34,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -48,6 +49,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.p4handheld.GlobalConstants
 import com.p4handheld.data.models.P4WEventType
 import com.p4handheld.data.models.UserContact
+import com.p4handheld.ui.components.TopBarViewModel
 import com.p4handheld.ui.components.TopBarWithIcons
 import com.p4handheld.ui.screens.viewmodels.ContactsViewModel
 import com.p4handheld.utils.formatDateTime
@@ -61,6 +63,7 @@ fun ContactsScreen(
     openMainMenu: () -> Unit = {}
 ) {
     val viewModel: ContactsViewModel = viewModel()
+    val topBarViewModel: TopBarViewModel = viewModel()
     val json = Json {
         ignoreUnknownKeys = true
         isLenient = true
@@ -68,13 +71,26 @@ fun ContactsScreen(
     }
 
     val uiState by viewModel.uiState.collectAsState()
+    val topBarState by topBarViewModel.uiState.collectAsState()
+    val ctx = androidx.compose.ui.platform.LocalContext.current
 
     BackHandler {
         openMainMenu();
     }
 
+    // Check if TopBar has unread messages when ContactsScreen becomes visible
+    // and send CHECK_ALL_MESSAGES_READ to update unread quantities
+    LaunchedEffect(Unit) {
+        if (topBarState.hasUnreadMessages) {
+            val intent = Intent(GlobalConstants.Intents.FIREBASE_MESSAGE_RECEIVED).apply {
+                putExtra("eventType", "CHECK_ALL_MESSAGES_READ")
+                setPackage(ctx.packageName)
+            }
+            ctx.sendBroadcast(intent)
+        }
+    }
+
     // Listen for incoming chat message broadcasts to update unread badges in the list
-    val ctx = androidx.compose.ui.platform.LocalContext.current
     DisposableEffect(Unit) {
         val filter = IntentFilter(GlobalConstants.Intents.FIREBASE_MESSAGE_RECEIVED)
         val receiver = object : BroadcastReceiver() {
@@ -102,11 +118,7 @@ fun ContactsScreen(
                         if (contactId != null) {
                             viewModel.clearUnread(contactId)
                         }
-                        // Reload contacts list if there are any unread messages to get fresh data
-                        if (uiState.contacts.any { it.newMessages > 0 }) {
-                            viewModel.refresh()
-                        }
-                        // Check all contacts and update TopBar
+                        viewModel.refresh()
                         viewModel.checkAndUpdateTopBarUnreadStatus(uiState.contacts)
                     }
                 }

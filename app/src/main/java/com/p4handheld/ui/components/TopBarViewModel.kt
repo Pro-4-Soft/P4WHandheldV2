@@ -10,6 +10,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.p4handheld.GlobalConstants
+import com.p4handheld.data.ChatStateManager
 import com.p4handheld.data.api.ApiClient.apiService
 import com.p4handheld.data.models.P4WEventType
 import com.p4handheld.data.repository.AuthRepository
@@ -81,7 +82,10 @@ class TopBarViewModel(application: Application) : AndroidViewModel(application) 
                         }
 
                         P4WEventType.USER_CHAT_MESSAGE.toString() -> {
-                            PersistentUiState.value = PersistentUiState.value.copy(hasUnreadMessages = true)
+                            val fromUserId = intent.getStringExtra("fromUserId")
+                            if (fromUserId != null && !ChatStateManager.isViewingChatWith(fromUserId)) {
+                                PersistentUiState.value = PersistentUiState.value.copy(hasUnreadMessages = true)
+                            }
                         }
                     }
                 }

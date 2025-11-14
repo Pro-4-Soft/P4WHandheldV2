@@ -44,9 +44,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
 
         // check if user is in chat screen
         val shouldSuppressNotification = shouldSuppressNotificationForMessage(p4wNotification)
-
         if (!shouldSuppressNotification) {
-            // Play internal sounds only, no system notifications
             playInternalSounds(p4wNotification)
         }
 
@@ -154,6 +152,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
     private fun broadcastMessage(message: P4WFirebaseNotification) {
         val intent = Intent(GlobalConstants.Intents.FIREBASE_MESSAGE_RECEIVED).apply {
             putExtra("messageId", message.id)
+            putExtra("fromUserId", message.userChatMessage?.fromUserId)
             putExtra("eventType", message.eventType.name)
             putExtra("title", message.title)
             putExtra("body", message.body)
